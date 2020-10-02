@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Management.Smo;
+using System;
 using System.Data;
 using System.Linq;
 using Umbraco.Core.Persistence.Querying;
@@ -71,109 +72,109 @@ namespace Umbraco.Core.Persistence.SqlSyntax
         }
 
         /// <summary>
-        /// This uses a the DbTypeMap created and custom mapping to resolve the SqlDbType
+        /// This uses a the DbTypeMap created and custom mapping to resolve the SqlDataType
         /// </summary>
         /// <param name="clrType"></param>
         /// <returns></returns>
-        public virtual SqlDbType GetSqlDbType(Type clrType)
+        public virtual SqlDataType GetSqlDataType(Type clrType)
         {
             var dbType = DbTypeMap.ColumnDbTypeMap.First(x => x.Key == clrType).Value;
-            return GetSqlDbType(dbType);
+            return GetSqlDataType(dbType);
         }
 
         /// <summary>
-        /// Returns the mapped SqlDbType for the DbType specified
+        /// Returns the mapped SqlDataType for the DbType specified
         /// </summary>
         /// <param name="dbType"></param>
         /// <returns></returns>
-        public virtual SqlDbType GetSqlDbType(DbType dbType)
+        public virtual SqlDataType GetSqlDataType(DbType dbType)
         {
-            SqlDbType sqlDbType;
+            SqlDataType SqlDataType;
 
             //SEE: https://msdn.microsoft.com/en-us/library/cc716729(v=vs.110).aspx
             // and https://msdn.microsoft.com/en-us/library/yy6y35y8%28v=vs.110%29.aspx?f=255&MSPPError=-2147217396
             switch (dbType)
             {
                 case DbType.AnsiString:
-                    sqlDbType = SqlDbType.VarChar;
+                    SqlDataType = SqlDataType.VarChar;
                     break;
                 case DbType.Binary:
-                    sqlDbType = SqlDbType.VarBinary;
+                    SqlDataType = SqlDataType.VarBinary;
                     break;
                 case DbType.Byte:
-                    sqlDbType = SqlDbType.TinyInt;
+                    SqlDataType = SqlDataType.TinyInt;
                     break;
                 case DbType.Boolean:
-                    sqlDbType = SqlDbType.Bit;
+                    SqlDataType = SqlDataType.Bit;
                     break;
                 case DbType.Currency:
-                    sqlDbType = SqlDbType.Money;
+                    SqlDataType = SqlDataType.Money;
                     break;
                 case DbType.Date:
-                    sqlDbType = SqlDbType.Date;
+                    SqlDataType = SqlDataType.Date;
                     break;
                 case DbType.DateTime:
-                    sqlDbType = SqlDbType.DateTime;
+                    SqlDataType = SqlDataType.DateTime;
                     break;
                 case DbType.Decimal:
-                    sqlDbType = SqlDbType.Decimal;
+                    SqlDataType = SqlDataType.Decimal;
                     break;
                 case DbType.Double:
-                    sqlDbType = SqlDbType.Float;
+                    SqlDataType = SqlDataType.Float;
                     break;
                 case DbType.Guid:
-                    sqlDbType = SqlDbType.UniqueIdentifier;
+                    SqlDataType = SqlDataType.UniqueIdentifier;
                     break;
                 case DbType.Int16:
-                    sqlDbType = SqlDbType.SmallInt;
+                    SqlDataType = SqlDataType.SmallInt;
                     break;
                 case DbType.Int32:
-                    sqlDbType = SqlDbType.Int;
+                    SqlDataType = SqlDataType.Int;
                     break;
                 case DbType.Int64:
-                    sqlDbType = SqlDbType.BigInt;
+                    SqlDataType = SqlDataType.BigInt;
                     break;
                 case DbType.Object:
-                    sqlDbType = SqlDbType.Variant;
+                    SqlDataType = SqlDataType.Variant;
                     break;
                 case DbType.SByte:
-                    throw new NotSupportedException("Inferring a SqlDbType from SByte is not supported.");
+                    throw new NotSupportedException("Inferring a SqlDataType from SByte is not supported.");
                 case DbType.Single:
-                    sqlDbType = SqlDbType.Real;
+                    SqlDataType = SqlDataType.Real;
                     break;
                 case DbType.String:
-                    sqlDbType = SqlDbType.NVarChar;
+                    SqlDataType = SqlDataType.NVarChar;
                     break;
                 case DbType.Time:
-                    sqlDbType = SqlDbType.Time;
+                    SqlDataType = SqlDataType.Time;
                     break;
                 case DbType.UInt16:
-                    throw new NotSupportedException("Inferring a SqlDbType from UInt16 is not supported.");
+                    throw new NotSupportedException("Inferring a SqlDataType from UInt16 is not supported.");
                 case DbType.UInt32:
-                    throw new NotSupportedException("Inferring a SqlDbType from UInt32 is not supported.");
+                    throw new NotSupportedException("Inferring a SqlDataType from UInt32 is not supported.");
                 case DbType.UInt64:
-                    throw new NotSupportedException("Inferring a SqlDbType from UInt64 is not supported.");
+                    throw new NotSupportedException("Inferring a SqlDataType from UInt64 is not supported.");
                 case DbType.VarNumeric:
                     throw new NotSupportedException("Inferring a VarNumeric from UInt64 is not supported.");
                 case DbType.AnsiStringFixedLength:
-                    sqlDbType = SqlDbType.Char;
+                    SqlDataType = SqlDataType.Char;
                     break;
                 case DbType.StringFixedLength:
-                    sqlDbType = SqlDbType.NChar;
+                    SqlDataType = SqlDataType.NChar;
                     break;
                 case DbType.Xml:
-                    sqlDbType = SqlDbType.Xml;
+                    SqlDataType = SqlDataType.Xml;
                     break;
                 case DbType.DateTime2:
-                    sqlDbType = SqlDbType.DateTime2;
+                    SqlDataType = SqlDataType.DateTime2;
                     break;
                 case DbType.DateTimeOffset:
-                    sqlDbType = SqlDbType.DateTimeOffset;
+                    SqlDataType = SqlDataType.DateTimeOffset;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            return sqlDbType;
+            return SqlDataType;
         }
     }
 }

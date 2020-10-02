@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Management.Smo;
+using Microsoft.SqlServer.Types;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -108,52 +110,53 @@ namespace Umbraco.Core.Persistence
         /// Adds the input row set's schema to the object.
         /// </summary>
         /// <remarks>
-        /// Call <see cref="AddSchemaTableRow(String,Nullable{Int32},Nullable{Int16},Nullable{Int16},Boolean,Boolean,Boolean,SqlDbType,String,String,String,String,String)"/>
+        /// Call <see cref="AddSchemaTableRow(String,Nullable{Int32},Nullable{Int16},Nullable{Int16},Boolean,Boolean,Boolean,SqlDataType,String,String,String,String,String)"/>
         /// to do this for each row.
         /// </remarks>
-        /// <seealso cref="AddSchemaTableRow(String,Nullable{Int32},Nullable{Int16},Nullable{Int16},Boolean,Boolean,Boolean,SqlDbType,String,String,String,String,String)"/>
+        /// <seealso cref="AddSchemaTableRow(String,Nullable{Int32},Nullable{Int16},Nullable{Int16},Boolean,Boolean,Boolean,SqlDataType,String,String,String,String,String)"/>
         protected abstract void AddSchemaTableRows();
 
         /// <summary>
-        /// For each <see cref="SqlDbType"/>, the optional columns that may have values.
+        /// For each <see cref="SqlDataType"/>, the optional columns that may have values.
         /// </summary>
         /// <remarks>
-        /// This is used for checking the parameters of <see cref="AddSchemaTableRow(String,Nullable{Int32},Nullable{Int16},Nullable{Int16},Boolean,Boolean,Boolean,SqlDbType,String,String,String,String,String)"/>.
+        /// This is used for checking the parameters of <see cref="AddSchemaTableRow(String,Nullable{Int32},Nullable{Int16},Nullable{Int16},Boolean,Boolean,Boolean,SqlDataType,String,String,String,String,String)"/>.
         /// </remarks>
-        /// <seealso cref="AddSchemaTableRow(String,Nullable{Int32},Nullable{Int16},Nullable{Int16},Boolean,Boolean,Boolean,SqlDbType,String,String,String,String,String)"/>
-        private static readonly Dictionary<SqlDbType, List<string>> AllowedOptionalColumnCombinations = new Dictionary<SqlDbType, List<string>>
+        /// <seealso cref="AddSchemaTableRow(String,Nullable{Int32},Nullable{Int16},Nullable{Int16},Boolean,Boolean,Boolean,SqlDataType,String,String,String,String,String)"/>
+        private static readonly Dictionary<SqlDataType, List<string>> AllowedOptionalColumnCombinations = new Dictionary<SqlDataType, List<string>>
         {
-            { SqlDbType.BigInt, new List<string> { } },
-            { SqlDbType.Binary, new List<string> { SchemaTableColumn.ColumnSize } },
-            { SqlDbType.Bit, new List<string> { } },
-            { SqlDbType.Char, new List<string> { SchemaTableColumn.ColumnSize } },
-            { SqlDbType.Date, new List<string> { } },
-            { SqlDbType.DateTime, new List<string> { } },
-            { SqlDbType.DateTime2, new List<string> { SchemaTableColumn.NumericPrecision } },
-            { SqlDbType.DateTimeOffset, new List<string> { SchemaTableColumn.NumericPrecision } },
-            { SqlDbType.Decimal, new List<string> { SchemaTableColumn.NumericPrecision, SchemaTableColumn.NumericScale } },
-            { SqlDbType.Float, new List<string> { SchemaTableColumn.NumericPrecision, SchemaTableColumn.NumericScale } },
-            { SqlDbType.Image, new List<string> { } },
-            { SqlDbType.Int, new List<string> { } },
-            { SqlDbType.Money, new List<string> { } },
-            { SqlDbType.NChar, new List<string> { SchemaTableColumn.ColumnSize } },
-            { SqlDbType.NText, new List<string> { } },
-            { SqlDbType.NVarChar, new List<string> { SchemaTableColumn.ColumnSize } },
-            { SqlDbType.Real, new List<string> { } },
-            { SqlDbType.SmallDateTime, new List<string> { } },
-            { SqlDbType.SmallInt, new List<string> { } },
-            { SqlDbType.SmallMoney, new List<string> { } },
-            { SqlDbType.Structured, new List<string> { } },
-            { SqlDbType.Text, new List<string> { } },
-            { SqlDbType.Time, new List<string> { SchemaTableColumn.NumericPrecision } },
-            { SqlDbType.Timestamp, new List<string> { } },
-            { SqlDbType.TinyInt, new List<string> { } },
-            { SqlDbType.Udt, new List<string> { BulkDataReader.DataTypeNameSchemaColumn } },
-            { SqlDbType.UniqueIdentifier, new List<string> { } },
-            { SqlDbType.VarBinary, new List<string> { SchemaTableColumn.ColumnSize } },
-            { SqlDbType.VarChar, new List<string> { SchemaTableColumn.ColumnSize } },
-            { SqlDbType.Variant, new List<string> { } },
-            { SqlDbType.Xml, new List<string> { BulkDataReader.XmlSchemaCollectionDatabaseSchemaColumn, BulkDataReader.XmlSchemaCollectionOwningSchemaSchemaColumn, BulkDataReader.XmlSchemaCollectionNameSchemaColumn } }
+            { SqlDataType.BigInt, new List<string> { } },
+            { SqlDataType.Binary, new List<string> { SchemaTableColumn.ColumnSize } },
+            { SqlDataType.Bit, new List<string> { } },
+            { SqlDataType.Char, new List<string> { SchemaTableColumn.ColumnSize } },
+            { SqlDataType.Date, new List<string> { } },
+            { SqlDataType.DateTime, new List<string> { } },
+            { SqlDataType.DateTime2, new List<string> { SchemaTableColumn.NumericPrecision } },
+            { SqlDataType.DateTimeOffset, new List<string> { SchemaTableColumn.NumericPrecision } },
+            { SqlDataType.Decimal, new List<string> { SchemaTableColumn.NumericPrecision, SchemaTableColumn.NumericScale } },
+            { SqlDataType.Float, new List<string> { SchemaTableColumn.NumericPrecision, SchemaTableColumn.NumericScale } },
+            { SqlDataType.HierarchyId, new List<string> { } },
+            { SqlDataType.Image, new List<string> { } },
+            { SqlDataType.Int, new List<string> { } },
+            { SqlDataType.Money, new List<string> { } },
+            { SqlDataType.NChar, new List<string> { SchemaTableColumn.ColumnSize } },
+            { SqlDataType.NText, new List<string> { } },
+            { SqlDataType.NVarChar, new List<string> { SchemaTableColumn.ColumnSize } },
+            { SqlDataType.Real, new List<string> { } },
+            { SqlDataType.SmallDateTime, new List<string> { } },
+            { SqlDataType.SmallInt, new List<string> { } },
+            { SqlDataType.SmallMoney, new List<string> { } },
+            { SqlDataType.UserDefinedTableType, new List<string> { } },
+            { SqlDataType.Text, new List<string> { } },
+            { SqlDataType.Time, new List<string> { SchemaTableColumn.NumericPrecision } },
+            { SqlDataType.Timestamp, new List<string> { } },
+            { SqlDataType.TinyInt, new List<string> { } },
+            { SqlDataType.UserDefinedType, new List<string> { BulkDataReader.DataTypeNameSchemaColumn } },
+            { SqlDataType.UniqueIdentifier, new List<string> { } },
+            { SqlDataType.VarBinary, new List<string> { SchemaTableColumn.ColumnSize } },
+            { SqlDataType.VarChar, new List<string> { SchemaTableColumn.ColumnSize } },
+            { SqlDataType.Variant, new List<string> { } },
+            { SqlDataType.Xml, new List<string> { BulkDataReader.XmlSchemaCollectionDatabaseSchemaColumn, BulkDataReader.XmlSchemaCollectionOwningSchemaSchemaColumn, BulkDataReader.XmlSchemaCollectionNameSchemaColumn } }
         };
 
         /// <summary>
@@ -191,7 +194,7 @@ namespace Umbraco.Core.Persistence
         /// Is the column nullable (i.e. optional)?
         /// </param>
         /// <param name="providerType">
-        /// The corresponding <see cref="SqlDbType"/>.
+        /// The corresponding <see cref="SqlDataType"/>.
         /// </param>
         /// <param name="udtSchema">
         /// The schema name of the UDT.
@@ -216,7 +219,7 @@ namespace Umbraco.Core.Persistence
                                          bool isUnique,
                                          bool isKey,
                                          bool allowDbNull,
-                                         SqlDbType providerType,
+                                         SqlDataType providerType,
                                          string udtSchema,
                                          string udtType,
                                          string xmlSchemaCollectionDatabase,
@@ -267,12 +270,12 @@ namespace Umbraco.Core.Persistence
 
             switch (providerType)
             {
-                case SqlDbType.BigInt:
+                case SqlDataType.BigInt:
                     dataType = typeof(long);
                     dataTypeName = "bigint";
                     break;
 
-                case SqlDbType.Binary:
+                case SqlDataType.Binary:
                     dataType = typeof(byte[]);
 
                     if (!columnSize.HasValue)
@@ -289,12 +292,12 @@ namespace Umbraco.Core.Persistence
                                                  columnSize.Value);
                     break;
 
-                case SqlDbType.Bit:
+                case SqlDataType.Bit:
                     dataType = typeof(bool);
                     dataTypeName = "bit";
                     break;
 
-                case SqlDbType.Char:
+                case SqlDataType.Char:
                     dataType = typeof(string);
 
                     if (!columnSize.HasValue)
@@ -311,17 +314,17 @@ namespace Umbraco.Core.Persistence
                                                  columnSize.Value);
                     break;
 
-                case SqlDbType.Date:
+                case SqlDataType.Date:
                     dataType = typeof(DateTime);
                     dataTypeName = "date";
                     break;
 
-                case SqlDbType.DateTime:
+                case SqlDataType.DateTime:
                     dataType = typeof(DateTime);
                     dataTypeName = "datetime";
                     break;
 
-                case SqlDbType.DateTime2:
+                case SqlDataType.DateTime2:
                     dataType = typeof(DateTime);
 
                     if (numericPrecision.HasValue)
@@ -341,7 +344,7 @@ namespace Umbraco.Core.Persistence
                     }
                     break;
 
-                case SqlDbType.DateTimeOffset:
+                case SqlDataType.DateTimeOffset:
                     dataType = typeof(DateTimeOffset);
 
                     if (numericPrecision.HasValue)
@@ -361,7 +364,7 @@ namespace Umbraco.Core.Persistence
                     }
                     break;
 
-                case SqlDbType.Decimal:
+                case SqlDataType.Decimal:
                     dataType = typeof(decimal);
 
                     if (!numericPrecision.HasValue || !numericScale.HasValue)
@@ -383,7 +386,7 @@ namespace Umbraco.Core.Persistence
                                                  numericScale.Value);
                     break;
 
-                case SqlDbType.Float:
+                case SqlDataType.Float:
                     dataType = typeof(double);
 
                     if (!numericPrecision.HasValue)
@@ -400,22 +403,22 @@ namespace Umbraco.Core.Persistence
                                                  numericPrecision.Value);
                     break;
 
-                case SqlDbType.Image:
+                case SqlDataType.Image:
                     dataType = typeof(byte[]);
                     dataTypeName = "image";
                     break;
 
-                case SqlDbType.Int:
+                case SqlDataType.Int:
                     dataType = typeof(int);
                     dataTypeName = "int";
                     break;
 
-                case SqlDbType.Money:
+                case SqlDataType.Money:
                     dataType = typeof(decimal);
                     dataTypeName = "money";
                     break;
 
-                case SqlDbType.NChar:
+                case SqlDataType.NChar:
                     dataType = typeof(string);
 
                     if (!columnSize.HasValue)
@@ -432,12 +435,12 @@ namespace Umbraco.Core.Persistence
                                                  columnSize.Value);
                     break;
 
-                case SqlDbType.NText:
+                case SqlDataType.NText:
                     dataType = typeof(string);
                     dataTypeName = "ntext";
                     break;
 
-                case SqlDbType.NVarChar:
+                case SqlDataType.NVarChar:
                     dataType = typeof(string);
 
                     if (columnSize.HasValue)
@@ -459,34 +462,34 @@ namespace Umbraco.Core.Persistence
                     }
                     break;
 
-                case SqlDbType.Real:
+                case SqlDataType.Real:
                     dataType = typeof(float);
                     dataTypeName = "real";
                     break;
 
-                case SqlDbType.SmallDateTime:
+                case SqlDataType.SmallDateTime:
                     dataType = typeof(DateTime);
                     dataTypeName = "smalldatetime";
                     break;
 
-                case SqlDbType.SmallInt:
+                case SqlDataType.SmallInt:
                     dataType = typeof(short);
                     dataTypeName = "smallint";
                     break;
 
-                case SqlDbType.SmallMoney:
+                case SqlDataType.SmallMoney:
                     dataType = typeof(decimal);
                     dataTypeName = "smallmoney";
                     break;
 
-                // SqlDbType.Structured not supported because it related to nested rowsets.
+                // SqlDataType.UserDefinedTableType not supported because it related to nested rowsets.
 
-                case SqlDbType.Text:
+                case SqlDataType.Text:
                     dataType = typeof(string);
                     dataTypeName = "text";
                     break;
 
-                case SqlDbType.Time:
+                case SqlDataType.Time:
                     dataType = typeof(TimeSpan);
 
                     if (numericPrecision.HasValue)
@@ -507,14 +510,14 @@ namespace Umbraco.Core.Persistence
                     break;
 
 
-                // SqlDbType.Timestamp not supported because rowversions are not settable.
+                // SqlDataType.Timestamp not supported because rowversions are not settable.
 
-                case SqlDbType.TinyInt:
+                case SqlDataType.TinyInt:
                     dataType = typeof(byte);
                     dataTypeName = "tinyint";
                     break;
 
-                case SqlDbType.Udt:
+                case SqlDataType.UserDefinedType:
                     if (string.IsNullOrEmpty(udtSchema))
                     {
                         throw new ArgumentException("udtSchema must be nonnull and nonempty for \"UDT\" columns.");
@@ -531,12 +534,12 @@ namespace Umbraco.Core.Persistence
                     }
                     break;
 
-                case SqlDbType.UniqueIdentifier:
+                case SqlDataType.UniqueIdentifier:
                     dataType = typeof(Guid);
                     dataTypeName = "uniqueidentifier";
                     break;
 
-                case SqlDbType.VarBinary:
+                case SqlDataType.VarBinary:
                     dataType = typeof(byte[]);
 
                     if (columnSize.HasValue)
@@ -558,7 +561,7 @@ namespace Umbraco.Core.Persistence
                     }
                     break;
 
-                case SqlDbType.VarChar:
+                case SqlDataType.VarChar:
                     dataType = typeof(string);
 
                     if (columnSize.HasValue)
@@ -580,12 +583,12 @@ namespace Umbraco.Core.Persistence
                     }
                     break;
 
-                case SqlDbType.Variant:
+                case SqlDataType.Variant:
                     dataType = typeof(object);
                     dataTypeName = "sql_variant";
                     break;
 
-                case SqlDbType.Xml:
+                case SqlDataType.Xml:
                     dataType = typeof(string);
 
                     if (xmlSchemaCollectionName == null)
@@ -626,6 +629,10 @@ namespace Umbraco.Core.Persistence
 
                         dataTypeName = schemaCollection.ToString();
                     }
+                    break;
+                case SqlDataType.HierarchyId:
+                    dataType = typeof(SqlHierarchyId);
+                    dataTypeName = "hierarchyid";
                     break;
 
                 default:

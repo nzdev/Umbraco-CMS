@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using Microsoft.SqlServer.Management.Smo;
 using NPoco;
 using Umbraco.Core.Persistence.DatabaseAnnotations;
 using Umbraco.Core.Persistence.DatabaseModelDefinitions;
@@ -67,20 +68,23 @@ namespace Umbraco.Core.Persistence
             //foreach (var col in _columnDefinitions.Where(x => colNames.Contains(x.Name, StringComparer.OrdinalIgnoreCase)))
             foreach (var col in _columnDefinitions)
             {
-                SqlDbType sqlDbType;
+                SqlDataType sqlDataType;
                 if (col.HasSpecialDbType)
                 {
-                    //get the SqlDbType from the 'special type'
+                    //get the SqlDataType from the 'special type'
                     switch (col.DbType)
                     {
                         case SpecialDbTypes.NTEXT:
-                            sqlDbType = SqlDbType.NText;
+                            sqlDataType = SqlDataType.NText;
                             break;
                         case SpecialDbTypes.NCHAR:
-                            sqlDbType = SqlDbType.NChar;
+                            sqlDataType = SqlDataType.NChar;
                             break;
                         case SpecialDbTypes.NVARCHARMAX:
-                            sqlDbType = SqlDbType.NVarChar;
+                            sqlDataType = SqlDataType.NVarChar;
+                            break;
+                        case SpecialDbTypes.HIERARCHYID:
+                            sqlDataType = SqlDataType.HierarchyId;
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -88,20 +92,20 @@ namespace Umbraco.Core.Persistence
                 }
                 else if (col.Type.HasValue)
                 {
-                    //get the SqlDbType from the DbType
-                    sqlDbType = _sqlSyntaxProvider.GetSqlDbType(col.Type.Value);
+                    //get the SqlDataType from the DbType
+                    sqlDataType = _sqlSyntaxProvider.GetSqlDataType(col.Type.Value);
                 }
                 else
                 {
-                    //get the SqlDbType from the CLR type
-                    sqlDbType = _sqlSyntaxProvider.GetSqlDbType(col.PropertyType);
+                    //get the SqlDataType from the CLR type
+                    sqlDataType = _sqlSyntaxProvider.GetSqlDataType(col.PropertyType);
                 }
 
                 AddSchemaTableRow(
                     col.Name,
                     col.Size > 0 ? (int?)col.Size : null,
                     col.Precision > 0  ? (short?)col.Precision : null,
-                    null, col.IsUnique, col.IsIdentity, col.IsNullable, sqlDbType,
+                    null, col.IsUnique, col.IsIdentity, col.IsNullable, sqlDataType,
                     null, null, null, null, null);
             }
         }

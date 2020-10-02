@@ -61,6 +61,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects">
+      <Version>161.41011.9</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SqlServer.Types">
+      <Version>14.0.1016.290</Version>
+    </PackageReference>
     <PackageReference Include="SecurityCodeScan">
       <Version>3.3.0</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

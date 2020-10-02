@@ -8,6 +8,7 @@
     {
         NTEXT,
         NCHAR,
-        NVARCHARMAX
+        NVARCHARMAX,
+        HIERARCHYID
     }
 }

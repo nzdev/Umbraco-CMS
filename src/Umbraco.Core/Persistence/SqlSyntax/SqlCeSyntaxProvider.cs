@@ -235,6 +235,8 @@ where table_name=@0 and column_name=@1", tableName, columnName).FirstOrDefault()
         {
             if (dbTypes == SpecialDbTypes.NVARCHARMAX) // SqlCE does not have nvarchar(max) for now
                 return "NTEXT";
+            if (dbTypes == SpecialDbTypes.HIERARCHYID)
+                return "varbinary(892)";
             return base.GetSpecialDbType(dbTypes);
         }
     }

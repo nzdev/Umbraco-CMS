@@ -203,6 +203,10 @@ namespace Umbraco.Core.Persistence.SqlSyntax
             {
                 return "NVARCHAR(MAX)";
             }
+            else if (dbTypes == SpecialDbTypes.HIERARCHYID)
+            {
+                return "HIERARCHYID";
+            }
 
             return "NVARCHAR";
         }
