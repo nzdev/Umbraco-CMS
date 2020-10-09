@@ -23,7 +23,6 @@ namespace Umbraco.PublishedCache.NuCache.LiteDb
             _collectionName = collectionName;
             _isReadOnly = isReadOnly;
             _db = new LiteDatabase(_connectionString, BsonMapper.Global);
-            _db.GetCollection<TValue>(_collectionName);
         }
 
         public void BeginTransaction()

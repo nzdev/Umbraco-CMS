@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace Umbraco.Web.PublishedCache.NuCache
 {
-    public interface ITransactable : IDisposable
+    public enum ContentCacheEntityType
     {
-        ITransactionScope BeginTransaction();
+        Document = 1,
+        Media = 2,
+        Member = 4
     }
 }

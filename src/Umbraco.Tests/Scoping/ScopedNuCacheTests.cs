@@ -82,9 +82,10 @@ namespace Umbraco.Tests.Scoping
             var mediaRepository = Mock.Of<IMediaRepository>();
             var memberRepository = Mock.Of<IMemberRepository>();
             var contentNestedDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
-            ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory();
-            var contentRouter = new ContentCacheContentRouter(Factory.GetInstance<IGlobalSettings>());
+            var globalSettings = Factory.GetInstance<IGlobalSettings>();
+            var contentRouter = new ContentCacheContentRouter(globalSettings);
 
+            ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory(globalSettings);
             return new PublishedSnapshotService(
                 options,
                 null,
@@ -98,8 +99,8 @@ namespace Umbraco.Tests.Scoping
                 ScopeProvider,
                 documentRepository, mediaRepository, memberRepository,
                 DefaultCultureAccessor,
-                new DatabaseDataSource(contentNestedDataSerializerFactory),
-                Factory.GetInstance<IGlobalSettings>(),
+                new DatabaseDataSource(nestedContentDataSerializerFactory),
+                globalSettings,
                 Factory.GetInstance<IEntityXmlSerializer>(),
                 Mock.Of<IPublishedModelFactory>(),
                 new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }), 

@@ -13,16 +13,22 @@ namespace Umbraco.Web.PublishedCache.NuCache
         IDisposable
     {
         /// <summary>
-        /// Whether the files exist in the local filesystem
+        /// Conditionally removes a key/value pair from the dictionary via an implementation
         /// </summary>
-        /// <returns></returns>
-        bool LocalFilesExist();
+        /// <param name="key">Key to remove</param>
+        /// <param name="value">Removed Value</param>
+        /// <returns>Removed</returns>
+        bool TryRemove(TKey key, out TValue value);
 
         /// <summary>
-        /// Delete the local files
+        /// Whether the dictionary has been populated
         /// </summary>
-        void DeleteLocalFiles();
-        bool TryRemove(TKey key, out TValue unused);
+        /// <returns></returns>
+        bool IsPopulated();
+
+        /// <summary>
+        /// Drop the database
+        /// </summary>
+        void Drop();
     }
-    
 }

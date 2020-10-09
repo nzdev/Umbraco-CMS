@@ -1,9 +1,11 @@
-﻿namespace Umbraco.Web.PublishedCache
+﻿using System;
+
+namespace Umbraco.Web.PublishedCache
 {
     /// <summary>
     /// Router for content ids
     /// </summary>
-    public interface IContentRouter
+    public interface IContentRouter : IDisposable
     {
         /// <summary>
         /// Gets content id identified by a route.

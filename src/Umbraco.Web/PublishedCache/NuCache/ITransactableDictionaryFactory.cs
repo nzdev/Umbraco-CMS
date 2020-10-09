@@ -8,6 +8,19 @@ namespace Umbraco.Web.PublishedCache.NuCache
 {
     public interface ITransactableDictionaryFactory
     {
-        ITransactableDictionary<int, ContentNodeKit> Create(string filepath, bool exists);
+        ITransactableDictionary<int, ContentNodeKit> Get(ContentCacheEntityType entityType);
+
+        /// <summary>
+        /// Ensures that the ITransactableDictionaryFactory has the proper environment to run.
+        /// </summary>
+        /// <param name="errors">The errors, if any.</param>
+        /// <returns>A value indicating whether the ITransactableDictionaryFactory has the proper environment to run.</returns>
+        bool EnsureEnvironment(out IEnumerable<string> errors);
+
+        /// <summary>
+        /// Whether the dictionary has been populated
+        /// </summary>
+        /// <returns></returns>
+        bool IsPopulated(ContentCacheEntityType entityType);
     }
 }

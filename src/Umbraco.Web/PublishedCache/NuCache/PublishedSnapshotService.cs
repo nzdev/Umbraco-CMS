@@ -61,8 +61,6 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         private ITransactableDictionary<int,ContentNodeKit> _localContentDb;
         private ITransactableDictionary<int, ContentNodeKit> _localMediaDb;
-        private bool _localContentDbExists;
-        private bool _localMediaDbExists;
 
         // define constant - determines whether to use cache when previewing
         // to store eg routes, property converted values, anything - caching
@@ -102,8 +100,8 @@ namespace Umbraco.Web.PublishedCache.NuCache
             _defaultCultureAccessor = defaultCultureAccessor;
             _globalSettings = globalSettings;
             _urlSegmentProviders = urlSegmentProviders;
-            _contentCacheDataSerializerFactory = contentCacheDataSerializerFactory;
             _transactableDictionaryFactory = transactableDictionaryFactory;
+            _contentCacheDataSerializerFactory = contentCacheDataSerializerFactory;
             _contentRouter = contentRouter;
 
             // we need an Xml serializer here so that the member cache can support XPath,
@@ -138,9 +136,9 @@ namespace Umbraco.Web.PublishedCache.NuCache
                     // stores need to be populated, happens in OnResolutionFrozen which uses _localDbExists to
                     // figure out whether it can read the databases or it should populate them from sql
 
-                    _logger.Info<PublishedSnapshotService>("Creating the content store, localContentDbExists? {LocalContentDbExists}", _localContentDbExists);
+                    _logger.Info<PublishedSnapshotService>("Creating the content store, localContentDbExists? {LocalContentDbExists}", _localContentDb.IsPopulated());
                     _contentStore = new ContentStore(publishedSnapshotAccessor, variationContextAccessor, logger, _localContentDb);
-                    _logger.Info<PublishedSnapshotService>("Creating the media store, localMediaDbExists? {LocalMediaDbExists}", _localMediaDbExists);
+                    _logger.Info<PublishedSnapshotService>("Creating the media store, localMediaDbExists? {LocalMediaDbExists}", _localContentDb.IsPopulated());
                     _mediaStore = new ContentStore(publishedSnapshotAccessor, variationContextAccessor, logger, _localMediaDb);
                 }
                 else
@@ -178,20 +176,11 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// </remarks>
         private void MainDomRegister()
         {
+            // if both local databases exist then Get will open them, else new databases will be created
+            _localContentDb = _transactableDictionaryFactory.Get(ContentCacheEntityType.Document);
+            _localMediaDb = _transactableDictionaryFactory.Get(ContentCacheEntityType.Document);
 
-            // if both local databases exist then GetTree will open them, else new databases will be created
-            var path = GetLocalFilesPath();
-
-            var localContentDbPath = Path.Combine(path, "NuCache.Content.db");
-            _localContentDbExists = File.Exists(localContentDbPath);
-
-            _localContentDb = _transactableDictionaryFactory.Create(localContentDbPath, _localContentDbExists);
-
-            var localMediaDbPath = Path.Combine(path, "NuCache.Media.db");
-            _localMediaDbExists = File.Exists(localMediaDbPath);
-            _localMediaDb = _transactableDictionaryFactory.Create(localMediaDbPath, _localMediaDbExists);
-
-            _logger.Info<PublishedSnapshotService>("Registered with MainDom, localContentDbExists? {LocalContentDbExists}, localMediaDbExists? {LocalMediaDbExists}", _localContentDbExists, _localMediaDbExists);
+            _logger.Info<PublishedSnapshotService>("Registered with MainDom, localContentDbExists? {LocalContentDbExists}, localMediaDbExists? {LocalMediaDbExists}", _localContentDb.IsPopulated(), _localMediaDb.IsPopulated());
         }
 
         /// <summary>
@@ -229,14 +218,14 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
             try
             {
-                if (_localContentDbExists)
-                {
+                if ((_localContentDb != null && _localContentDb.IsPopulated()) || _transactableDictionaryFactory.IsPopulated(ContentCacheEntityType.Document))
+                    {
                     okContent = LockAndLoadContent(scope => LoadContentFromLocalDbLocked(true));
                     if (!okContent)
                         _logger.Warn<PublishedSnapshotService>("Loading content from local db raised warnings, will reload from database.");
                 }
 
-                if (_localMediaDbExists)
+                if ((_localMediaDb  != null && _localMediaDb.IsPopulated()) || _transactableDictionaryFactory.IsPopulated(ContentCacheEntityType.Media))
                 {
                     okMedia = LockAndLoadMedia(scope => LoadMediaFromLocalDbLocked(true));
                     if (!okMedia)
@@ -309,6 +298,8 @@ namespace Umbraco.Web.PublishedCache.NuCache
         public override void Dispose()
         {
             TearDownRepositoryEvents();
+            _localContentDb?.Dispose();
+            _localMediaDb?.Dispose();
             base.Dispose();
         }
 
@@ -316,30 +307,18 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         #region Local files
 
-        private string GetLocalFilesPath()
-        {
-            var path = Path.Combine(_globalSettings.LocalTempPath, "NuCache");
-
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-
-            return path;
-        }
-
         private void DeleteLocalFilesForContent()
         {
             if (_isReady && _localContentDb != null)
                 throw new InvalidOperationException("Cannot delete local files while the cache uses them.");
-
-            _localContentDb.DeleteLocalFiles();
+            _localContentDb.Drop();
         }
 
         private void DeleteLocalFilesForMedia()
         {
             if (_isReady && _localMediaDb != null)
                 throw new InvalidOperationException("Cannot delete local files while the cache uses them.");
-
-            _localMediaDb.DeleteLocalFiles();
+            _localMediaDb.Drop();
         }
 
         #endregion
@@ -348,10 +327,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         public override bool EnsureEnvironment(out IEnumerable<string> errors)
         {
-            // must have app_data and be able to write files into it
-            var ok = FilePermissionHelper.TryCreateDirectory(GetLocalFilesPath());
-            errors = ok ? Enumerable.Empty<string>() : new[] { "NuCache local files." };
-            return ok;
+           return _transactableDictionaryFactory.EnsureEnvironment(out errors);
         }
 
         #endregion

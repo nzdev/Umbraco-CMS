@@ -1,25 +1,24 @@
 ﻿using CSharpTest.Net.Collections;
-using CSharpTest.Net.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Umbraco.Web.PublishedCache.NuCache
 {
     public class BPlusTreeTransactableDictionary<TKey, TValue> : ITransactableDictionary<TKey, TValue>
     {
         private readonly BPlusTree<TKey, TValue> _bplusTree;
-        private readonly string _filePath;
         private bool _disposedValue;
+        private readonly string _filePath;
+        private bool _isPopulated;
 
-        public BPlusTreeTransactableDictionary(BPlusTree<TKey, TValue> bplusTree,string filePath)
+        public BPlusTreeTransactableDictionary(BPlusTree<TKey, TValue> bplusTree, string filePath,bool localDbCacheFileExists)
         {
             _bplusTree = bplusTree;
             _filePath = filePath;
+            _isPopulated = localDbCacheFileExists;
         }
 
         #region IDictionary
@@ -87,15 +86,11 @@ namespace Umbraco.Web.PublishedCache.NuCache
         #endregion
 
         #region ITransactable
-        public void Commit()
+        public ITransactionScope BeginTransaction()
         {
-            _bplusTree.Commit();
+            return new BPlusTreeTransactionScope<TKey,TValue>(_bplusTree);
         }
 
-        public void Rollback()
-        {
-            _bplusTree.Rollback();
-        }
         #endregion
 
         #region IEnumerable
@@ -127,92 +122,20 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         #endregion
 
-        #region IConcurrentDictionary<TKey,TValue>
-
-        public TValue GetOrAdd(TKey key, Converter<TKey, TValue> fnCreate)
-        {
-            return _bplusTree.GetOrAdd(key, fnCreate);
-        }
-
-        public TValue AddOrUpdate(TKey key, TValue addValue, KeyValueUpdate<TKey, TValue> fnUpdate)
-        {
-            return _bplusTree.AddOrUpdate(key, addValue, fnUpdate);
-        }
-
-        public TValue AddOrUpdate(TKey key, Converter<TKey, TValue> fnCreate, KeyValueUpdate<TKey, TValue> fnUpdate)
-        {
-            return _bplusTree.AddOrUpdate(key, fnCreate, fnUpdate);
-        }
-
-        public bool AddOrUpdate<T>(TKey key, ref T createOrUpdateValue) where T : ICreateOrUpdateValue<TKey, TValue>
-        {
-            return _bplusTree.AddOrUpdate(key, ref createOrUpdateValue);
-        }
-
-        public bool TryAdd(TKey key, Converter<TKey, TValue> fnCreate)
-        {
-            return _bplusTree.TryAdd(key, fnCreate);
-        }
-
-        public bool TryUpdate(TKey key, KeyValueUpdate<TKey, TValue> fnUpdate)
-        {
-            return _bplusTree.TryUpdate(key, fnUpdate);
-        }
-
-        public bool TryRemove(TKey key, KeyValuePredicate<TKey, TValue> fnCondition)
-        {
-            return _bplusTree.TryRemove(key, fnCondition);
-        }
-
-        public bool TryRemove<T>(TKey key, ref T removeValue) where T : IRemoveValue<TKey, TValue>
-        {
-            return _bplusTree.TryRemove(key, ref removeValue);
-        }
-
-        public TValue GetOrAdd(TKey key, TValue value)
-        {
-            return _bplusTree.GetOrAdd(key, value);
-        }
-
-        public bool TryAdd(TKey key, TValue value)
-        {
-            return _bplusTree.TryAdd(key, value);
-        }
-
-        public bool TryUpdate(TKey key, TValue value)
-        {
-            return _bplusTree.TryUpdate(key, value);
-        }
-
-        public bool TryUpdate(TKey key, TValue value, TValue comparisonValue)
-        {
-            return _bplusTree.TryUpdate(key, value, comparisonValue);
-        }
+        #region ITransactableDictionary<TKey,TValue>
 
         public bool TryRemove(TKey key, out TValue value)
         {
             return _bplusTree.TryRemove(key, out value);
         }
-
         #endregion
 
-        #region ITransactableDictionary
-
-        public bool LocalFilesExist()
-        {
-            return File.Exists(_filePath);
-        }
-
-        public void DeleteLocalFiles()
+        public void Drop()
         {
             if (File.Exists(_filePath))
                 File.Delete(_filePath);
         }
 
-        public void BeginTransaction()
-        {
-        }
-
-        #endregion
+        public bool IsPopulated() => _isPopulated;
     }
 }

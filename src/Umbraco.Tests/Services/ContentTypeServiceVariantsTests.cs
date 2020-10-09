@@ -52,7 +52,8 @@ namespace Umbraco.Tests.Services
             var documentRepository = Factory.GetInstance<IDocumentRepository>();
             var mediaRepository = Mock.Of<IMediaRepository>();
             var memberRepository = Mock.Of<IMemberRepository>();
-
+            var globalSettings = Factory.GetInstance<IGlobalSettings>();
+            ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory(globalSettings);
             var nestedContentDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
             ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory();
             var contentRouter = new ContentCacheContentRouter(Factory.GetInstance<IGlobalSettings>());
@@ -71,7 +72,7 @@ namespace Umbraco.Tests.Services
                 documentRepository, mediaRepository, memberRepository,
                 DefaultCultureAccessor,
                 new DatabaseDataSource(nestedContentDataSerializerFactory),
-                Factory.GetInstance<IGlobalSettings>(),
+                globalSettings,
                 Factory.GetInstance<IEntityXmlSerializer>(),
                 Mock.Of<IPublishedModelFactory>(),
                 new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }),

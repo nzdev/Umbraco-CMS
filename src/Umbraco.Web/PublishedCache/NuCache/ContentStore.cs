@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CSharpTest.Net.Collections;
 using Umbraco.Core;
 using Umbraco.Core.Exceptions;
 using Umbraco.Core.Logging;
@@ -185,16 +184,19 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 }
                 else if (_localDb != null && _wchanges != null)
                 {
-                    _localDb.BeginTransaction();
-                    foreach (var change in _wchanges)
+                    using (var transaction = _localDb.BeginTransaction())
                     {
-                        if (change.Value.IsNull)
-                            _localDb.TryRemove(change.Key, out ContentNodeKit unused);
-                        else
-                            _localDb[change.Key] = change.Value;
+                        foreach (var change in _wchanges)
+                        {
+                            if (change.Value.IsNull)
+                                _localDb.TryRemove(change.Key, out ContentNodeKit unused);
+                            else
+                                _localDb[change.Key] = change.Value;
+                        }
+                        _wchanges = null;
+                        transaction.Commit();
                     }
-                    _wchanges = null;
-                    _localDb.Commit();
+                        
                 }
             }
             finally

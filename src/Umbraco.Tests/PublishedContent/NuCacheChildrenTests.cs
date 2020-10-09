@@ -139,8 +139,7 @@ namespace Umbraco.Tests.PublishedContent
             _contentNestedDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
 
             var contentRouter = new ContentCacheContentRouter(globalSettings);
-
-            ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory();
+            ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory(globalSettings);
             // at last, create the complete NuCache snapshot service!
             var options = new PublishedSnapshotServiceOptions { IgnoreLocalDb = true };
             _snapshotService = new PublishedSnapshotService(options,

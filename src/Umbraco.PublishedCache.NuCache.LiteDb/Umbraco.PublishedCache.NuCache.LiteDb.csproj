@@ -48,9 +48,12 @@
   <ItemGroup>
     <Compile Include="Composing\LiteDbNuCacheComponent.cs" />
     <Compile Include="Composing\LiteDbNuCacheComposer.cs" />
-    <Compile Include="LiteDbTransactableDictionary.cs" />
-    <Compile Include="LiteDbTransactableDictionaryFactory.cs" />
+    <Compile Include="DocumentCaching\LiteDbTransactableDictionary.cs" />
+    <Compile Include="DocumentCaching\LiteDbTransactableDictionaryFactory.cs" />
+    <Compile Include="DocumentCaching\NuCacheMapper.cs" />
+    <Compile Include="LiteDbContentSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Routing\LiteDbContentCacheContentRouter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Umbraco.Core\Umbraco.Core.csproj">
