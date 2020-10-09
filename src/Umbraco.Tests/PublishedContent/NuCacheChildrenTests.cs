@@ -5,6 +5,7 @@ using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Umbraco.Core;
+using Umbraco.Core.Cache;
 using Umbraco.Core.Composing;
 using Umbraco.Core.Configuration;
 using Umbraco.Core.Events;
@@ -137,6 +138,8 @@ namespace Umbraco.Tests.PublishedContent
             _source = new TestDataSource(kits());
             _contentNestedDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
 
+            var contentRouter = new ContentCacheContentRouter(globalSettings);
+
             ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory();
             // at last, create the complete NuCache snapshot service!
             var options = new PublishedSnapshotServiceOptions { IgnoreLocalDb = true };
@@ -160,7 +163,8 @@ namespace Umbraco.Tests.PublishedContent
                 Mock.Of<IPublishedModelFactory>(),
                 new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }),
                 transactableDictionaryFactory,
-                _contentNestedDataSerializerFactory);
+                _contentNestedDataSerializerFactory,
+                contentRouter);
 
             // invariant is the current default
             _variationAccesor.VariationContext = new VariationContext();

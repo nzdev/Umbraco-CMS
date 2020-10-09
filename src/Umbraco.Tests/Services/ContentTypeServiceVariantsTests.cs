@@ -55,6 +55,8 @@ namespace Umbraco.Tests.Services
 
             var nestedContentDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
             ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory();
+            var contentRouter = new ContentCacheContentRouter(Factory.GetInstance<IGlobalSettings>());
+
             return new PublishedSnapshotService(
                 options,
                 null,
@@ -74,7 +76,7 @@ namespace Umbraco.Tests.Services
                 Mock.Of<IPublishedModelFactory>(),
                 new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }),
                 transactableDictionaryFactory,
-                nestedContentDataSerializerFactory);
+                nestedContentDataSerializerFactory, contentRouter);
         }
 
         public class LocalServerMessenger : ServerMessengerBase
