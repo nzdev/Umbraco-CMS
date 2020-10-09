@@ -16,9 +16,6 @@ namespace Umbraco.PublishedCache.NuCache.LiteDb.Composing
         public void Initialize()
         {
           
-            //.Ignore(x => x.Node) // ignore this property (do not store)
-
-            ;
         }
 
        

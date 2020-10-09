@@ -132,8 +132,8 @@
     <Compile Include="Migrations\Upgrade\V_8_0_0\Models\ContentTypeDto80.cs" />
     <Compile Include="Migrations\Upgrade\V_8_0_0\Models\PropertyDataDto80.cs" />
     <Compile Include="Migrations\Upgrade\V_8_0_0\Models\PropertyTypeDto80.cs" />
-    <Compile Include="Migrations\Upgrade\V_8_9_0\AddCmsContentNuByteColumn.cs" />
-    <Compile Include="Migrations\Upgrade\V_8_9_0\UpgradedIncludeIndexes.cs" />
+    <Compile Include="Migrations\Upgrade\V_8_10_0\AddCmsContentNuByteColumn.cs" />
+    <Compile Include="Migrations\Upgrade\V_8_10_0\UpgradedIncludeIndexes.cs" />
     <Compile Include="Migrations\Upgrade\V_8_8_0\ExternalLoginTableUserData.cs" />
     <Compile Include="Models\Blocks\BlockEditorDataConverter.cs" />
     <Compile Include="Models\Blocks\BlockEditorData.cs" />
@@ -1633,6 +1633,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Auditing\" />
+    <Folder Include="Migrations\Upgrade\V_8_9_0\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

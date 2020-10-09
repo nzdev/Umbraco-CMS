@@ -7,7 +7,8 @@ using Umbraco.Core.Migrations.Upgrade.V_8_0_0;
 using Umbraco.Core.Migrations.Upgrade.V_8_0_1;
 using Umbraco.Core.Migrations.Upgrade.V_8_1_0;
 using Umbraco.Core.Migrations.Upgrade.V_8_6_0;
-using Umbraco.Core.Migrations.Upgrade.V_8_9_0;
+using Umbraco.Core.Migrations.Upgrade.V_8_8_0;
+using Umbraco.Core.Migrations.Upgrade.V_8_10_0;
 
 namespace Umbraco.Core.Migrations.Upgrade
 {
