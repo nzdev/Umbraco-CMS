@@ -8,7 +8,7 @@ using Umbraco.Web.Composing;
 
 namespace Umbraco.Web.Install
 {
-    internal class FilePermissionHelper
+    public class FilePermissionHelper
     {
         // ensure that these directories exist and Umbraco can write to them
         private static readonly string[] PermissionDirs = { SystemDirectories.Css, SystemDirectories.Config, SystemDirectories.Data, SystemDirectories.Media, SystemDirectories.Preview };

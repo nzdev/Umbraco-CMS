@@ -14,9 +14,9 @@ namespace Umbraco.Web.PublishedCache.NuCache
     public class BPlusTreeTransactableDictionaryFactory : ITransactableDictionaryFactory
     {
         private readonly IGlobalSettings _globalSettings;
-        private readonly ISerializer<ContentData> _contentDataSerializer;
+        private readonly ISerializer<ContentNodeKit> _contentDataSerializer;
 
-        public BPlusTreeTransactableDictionaryFactory(IGlobalSettings globalSettings,ISerializer<ContentData> contentDataSerializer = null)
+        public BPlusTreeTransactableDictionaryFactory(IGlobalSettings globalSettings,ISerializer<ContentNodeKit> contentDataSerializer = null)
         {
             _globalSettings = globalSettings;
             _contentDataSerializer = contentDataSerializer;
@@ -29,11 +29,11 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 case ContentCacheEntityType.Document:
                     var localContentDbPath = GetContentDbPath();
                     var localContentCacheFilesExist = File.Exists(localContentDbPath);
-                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localContentDbPath, localContentCacheFilesExist, _contentDataSerializer), localContentDbPath, localContentCacheFilesExist);
+                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localContentDbPath, localContentCacheFilesExist, _contentDataSerializer), localContentDbPath);
                 case ContentCacheEntityType.Media:
                     var localMediaDbPath = GetMediaDbPath();
                      var localMediaCacheFilesExist = File.Exists(localMediaDbPath);
-                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localMediaDbPath, localMediaCacheFilesExist, _contentDataSerializer), localMediaDbPath, localMediaCacheFilesExist);
+                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localMediaDbPath, localMediaCacheFilesExist, _contentDataSerializer), localMediaDbPath);
                 case ContentCacheEntityType.Member:
                     throw new ArgumentException("Unsupported Entity Type", nameof(entityType));
                 default:

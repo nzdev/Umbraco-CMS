@@ -21,6 +21,7 @@ namespace Umbraco.PublishedCache.NuCache.LiteDb.Composing
         {
             base.Compose(composition);
 
+            composition.Register<LiteDbTransactableDictionaryFactory, LiteDbTransactableDictionaryFactory>(Lifetime.Singleton);
             composition.Register<ITransactableDictionaryFactory, LiteDbTransactableDictionaryFactory>(Lifetime.Singleton);
 
             BsonMapper.Global.RegisterType<ContentNodeKit>
@@ -32,12 +33,23 @@ namespace Umbraco.PublishedCache.NuCache.LiteDb.Composing
                   }
               );
 
-            composition.Register<IContentRouter, LiteDbContentCacheContentRouter>(Lifetime.Singleton);
-            composition.Register<LiteDbContentSettings>((f) => new LiteDbContentSettings()
+            
+            composition.Register<LiteDbContentSettings>((f) =>
             {
-                 
+                var liteDbNuCacheFactory = f.GetInstance<LiteDbTransactableDictionaryFactory>();
+                var liteDbSettings = new LiteDbContentSettings()
+                {
+                    ConnectionString = new ConnectionString()
+                    {
+                        Filename = liteDbNuCacheFactory.GetContentDbPath(),
+                        ReadOnly = true
+                    },
+                    CollectionName = liteDbNuCacheFactory.ContentCollectionName()
+                };
+                return liteDbSettings;
             }, Lifetime.Singleton);
+            composition.Register<IContentRouter, LiteDbContentCacheContentRouter>(Lifetime.Singleton);
         }
-       
+
     }
 }

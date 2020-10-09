@@ -12,12 +12,19 @@ namespace Umbraco.PublishedCache.NuCache.LiteDb
 {
     public class LiteDbTransactableDictionary<Tkey, TValue> : ITransactableDictionary<Tkey, TValue> where TValue : IKey<Tkey>
     {
-        private readonly string _connectionString;
+        private readonly ConnectionString _connectionString;
         private readonly string _collectionName;
         private readonly bool _isReadOnly;
         private LiteDatabase _db;
 
         public LiteDbTransactableDictionary(string connectionString, string collectionName, bool isReadOnly = false)
+        {
+            _connectionString = new ConnectionString(connectionString);
+            _collectionName = collectionName;
+            _isReadOnly = isReadOnly;
+            _db = new LiteDatabase(_connectionString, BsonMapper.Global);
+        }
+        public LiteDbTransactableDictionary(ConnectionString connectionString, string collectionName, bool isReadOnly = false)
         {
             _connectionString = connectionString;
             _collectionName = collectionName;

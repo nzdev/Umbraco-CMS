@@ -211,7 +211,7 @@ namespace Umbraco.Tests.PublishedContent
                 Mock.Of<IPublishedModelFactory>(),
                 new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }),
                 transactableDictionaryFactory,
-                _contentNestedDataSerializerFactory), contentRouter);
+                _contentNestedDataSerializerFactory, contentRouter);
 
             // invariant is the current default
             _variationAccesor.VariationContext = new VariationContext();
