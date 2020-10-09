@@ -29,11 +29,11 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 case ContentCacheEntityType.Document:
                     var localContentDbPath = GetContentDbPath();
                     var localContentCacheFilesExist = File.Exists(localContentDbPath);
-                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localContentDbPath, localContentCacheFilesExist, _contentDataSerializer), localContentDbPath);
+                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localContentDbPath, localContentCacheFilesExist, _contentDataSerializer), localContentDbPath, localContentCacheFilesExist);
                 case ContentCacheEntityType.Media:
                     var localMediaDbPath = GetMediaDbPath();
                      var localMediaCacheFilesExist = File.Exists(localMediaDbPath);
-                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localMediaDbPath, localMediaCacheFilesExist, _contentDataSerializer), localMediaDbPath);
+                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localMediaDbPath, localMediaCacheFilesExist, _contentDataSerializer), localMediaDbPath, localMediaCacheFilesExist);
                 case ContentCacheEntityType.Member:
                     throw new ArgumentException("Unsupported Entity Type", nameof(entityType));
                 default:

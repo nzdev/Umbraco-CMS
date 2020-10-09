@@ -55,7 +55,6 @@ namespace Umbraco.Tests.Services
             var globalSettings = Factory.GetInstance<IGlobalSettings>();
             ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory(globalSettings);
             var nestedContentDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
-            ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory();
             var contentRouter = new ContentCacheContentRouter(Factory.GetInstance<IGlobalSettings>());
 
             return new PublishedSnapshotService(

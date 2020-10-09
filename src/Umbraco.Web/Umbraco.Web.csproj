@@ -266,6 +266,7 @@
     <Compile Include="PropertyEditors\ComplexEditorValidator.cs" />
     <Compile Include="PropertyEditors\ParameterEditors\MultipleMediaPickerParameterEditor.cs" />
     <Compile Include="PropertyEditors\RichTextEditorPastedImages.cs" />
+    <Compile Include="PublishedCache\NuCache\BPlusTreeTransactableDictionaryFactory.cs" />
     <Compile Include="PublishedCache\NuCache\DataSource\IContentData.cs" />
     <Compile Include="PublishedCache\NuCache\ContentCacheEntityType.cs" />
     <Compile Include="PublishedCache\NuCache\DataSource\ContentCacheDataSerializationResult.cs" />
@@ -285,7 +286,6 @@
     <Compile Include="PropertyEditors\Validation\ValidationResultConverter.cs" />
     <Compile Include="PropertyEditors\ValueConverters\BlockEditorConverter.cs" />
     <Compile Include="PropertyEditors\ValueConverters\BlockListPropertyValueConverter.cs" />
-    <Compile Include="PublishedCache\NuCache\BPlusTreeTransactableDictionaryFactory.cs" />
     <Compile Include="PublishedCache\NuCache\BPlusTreeTransactableDictionary.cs" />
     <Compile Include="PublishedCache\NuCache\IKey.cs" />
     <Compile Include="PublishedCache\NuCache\ITransactable.cs" />
@@ -296,7 +296,6 @@
     <Compile Include="PublishedCache\IContentRouter.cs" />
     <Compile Include="PublishedCache\ContentRoutingResult.cs" />
     <Compile Include="PublishedCache\IPublishedSnapshotAccessor.cs" />
-    <Compile Include="PublishedCache\NuCache\BPlusTreeTransactableDictionaryFactory.cs" />
     <Compile Include="PublishedCache\NuCache\BPlusTreeTransactableDictionary.cs" />
     <Compile Include="PublishedCache\NuCache\ITransactable.cs" />
     <Compile Include="PublishedCache\NuCache\ITransactableDictionary.cs" />
