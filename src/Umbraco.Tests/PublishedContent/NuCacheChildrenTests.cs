@@ -1376,7 +1376,7 @@ namespace Umbraco.Tests.PublishedContent
             var items = snapshot.Content.GetByXPath("/root/itype");
             Assert.AreEqual(items.Count(), items.Count());
         }
-        private void AssertLinkedNode(ContentNode node, int parent, int prevSibling, int nextSibling, int firstChild, int lastChild)
+        private void AssertLinkedNode(IContentNode node, int parent, int prevSibling, int nextSibling, int firstChild, int lastChild)
         {
             Assert.AreEqual(parent, node.ParentContentId);
             Assert.AreEqual(prevSibling, node.PreviousSiblingContentId);

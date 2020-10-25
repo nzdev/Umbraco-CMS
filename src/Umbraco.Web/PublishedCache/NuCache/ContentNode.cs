@@ -88,13 +88,17 @@ namespace Umbraco.Web.PublishedCache.NuCache
         {
             var origin = this;
             var cn = new ContentNode(origin.Id, origin.Uid, contentType ?? origin.ContentType,
-                origin.Level, origin.Path, origin.SortOrder, origin.ParentContentId, origin.CreateDate, origin.CreatorId, origin._draftData,
-                origin._publishedData, origin._publishedSnapshotAccessor, _variationContextAccessor);
+                origin.Level, origin.Path, origin.SortOrder, origin.ParentContentId, origin.CreateDate, origin.CreatorId);
 
             cn.FirstChildContentId = origin.FirstChildContentId;
             cn.LastChildContentId = origin.LastChildContentId;
             cn.NextSiblingContentId = origin.NextSiblingContentId;
             cn.PreviousSiblingContentId = origin.PreviousSiblingContentId;
+            cn._draftData = origin._draftData;
+            cn._publishedData = origin._publishedData;
+            cn._publishedSnapshotAccessor = origin._publishedSnapshotAccessor;
+            cn._variationContextAccessor = origin._variationContextAccessor;
+
             return cn;
         }
         // clone
