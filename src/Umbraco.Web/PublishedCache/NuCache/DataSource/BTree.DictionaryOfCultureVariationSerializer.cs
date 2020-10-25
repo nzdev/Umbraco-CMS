@@ -9,16 +9,16 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
     /// <summary>
     /// Serializes/Deserializes culture variant data as a dictionary for BTree
     /// </summary>
-    internal class DictionaryOfCultureVariationSerializer : SerializerBase, ISerializer<IReadOnlyDictionary<string, CultureVariation>>
+    internal class DictionaryOfCultureVariationSerializer : SerializerBase, ISerializer<IReadOnlyDictionary<string, ICultureVariation>>
     {
-        public IReadOnlyDictionary<string, CultureVariation> ReadFrom(Stream stream)
+        public IReadOnlyDictionary<string, ICultureVariation> ReadFrom(Stream stream)
         {
             // read variations count
             var pcount = PrimitiveSerializer.Int32.ReadFrom(stream);
             if (pcount == 0) return Empty;
 
             // read each variation
-            var dict = new Dictionary<string, CultureVariation>(StringComparer.InvariantCultureIgnoreCase);
+            var dict = new Dictionary<string, ICultureVariation>(StringComparer.InvariantCultureIgnoreCase);
             for (var i = 0; i < pcount; i++)
             {
                 var languageId = string.Intern(PrimitiveSerializer.String.ReadFrom(stream));
@@ -33,9 +33,9 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             return dict;
         }
 
-        private static readonly IReadOnlyDictionary<string, CultureVariation> Empty = new Dictionary<string, CultureVariation>();
+        private static readonly IReadOnlyDictionary<string, ICultureVariation> Empty = new Dictionary<string, ICultureVariation>();
 
-        public void WriteTo(IReadOnlyDictionary<string, CultureVariation> value, Stream stream)
+        public void WriteTo(IReadOnlyDictionary<string, ICultureVariation> value, Stream stream)
         {
             var variations = value ?? Empty;
 

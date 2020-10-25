@@ -14,14 +14,14 @@ namespace Umbraco.Web.PublishedCache.NuCache
     internal class PublishedContent : PublishedContentBase
     {
         private readonly IPublishedSnapshotAccessor _publishedSnapshotAccessor;
-        private readonly ContentNode _contentNode;
+        private readonly IContentNode _contentNode;
         private readonly string _urlSegment;
 
         #region Constructors
 
         public PublishedContent(
-            ContentNode contentNode,
-            ContentData contentData,
+            IContentNode contentNode,
+            IContentData contentData,
             IPublishedSnapshotAccessor publishedSnapshotAccessor,
             IVariationContextAccessor variationContextAccessor)
         {
@@ -67,7 +67,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         }
 
         // used when cloning in ContentNode
-        public PublishedContent(ContentNode contentNode, PublishedContent origin)
+        public PublishedContent(IContentNode contentNode, PublishedContent origin)
         {
             _contentNode = contentNode;
             _publishedSnapshotAccessor = origin._publishedSnapshotAccessor;
@@ -142,7 +142,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         #region PublishedContent
 
-        internal ContentData ContentData { get; }
+        internal IContentData ContentData { get; }
 
         /// <inheritdoc />
         public override int Id => _contentNode.Id;

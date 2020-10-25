@@ -55,6 +55,7 @@ namespace Umbraco.Tests.Services
             var globalSettings = Factory.GetInstance<IGlobalSettings>();
             ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory(globalSettings);
             var nestedContentDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
+            var contentStoreFactory = new ContentStoreFactory();
 
             return new PublishedSnapshotService(
                 options,
@@ -75,7 +76,8 @@ namespace Umbraco.Tests.Services
                 Mock.Of<IPublishedModelFactory>(),
                 new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }),
                 transactableDictionaryFactory,
-                nestedContentDataSerializerFactory);
+                nestedContentDataSerializerFactory,
+                contentStoreFactory);
         }
 
         public class LocalServerMessenger : ServerMessengerBase

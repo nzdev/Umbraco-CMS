@@ -43,7 +43,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         { }
 
         // initializes a published content property with a value
-        public Property(IPublishedPropertyType propertyType, PublishedContent content, PropertyData[] sourceValues, IPublishedSnapshotAccessor publishedSnapshotAccessor, PropertyCacheLevel referenceCacheLevel = PropertyCacheLevel.Element)
+        public Property(IPublishedPropertyType propertyType, PublishedContent content, IPropertyData[] sourceValues, IPublishedSnapshotAccessor publishedSnapshotAccessor, PropertyCacheLevel referenceCacheLevel = PropertyCacheLevel.Element)
             : base(propertyType, referenceCacheLevel)
         {
             if (sourceValues != null)

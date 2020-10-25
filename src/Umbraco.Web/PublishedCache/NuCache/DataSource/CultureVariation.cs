@@ -8,7 +8,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
     /// Represents the culture variation information on a content item
     /// </summary>
     [DataContract] // NOTE: Use DataContract annotations here to control how MessagePack serializes/deserializes the data to use INT keys
-    public class CultureVariation
+    public class CultureVariation : ICultureVariation
     {
         [DataMember(Order = 0)]
         [JsonProperty("nm")]

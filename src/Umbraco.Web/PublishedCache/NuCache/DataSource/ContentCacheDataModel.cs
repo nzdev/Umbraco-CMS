@@ -17,12 +17,12 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
         [DataMember(Order = 0)]
         [JsonProperty("pd")]
         [JsonConverter(typeof(AutoInterningStringKeyCaseInsensitiveDictionaryConverter<PropertyData[]>))]
-        public Dictionary<string, PropertyData[]> PropertyData { get; set; }
+        public Dictionary<string, IPropertyData[]> PropertyData { get; set; }
 
         [DataMember(Order = 1)]
         [JsonProperty("cd")]
         [JsonConverter(typeof(AutoInterningStringKeyCaseInsensitiveDictionaryConverter<CultureVariation>))]
-        public Dictionary<string, CultureVariation> CultureData { get; set; }
+        public Dictionary<string, ICultureVariation> CultureData { get; set; }
 
         [DataMember(Order = 2)]
         [JsonProperty("us")]
@@ -32,12 +32,12 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
         [IgnoreDataMember]
         [JsonProperty("properties")]
         [JsonConverter(typeof(CaseInsensitiveDictionaryConverter<PropertyData[]>))]
-        private Dictionary<string, PropertyData[]> LegacyPropertyData { set { PropertyData = value; } }
+        private Dictionary<string, IPropertyData[]> LegacyPropertyData { set { PropertyData = value; } }
 
         [IgnoreDataMember]
         [JsonProperty("cultureData")]
         [JsonConverter(typeof(CaseInsensitiveDictionaryConverter<CultureVariation>))]
-        private Dictionary<string, CultureVariation> LegacyCultureData { set { CultureData = value; } }
+        private Dictionary<string, ICultureVariation> LegacyCultureData { set { CultureData = value; } }
 
         [IgnoreDataMember]
         [JsonProperty("urlSegment")]

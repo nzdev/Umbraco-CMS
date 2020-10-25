@@ -139,6 +139,7 @@ namespace Umbraco.Tests.PublishedContent
             ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory(globalSettings);
             // at last, create the complete NuCache snapshot service!
             var options = new PublishedSnapshotServiceOptions { IgnoreLocalDb = true };
+            var contentStoreFactory = new ContentStoreFactory();
             _snapshotService = new PublishedSnapshotService(options,
                 null,
                 runtime,
@@ -159,7 +160,8 @@ namespace Umbraco.Tests.PublishedContent
                 Mock.Of<IPublishedModelFactory>(),
                 new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }),
                 transactableDictionaryFactory,
-                _contentNestedDataSerializerFactory);
+                _contentNestedDataSerializerFactory,
+                contentStoreFactory);
 
             // invariant is the current default
             _variationAccesor.VariationContext = new VariationContext();
@@ -228,8 +230,8 @@ namespace Umbraco.Tests.PublishedContent
                 VersionId = 1,
                 VersionDate = now,
                 WriterId = 0,
-                Properties = new Dictionary<string, PropertyData[]>(),
-                CultureInfos = new Dictionary<string, CultureVariation>()
+                Properties = new Dictionary<string, IPropertyData[]>(),
+                CultureInfos = new Dictionary<string, ICultureVariation>()
             };
 
             return new ContentNodeKit
@@ -263,12 +265,12 @@ namespace Umbraco.Tests.PublishedContent
             yield return CreateVariantKit(12, 4, 2, paths);
         }
 
-        private static Dictionary<string, CultureVariation> GetCultureInfos(int id, DateTime now)
+        private static Dictionary<string, ICultureVariation> GetCultureInfos(int id, DateTime now)
         {
             var en = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
             var fr = new[] { 1, 3, 4, 6, 7, 9, 10, 12 };
 
-            var infos = new Dictionary<string, CultureVariation>();
+            var infos = new Dictionary<string, ICultureVariation>();
             if (en.Contains(id))
                 infos["en-US"] = new CultureVariation { Name = "N" + id + "-" + "en-US", Date = now, IsDraft = false };
             if (fr.Contains(id))
@@ -298,7 +300,7 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
+                    Properties = new Dictionary<string, IPropertyData[]>(),
                     CultureInfos = GetCultureInfos(id, now)
                 }
             };
@@ -308,12 +310,12 @@ namespace Umbraco.Tests.PublishedContent
         {
             var paths = new Dictionary<int, string> { { -1, "-1" } };
 
-            Dictionary<string, CultureVariation> GetCultureInfos(int id, DateTime now)
+            Dictionary<string, ICultureVariation> GetCultureInfos(int id, DateTime now)
             {
                 var en = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
                 var fr = new[] { 1, 3, 4, 6, 7, 9, 10, 12 };
 
-                var infos = new Dictionary<string, CultureVariation>();
+                var infos = new Dictionary<string, ICultureVariation>();
                 if (en.Contains(id))
                     infos["en-US"] = new CultureVariation { Name = "N" + id + "-" + "en-US", Date = now, IsDraft = false };
                 if (fr.Contains(id))
@@ -338,7 +340,7 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
+                    Properties = new Dictionary<string, IPropertyData[]>(),
                     CultureInfos = GetCultureInfos(id, now)
                 };
 
@@ -461,8 +463,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
-                    CultureInfos = new Dictionary<string, CultureVariation>()
+                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    CultureInfos = new Dictionary<string, ICultureVariation>()
                 }
             };
 
@@ -503,8 +505,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
-                    CultureInfos = new Dictionary<string, CultureVariation>()
+                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    CultureInfos = new Dictionary<string, ICultureVariation>()
                 }
             };
 
@@ -545,8 +547,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
-                    CultureInfos = new Dictionary<string, CultureVariation>()
+                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    CultureInfos = new Dictionary<string, ICultureVariation>()
                 }
             };
 
@@ -564,8 +566,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
-                    CultureInfos = new Dictionary<string, CultureVariation>()
+                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    CultureInfos = new Dictionary<string, ICultureVariation>()
                 }
             };
 
@@ -583,8 +585,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
-                    CultureInfos = new Dictionary<string, CultureVariation>()
+                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    CultureInfos = new Dictionary<string, ICultureVariation>()
                 }
             };
 
@@ -620,8 +622,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
-                    CultureInfos = new Dictionary<string, CultureVariation>()
+                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    CultureInfos = new Dictionary<string, ICultureVariation>()
                 }
             };
 
@@ -639,8 +641,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
-                    CultureInfos = new Dictionary<string, CultureVariation>()
+                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    CultureInfos = new Dictionary<string, ICultureVariation>()
                 }
             };
 
@@ -658,8 +660,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
-                    CultureInfos = new Dictionary<string, CultureVariation>()
+                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    CultureInfos = new Dictionary<string, ICultureVariation>()
                 }
             };
 
@@ -677,8 +679,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, PropertyData[]>(),
-                    CultureInfos = new Dictionary<string, CultureVariation>()
+                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    CultureInfos = new Dictionary<string, ICultureVariation>()
                 }
             };
 

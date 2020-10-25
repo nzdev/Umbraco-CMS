@@ -84,6 +84,7 @@ namespace Umbraco.Tests.Scoping
             var globalSettings = Factory.GetInstance<IGlobalSettings>();
             ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory(globalSettings);
             var nestedContentDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
+            var contentStoreFactory = new ContentStoreFactory();
             return new PublishedSnapshotService(
                 options,
                 null,
@@ -103,7 +104,8 @@ namespace Umbraco.Tests.Scoping
                 Mock.Of<IPublishedModelFactory>(),
                 new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }),
                 transactableDictionaryFactory,
-                nestedContentDataSerializerFactory);
+                nestedContentDataSerializerFactory,
+                contentStoreFactory);
         }
 
         protected UmbracoContext GetUmbracoContextNu(string url, int templateId = 1234, RouteData routeData = null, bool setSingleton = false, IUmbracoSettingsSection umbracoSettings = null, IEnumerable<IUrlProvider> urlProviders = null)

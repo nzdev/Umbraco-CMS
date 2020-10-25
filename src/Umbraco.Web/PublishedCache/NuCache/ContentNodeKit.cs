@@ -6,10 +6,10 @@ namespace Umbraco.Web.PublishedCache.NuCache
     // what's needed to actually build a content node
     public struct ContentNodeKit
     {
-        public ContentNode Node;
+        public IContentNode Node;
         public int ContentTypeId;
-        public ContentData DraftData;
-        public ContentData PublishedData;
+        public IContentData DraftData;
+        public IContentData PublishedData;
 
         public bool IsEmpty => Node == null;
 
@@ -44,7 +44,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 ContentTypeId = ContentTypeId,
                 DraftData = DraftData,
                 PublishedData = PublishedData,
-                Node = new ContentNode(Node)
+                Node = Node.Clone()
             };
     }
 }

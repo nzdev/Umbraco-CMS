@@ -17,8 +17,8 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         private PublishedMember(
             IMember member,
-            ContentNode contentNode,
-            ContentData contentData,
+            IContentNode contentNode,
+            IContentData contentData,
             IPublishedSnapshotAccessor publishedSnapshotAccessor,
             IVariationContextAccessor variationContextAccessor)
             : base(contentNode, contentData, publishedSnapshotAccessor, variationContextAccessor)
@@ -33,7 +33,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             IPublishedSnapshotAccessor publishedSnapshotAccessor,
             IVariationContextAccessor variationContextAccessor)
         {
-            var d = new ContentData
+            IContentData d = new ContentData
             {
                 Name = member.Name,
                 Published = previewing,
@@ -50,7 +50,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             return new PublishedMember(member, n, d, publishedSnapshotAccessor, variationContextAccessor).CreateModel();
         }
 
-        private static Dictionary<string, PropertyData[]> GetPropertyValues(IPublishedContentType contentType, IMember member)
+        private static Dictionary<string, IPropertyData[]> GetPropertyValues(IPublishedContentType contentType, IMember member)
         {
             // see node in PublishedSnapshotService
             // we do not (want to) support ConvertDbToXml/String
@@ -71,7 +71,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 //    return new KeyValuePair<string, object>(property.Alias, v);
                 //})
                 //.ToDictionary(x => x.Key, x => x.Value);
-                .ToDictionary(x => x.Alias, x => new[] { new PropertyData { Value = x.GetValue(), Culture = string.Empty, Segment = string.Empty } }, StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(x => x.Alias, x => new IPropertyData[] { new PropertyData { Value = x.GetValue(), Culture = string.Empty, Segment = string.Empty } }, StringComparer.OrdinalIgnoreCase);
 
             // see also PublishedContentType
             AddIf(contentType, properties, "Email", member.Email);
@@ -88,7 +88,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             return properties;
         }
 
-        private static void AddIf(IPublishedContentType contentType, IDictionary<string, PropertyData[]> properties, string alias, object value)
+        private static void AddIf(IPublishedContentType contentType, IDictionary<string, IPropertyData[]> properties, string alias, object value)
         {
             var propertyType = contentType.GetPropertyType(alias);
             if (propertyType == null || propertyType.IsUserProperty) return;

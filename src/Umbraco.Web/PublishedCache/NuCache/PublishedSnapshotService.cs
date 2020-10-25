@@ -46,12 +46,13 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private readonly UrlSegmentProviderCollection _urlSegmentProviders;
         private readonly ITransactableDictionaryFactory _transactableDictionaryFactory;
         private readonly IContentCacheDataSerializerFactory _contentCacheDataSerializerFactory;
+        private readonly IContentStoreFactory _contentStoreFactory;
 
         // volatile because we read it with no lock
         private volatile bool _isReady;
 
-        private readonly ContentStore _contentStore;
-        private readonly ContentStore _mediaStore;
+        private readonly IContentStore _contentStore;
+        private readonly IContentStore _mediaStore;
         private readonly SnapDictionary<int, Domain> _domainStore;
         private readonly object _storesLock = new object();
         private readonly object _elementsLock = new object();
@@ -79,7 +80,8 @@ namespace Umbraco.Web.PublishedCache.NuCache
             IPublishedModelFactory publishedModelFactory,
             UrlSegmentProviderCollection urlSegmentProviders,
             ITransactableDictionaryFactory transactableDictionaryFactory, 
-            IContentCacheDataSerializerFactory contentCacheDataSerializerFactory)
+            IContentCacheDataSerializerFactory contentCacheDataSerializerFactory,
+            IContentStoreFactory contentStoreFactory)
             : base(publishedSnapshotAccessor, variationContextAccessor)
         {
             //if (Interlocked.Increment(ref _singletonCheck) > 1)
@@ -98,6 +100,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             _urlSegmentProviders = urlSegmentProviders;
             _transactableDictionaryFactory = transactableDictionaryFactory;
             _contentCacheDataSerializerFactory = contentCacheDataSerializerFactory;
+            _contentStoreFactory = contentStoreFactory;
 
             // we need an Xml serializer here so that the member cache can support XPath,
             // for members this is done by navigating the serialized-to-xml member
@@ -132,16 +135,16 @@ namespace Umbraco.Web.PublishedCache.NuCache
                     // figure out whether it can read the databases or it should populate them from sql
 
                     _logger.Info<PublishedSnapshotService>("Creating the content store, localContentDbExists? {LocalContentDbExists}", _localContentDb.IsPopulated());
-                    _contentStore = new ContentStore(publishedSnapshotAccessor, variationContextAccessor, logger, _localContentDb);
+                    _contentStore = _contentStoreFactory.GetContentStore(publishedSnapshotAccessor, variationContextAccessor, logger, _localContentDb);
                     _logger.Info<PublishedSnapshotService>("Creating the media store, localMediaDbExists? {LocalMediaDbExists}", _localContentDb.IsPopulated());
-                    _mediaStore = new ContentStore(publishedSnapshotAccessor, variationContextAccessor, logger, _localMediaDb);
+                    _mediaStore = _contentStoreFactory.GetContentStore(publishedSnapshotAccessor, variationContextAccessor, logger, _localMediaDb);
                 }
                 else
                 {
                     _logger.Info<PublishedSnapshotService>("Creating the content store (local db ignored)");
-                    _contentStore = new ContentStore(publishedSnapshotAccessor, variationContextAccessor, logger);
+                    _contentStore = _contentStoreFactory.GetContentStore(publishedSnapshotAccessor, variationContextAccessor, logger);
                     _logger.Info<PublishedSnapshotService>("Creating the media store (local db ignored)");
-                    _mediaStore = new ContentStore(publishedSnapshotAccessor, variationContextAccessor, logger);
+                    _mediaStore = _contentStoreFactory.GetContentStore(publishedSnapshotAccessor, variationContextAccessor, logger);
                 }
 
                 _domainStore = new SnapDictionary<int, Domain>();
@@ -149,8 +152,8 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 LoadCachesOnStartup();
             }
 
-            Guid GetUid(ContentStore store, int id) => store.LiveSnapshot.Get(id)?.Uid ?? default;
-            int GetId(ContentStore store, Guid uid) => store.LiveSnapshot.Get(uid)?.Id ?? default;
+            Guid GetUid(IContentStore store, int id) => store.LiveSnapshot.Get(id)?.Uid ?? default;
+            int GetId(IContentStore store, Guid uid) => store.LiveSnapshot.Get(uid)?.Id ?? default;
 
             if (idkMap != null)
             {
@@ -461,7 +464,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         }
 
-        private bool LoadEntitiesFromLocalDbLocked(bool onStartup, ITransactableDictionary<int, ContentNodeKit> localDb, ContentStore store, string entityType)
+        private bool LoadEntitiesFromLocalDbLocked(bool onStartup, ITransactableDictionary<int, ContentNodeKit> localDb, IContentStore store, string entityType)
         {
             var kits = localDb.Select(x => x.Value)
                     .OrderBy(x => x.Node.Level)
@@ -869,7 +872,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             ((PublishedSnapshot)CurrentPublishedSnapshot)?.Resync();
         }
 
-        private void Notify<T>(ContentStore store, ContentTypeCacheRefresher.JsonPayload[] payloads, Action<List<int>, List<int>, List<int>, List<int>> action)
+        private void Notify<T>(IContentStore store, ContentTypeCacheRefresher.JsonPayload[] payloads, Action<List<int>, List<int>, List<int>, List<int>> action)
             where T : IContentTypeComposition
         {
             if (payloads.Length == 0) return; //nothing to do
@@ -1129,7 +1132,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             // for elements cache, DictionaryAppCache is a No-No, use something better.
             // ie FastDictionaryAppCache (thread safe and all)
 
-            ContentStore.Snapshot contentSnap, mediaSnap;
+            ISnapshot contentSnap, mediaSnap;
             SnapDictionary<int, Domain>.Snapshot domainSnap;
             IAppCache elementsCache;
 
@@ -1357,10 +1360,10 @@ namespace Umbraco.Web.PublishedCache.NuCache
             //var propertyEditorResolver = PropertyEditorResolver.Current;
             //var dataTypeService = ApplicationContext.Current.Services.DataTypeService;
 
-            var propertyData = new Dictionary<string, PropertyData[]>();
+            var propertyData = new Dictionary<string, IPropertyData[]>();
             foreach (var prop in content.Properties)
             {
-                var pdatas = new List<PropertyData>();
+                var pdatas = new List<IPropertyData>();
                 foreach (var pvalue in prop.Values)
                 {
                     // sanitize - properties should be ok but ... never knows
@@ -1396,7 +1399,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 propertyData[prop.Alias] = pdatas.ToArray();
             }
 
-            var cultureData = new Dictionary<string, CultureVariation>();
+            var cultureData = new Dictionary<string, ICultureVariation>();
 
             // sanitize - names should be ok but ... never knows
             if (content.ContentType.VariesByCulture())
@@ -1792,8 +1795,8 @@ AND cmsContentNu.nodeId IS NULL
 
         #region Internals/Testing
 
-        internal ContentStore GetContentStore() => _contentStore;
-        internal ContentStore GetMediaStore() => _mediaStore;
+        internal IContentStore GetContentStore() => _contentStore;
+        internal IContentStore GetMediaStore() => _mediaStore;
 
         #endregion
     }

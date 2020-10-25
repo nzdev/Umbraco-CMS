@@ -275,8 +275,8 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
 
         private ContentNodeKit CreateContentNodeKit(ContentSourceDto dto, IContentCacheDataSerializer serializer)
         {
-            ContentData d = null;
-            ContentData p = null;
+            IContentData d = null;
+            IContentData p = null;
 
             if (dto.Edited)
             {
@@ -353,7 +353,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
 
             var deserializedMedia = serializer.Deserialize(dto.ContentTypeId, dto.EditData, dto.EditDataRaw);
 
-            var p = new ContentData
+            IContentData p = new ContentData
             {
                 Name = dto.EditName,
                 Published = true,

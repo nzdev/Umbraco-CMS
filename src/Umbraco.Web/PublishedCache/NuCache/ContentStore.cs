@@ -25,7 +25,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
     /// This class's logic is based on the <see cref="SnapDictionary{TKey, TValue}"/> class but has been slightly modified to suit these purposes.
     /// </para>
     /// </remarks>
-    internal class ContentStore
+    public class ContentStore : IContentStore
     {
         // this class is an extended version of SnapDictionary
         // most of the snapshots management code, etc is an exact copy
@@ -34,13 +34,13 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         private readonly IPublishedSnapshotAccessor _publishedSnapshotAccessor;
         private readonly IVariationContextAccessor _variationContextAccessor;
-        private readonly ConcurrentDictionary<int, LinkedNode<ContentNode>> _contentNodes;
-        private LinkedNode<ContentNode> _root;
+        private readonly ConcurrentDictionary<int, LinkedNode<IContentNode>> _contentNodes;
+        private LinkedNode<IContentNode> _root;
 
         // We must keep separate dictionaries for by id and by alias because we track these in snapshot/layers
         // and it is possible that the alias of a content type can be different for the same id in another layer
         // whereas the GUID -> INT cross reference can never be different
-        private readonly ConcurrentDictionary<int, LinkedNode<IPublishedContentType>> _contentTypesById;       
+        private readonly ConcurrentDictionary<int, LinkedNode<IPublishedContentType>> _contentTypesById;
         private readonly ConcurrentDictionary<string, LinkedNode<IPublishedContentType>> _contentTypesByAlias;
         private readonly ConcurrentDictionary<Guid, int> _contentTypeKeyToIdMap;
         private readonly ConcurrentDictionary<Guid, int> _contentKeyToIdMap;
@@ -73,8 +73,8 @@ namespace Umbraco.Web.PublishedCache.NuCache
             _logger = logger;
             _localDb = localDb;
 
-            _contentNodes = new ConcurrentDictionary<int, LinkedNode<ContentNode>>();
-            _root = new LinkedNode<ContentNode>(new ContentNode(), 0);
+            _contentNodes = new ConcurrentDictionary<int, LinkedNode<IContentNode>>();
+            _root = new LinkedNode<IContentNode>(new ContentNode(), 0);
             _contentTypesById = new ConcurrentDictionary<int, LinkedNode<IPublishedContentType>>();
             _contentTypesByAlias = new ConcurrentDictionary<string, LinkedNode<IPublishedContentType>>(StringComparer.InvariantCultureIgnoreCase);
             _contentTypeKeyToIdMap = new ConcurrentDictionary<Guid, int>();
@@ -95,7 +95,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         private readonly string _instanceId = Guid.NewGuid().ToString("N");
 
-        private class WriteLockInfo
+        public class WriteLockInfo
         {
             public bool Taken;
         }
@@ -104,10 +104,10 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private class ScopedWriteLock : ScopeContextualBase
         {
             private readonly WriteLockInfo _lockinfo = new WriteLockInfo();
-            private readonly ContentStore _store;
+            private readonly IContentStore _store;
             private int _released;
 
-            public ScopedWriteLock(ContentStore store, bool scoped)
+            public ScopedWriteLock(IContentStore store, bool scoped)
             {
                 _store = store;
                 store.Lock(_lockinfo, scoped);
@@ -134,7 +134,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 throw new InvalidOperationException("Write lock must be acquried.");
         }
 
-        private void Lock(WriteLockInfo lockInfo, bool forceGen = false)
+        public void Lock(WriteLockInfo lockInfo, bool forceGen = false)
         {
             if (Monitor.IsEntered(_wlocko))
                 throw new InvalidOperationException("Recursive locks not allowed");
@@ -160,7 +160,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             }
         }
 
-        private void Release(WriteLockInfo lockInfo, bool commit = true)
+        public void Release(WriteLockInfo lockInfo, bool commit = true)
         {
             try
             {
@@ -196,7 +196,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                         _wchanges = null;
                         transaction.Commit();
                     }
-                        
+
                 }
             }
             finally
@@ -335,7 +335,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 if (node == null) continue;
                 var contentTypeId = node.ContentType.Id;
                 if (index.TryGetValue(contentTypeId, out var contentType) == false) continue;
-                SetValueLocked(_contentNodes, node.Id, new ContentNode(node, contentType));
+                SetValueLocked(_contentNodes, node.Id, node.Clone(contentType));
             }
         }
 
@@ -500,7 +500,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                     _contentNodes.TryGetValue(id, out var link);
                     if (link?.Value == null)
                         continue;
-                    var node = new ContentNode(link.Value, contentType);
+                    var node = link.Value.Clone(contentType);
                     SetValueLocked(_contentNodes, id, node);
                     if (_localDb != null) RegisterChange(id, node.ToKit());
                 }
@@ -515,7 +515,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <returns>
         /// Returns false if the parent was not found or if the kit validation failed
         /// </returns>
-        private bool BuildKit(ContentNodeKit kit, out LinkedNode<ContentNode> parent)
+        private bool BuildKit(ContentNodeKit kit, out LinkedNode<IContentNode> parent)
         {
             // make sure parent exists
             parent = GetParentLink(kit.Node, null);
@@ -651,7 +651,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private void ClearRootLocked()
         {
             if (_root.Gen != _liveGen)
-                _root = new LinkedNode<ContentNode>(new ContentNode(), _liveGen, _root);
+                _root = new LinkedNode<IContentNode>(new ContentNode(), _liveGen, _root);
             else
                 _root.Value.FirstChildContentId = -1;
         }
@@ -693,8 +693,8 @@ namespace Umbraco.Web.PublishedCache.NuCache
             //  NextSiblingContentId
             //  PreviousSiblingContentId
 
-            ContentNode previousNode = null;
-            ContentNode parent = null;
+            IContentNode previousNode = null;
+            IContentNode parent = null;
 
             foreach (var kit in kits)
             {
@@ -885,7 +885,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             ClearBranchLocked(link.Value);
         }
 
-        private void ClearBranchLocked(ContentNode content)
+        private void ClearBranchLocked(IContentNode content)
         {
             // This should never be null, all code that calls this method is null checking but we've seen
             // issues of null ref exceptions in issue reports so we'll double check here
@@ -914,7 +914,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <param name="description"></param>
         /// <param name="gen">the generation requested, null for the latest stored</param>
         /// <returns></returns>
-        private LinkedNode<ContentNode> GetRequiredLinkedNode(int id, string description, long? gen)
+        private LinkedNode<IContentNode> GetRequiredLinkedNode(int id, string description, long? gen)
         {
             if (_contentNodes.TryGetValue(id, out var link))
             {
@@ -930,7 +930,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// Gets the parent link node, may be null or root if ParentContentId is less than 0
         /// </summary>
         /// <param name="gen">the generation requested, null for the latest stored</param>
-        private LinkedNode<ContentNode> GetParentLink(ContentNode content, long? gen)
+        private LinkedNode<IContentNode> GetParentLink(IContentNode content, long? gen)
         {
             if (content.ParentContentId < 0)
             {
@@ -950,7 +950,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <param name="content"></param>
         /// <param name="gen">the generation requested, null for the latest stored</param>
         /// <returns></returns>
-        private LinkedNode<ContentNode> GetRequiredParentLink(ContentNode content, long? gen)
+        private LinkedNode<IContentNode> GetRequiredParentLink(IContentNode content, long? gen)
         {
             return content.ParentContentId < 0 ? _root : GetRequiredLinkedNode(content.ParentContentId, "parent", gen);
         }
@@ -981,7 +981,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <remarks>
         /// This is called within a lock which means a new Gen is being created therefore this will not modify any existing content in a Gen.
         /// </remarks>
-        private void RemoveTreeNodeLocked(ContentNode content)
+        private void RemoveTreeNodeLocked(IContentNode content)
         {
             // NOTE: DO NOT modify `content` here, this would modify data for an existing Gen, all modifications are done to clones
             // which would be targeting the new Gen.
@@ -1033,13 +1033,13 @@ namespace Umbraco.Web.PublishedCache.NuCache
             return node != null && node.HasPublished;
         }
 
-        private ContentNode GenCloneLocked(LinkedNode<ContentNode> link)
+        private IContentNode GenCloneLocked(LinkedNode<IContentNode> link)
         {
             var node = link.Value;
 
             if (node != null && link.Gen != _liveGen)
             {
-                node = new ContentNode(link.Value);
+                node = link.Value.Clone();
                 if (link == _root)
                     SetRootLocked(node);
                 else
@@ -1052,7 +1052,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <summary>
         /// Adds a node to the tree structure.
         /// </summary>
-        private void AddTreeNodeLocked(ContentNode content, LinkedNode<ContentNode> parentLink = null)
+        private void AddTreeNodeLocked(IContentNode content, LinkedNode<IContentNode> parentLink = null)
         {
             parentLink = parentLink ?? GetRequiredParentLink(content, null);
 
@@ -1147,11 +1147,11 @@ namespace Umbraco.Web.PublishedCache.NuCache
         }
 
         // replaces the root node
-        private void SetRootLocked(ContentNode node)
+        private void SetRootLocked(IContentNode node)
         {
             if (_root.Gen != _liveGen)
             {
-                _root = new LinkedNode<ContentNode>(node, _liveGen, _root);
+                _root = new LinkedNode<IContentNode>(node, _liveGen, _root);
             }
             else
             {
@@ -1218,19 +1218,19 @@ namespace Umbraco.Web.PublishedCache.NuCache
             }
         }
 
-        public ContentNode Get(int id, long gen)
+        public IContentNode Get(int id, long gen)
         {
             return GetValue(_contentNodes, id, gen);
         }
 
-        public ContentNode Get(Guid uid, long gen)
+        public IContentNode Get(Guid uid, long gen)
         {
             return _contentKeyToIdMap.TryGetValue(uid, out var id)
                 ? GetValue(_contentNodes, id, gen)
                 : null;
         }
 
-        public IEnumerable<ContentNode> GetAtRoot(long gen)
+        public IEnumerable<IContentNode> GetAtRoot(long gen)
         {
             var root = GetLinkedNodeGen(_root, gen);
             if (root == null)
@@ -1255,7 +1255,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             return link?.Value; // may be null
         }
 
-        public IEnumerable<ContentNode> GetAll(long gen)
+        public IEnumerable<IContentNode> GetAll(long gen)
         {
             // enumerating on .Values locks the concurrent dictionary,
             // so better get a shallow clone in an array and release
@@ -1299,7 +1299,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         #region Snapshots
 
-        public Snapshot CreateSnapshot()
+        public ISnapshot CreateSnapshot()
         {
             lock (_rlocko)
             {
@@ -1356,7 +1356,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             }
         }
 
-        public Snapshot LiveSnapshot => new Snapshot(this, _liveGen
+        public ISnapshot LiveSnapshot => new Snapshot(this, _liveGen
 #if DEBUG
             , _logger
 #endif
@@ -1494,7 +1494,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private TestHelper _unitTesting;
 
         // note: nothing here is thread-safe
-        internal class TestHelper
+        public class TestHelper : ITestHelper
         {
             private readonly ContentStore _store;
 
@@ -1517,14 +1517,14 @@ namespace Umbraco.Web.PublishedCache.NuCache
             /// </summary>
             /// <param name="id"></param>
             /// <returns></returns>
-            public (long gen, ContentNode contentNode)[] GetValues(int id)
+            public (long gen, IContentNode contentNode)[] GetValues(int id)
             {
-                _store._contentNodes.TryGetValue(id, out LinkedNode<ContentNode> link); // else null
+                _store._contentNodes.TryGetValue(id, out LinkedNode<IContentNode> link); // else null
 
                 if (link == null)
-                    return Array.Empty<(long, ContentNode)>();
+                    return Array.Empty<(long, IContentNode)>();
 
-                var tuples = new List<(long, ContentNode)>();
+                var tuples = new List<(long, IContentNode)>();
                 do
                 {
                     tuples.Add((link.Gen, link.Value));
@@ -1534,15 +1534,15 @@ namespace Umbraco.Web.PublishedCache.NuCache
             }
         }
 
-        internal TestHelper Test => _unitTesting ?? (_unitTesting = new TestHelper(this));
+        public ITestHelper Test => _unitTesting ?? (_unitTesting = new TestHelper(this));
 
         #endregion
 
         #region Classes
 
-        public class Snapshot : IDisposable
+        public class Snapshot : IDisposable, ISnapshot
         {
-            private readonly ContentStore _store;
+            private readonly IContentStore _store;
             private readonly GenRef _genRef;
             private long _gen;
 #if DEBUG
@@ -1552,7 +1552,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             //private static int _count;
             //private readonly int _thisCount;
 
-            internal Snapshot(ContentStore store, GenRef genRef
+            internal Snapshot(IContentStore store, GenRef genRef
 #if DEBUG
                     , ILogger logger
 #endif
@@ -1570,7 +1570,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 #endif
             }
 
-            internal Snapshot(ContentStore store, long gen
+            internal Snapshot(IContentStore store, long gen
 #if DEBUG
                 , ILogger logger
 #endif
@@ -1585,28 +1585,28 @@ namespace Umbraco.Web.PublishedCache.NuCache
 #endif
             }
 
-            public ContentNode Get(int id)
+            public IContentNode Get(int id)
             {
                 if (_gen < 0)
                     throw new ObjectDisposedException("snapshot" /*+ " (" + _thisCount + ")"*/);
                 return _store.Get(id, _gen);
             }
 
-            public ContentNode Get(Guid id)
+            public IContentNode Get(Guid id)
             {
                 if (_gen < 0)
                     throw new ObjectDisposedException("snapshot" /*+ " (" + _thisCount + ")"*/);
                 return _store.Get(id, _gen);
             }
 
-            public IEnumerable<ContentNode> GetAtRoot()
+            public IEnumerable<IContentNode> GetAtRoot()
             {
                 if (_gen < 0)
                     throw new ObjectDisposedException("snapshot" /*+ " (" + _thisCount + ")"*/);
                 return _store.GetAtRoot(_gen);
             }
 
-            public IEnumerable<ContentNode> GetAll()
+            public IEnumerable<IContentNode> GetAll()
             {
                 if (_gen < 0)
                     throw new ObjectDisposedException("snapshot" /*+ " (" + _thisCount + ")"*/);

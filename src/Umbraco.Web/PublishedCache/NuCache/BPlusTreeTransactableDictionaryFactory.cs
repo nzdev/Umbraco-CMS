@@ -14,9 +14,9 @@ namespace Umbraco.Web.PublishedCache.NuCache
     public class BPlusTreeTransactableDictionaryFactory : ITransactableDictionaryFactory
     {
         private readonly IGlobalSettings _globalSettings;
-        private readonly ISerializer<ContentData> _contentDataSerializer;
+        private readonly ISerializer<IContentData> _contentDataSerializer;
 
-        public BPlusTreeTransactableDictionaryFactory(IGlobalSettings globalSettings,ISerializer<ContentData> contentDataSerializer = null)
+        public BPlusTreeTransactableDictionaryFactory(IGlobalSettings globalSettings,ISerializer<IContentData> contentDataSerializer = null)
         {
             _globalSettings = globalSettings;
             _contentDataSerializer = contentDataSerializer;
@@ -78,7 +78,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             return ok;
         }
 
-        public virtual BPlusTree<int, ContentNodeKit> GetTree(string filepath, bool exists, ISerializer<ContentData> contentDataSerializer = null)
+        public virtual BPlusTree<int, ContentNodeKit> GetTree(string filepath, bool exists, ISerializer<IContentData> contentDataSerializer = null)
         {
             var keySerializer = new PrimitiveSerializer();
             var valueSerializer = new ContentNodeKitSerializer(contentDataSerializer);

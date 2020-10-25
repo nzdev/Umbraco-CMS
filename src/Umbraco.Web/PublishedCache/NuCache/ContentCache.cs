@@ -15,7 +15,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 {
     internal class ContentCache : PublishedCacheBase, IPublishedContentCache2, INavigableData, IDisposable
     {
-        private readonly ContentStore.Snapshot _snapshot;
+        private readonly ISnapshot _snapshot;
         private readonly IAppCache _snapshotCache;
         private readonly IAppCache _elementsCache;
         private readonly IDomainCache _domainCache;
@@ -29,7 +29,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         // it's too late for UmbracoContext which has captured previewDefault and stuff into these ctor vars
         // but, no, UmbracoContext returns snapshot.Content which comes from elements SO a resync should create a new cache
 
-        public ContentCache(bool previewDefault, ContentStore.Snapshot snapshot, IAppCache snapshotCache, IAppCache elementsCache, IDomainCache domainCache, IGlobalSettings globalSettings, IVariationContextAccessor variationContextAccessor)
+        public ContentCache(bool previewDefault, ISnapshot snapshot, IAppCache snapshotCache, IAppCache elementsCache, IDomainCache domainCache, IGlobalSettings globalSettings, IVariationContextAccessor variationContextAccessor)
             : base(previewDefault)
         {
             _snapshot = snapshot;
@@ -279,7 +279,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             return atRoot;
         }
 
-        private static IPublishedContent GetNodePublishedContent(ContentNode node, bool preview)
+        private static IPublishedContent GetNodePublishedContent(IContentNode node, bool preview)
         {
             if (node == null)
                 return null;

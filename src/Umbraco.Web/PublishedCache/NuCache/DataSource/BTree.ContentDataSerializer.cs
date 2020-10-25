@@ -6,7 +6,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
     /// <summary>
     /// Serializes/Deserializes data to BTree data source for <see cref="ContentData"/>
     /// </summary>
-    internal class ContentDataSerializer : ISerializer<ContentData>
+    internal class ContentDataSerializer : ISerializer<IContentData>
     {
         public ContentDataSerializer(IDictionaryOfPropertyDataSerializer dictionaryOfPropertyDataSerializer = null)
         {
@@ -20,7 +20,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
         private static readonly DictionaryOfCultureVariationSerializer DefaultCultureVariationsSerializer = new DictionaryOfCultureVariationSerializer();
         private readonly IDictionaryOfPropertyDataSerializer _dictionaryOfPropertyDataSerializer;
 
-        public ContentData ReadFrom(Stream stream)
+        public IContentData ReadFrom(Stream stream)
         {
             return new ContentData
             {
@@ -36,7 +36,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             };
         }
 
-        public void WriteTo(ContentData value, Stream stream)
+        public void WriteTo(IContentData value, Stream stream)
         {
             PrimitiveSerializer.Boolean.WriteTo(value.Published, stream);
             PrimitiveSerializer.String.WriteTo(value.Name, stream);

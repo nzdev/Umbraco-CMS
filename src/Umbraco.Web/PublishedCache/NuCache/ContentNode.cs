@@ -8,7 +8,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
     // represents a content "node" ie a pair of draft + published versions
     // internal, never exposed, to be accessed from ContentStore (only!)
     [DebuggerDisplay("Id: {Id}, Path: {Path}")]
-    public class ContentNode
+    public class ContentNode : IContentNode
     {
         // special ctor for root pseudo node
         public ContentNode()
@@ -26,22 +26,22 @@ namespace Umbraco.Web.PublishedCache.NuCache
             DateTime createDate, int creatorId)
             : this()
         {
-            Id = id;
-            Uid = uid;
+            _id = id;
+            _uid = uid;
             ContentType = contentType;
-            Level = level;
-            Path = path;
-            SortOrder = sortOrder;
-            ParentContentId = parentContentId;
-            CreateDate = createDate;
-            CreatorId = creatorId;
+            _level = level;
+            _path = path;
+            _sortOrder = sortOrder;
+            _parentContentId = parentContentId;
+            _createDate = createDate;
+            _creatorId = creatorId;
         }
 
         public ContentNode(int id, Guid uid, IPublishedContentType contentType,
             int level, string path, int sortOrder,
             int parentContentId,
             DateTime createDate, int creatorId,
-            ContentData draftData, ContentData publishedData,
+            IContentData draftData, IContentData publishedData,
             IPublishedSnapshotAccessor publishedSnapshotAccessor,
             IVariationContextAccessor variationContextAccessor)
             : this(id, uid, level, path, sortOrder, parentContentId, createDate, creatorId)
@@ -55,22 +55,22 @@ namespace Umbraco.Web.PublishedCache.NuCache
             int parentContentId,
             DateTime createDate, int creatorId)
         {
-            Id = id;
-            Uid = uid;
-            Level = level;
-            Path = path;
-            SortOrder = sortOrder;
-            ParentContentId = parentContentId;
+            _id = id;
+            _uid = uid;
+            _level = level;
+            _path = path;
+            _sortOrder = sortOrder;
+            _parentContentId = parentContentId;
             FirstChildContentId = -1;
             LastChildContentId = -1;
             NextSiblingContentId = -1;
             PreviousSiblingContentId = -1;
-            CreateDate = createDate;
-            CreatorId = creatorId;
+            _createDate = createDate;
+            _creatorId = creatorId;
         }
 
         // two-phase ctor, phase 2
-        public void SetContentTypeAndData(IPublishedContentType contentType, ContentData draftData, ContentData publishedData, IPublishedSnapshotAccessor publishedSnapshotAccessor, IVariationContextAccessor variationContextAccessor)
+        public void SetContentTypeAndData(IPublishedContentType contentType, IContentData draftData, IContentData publishedData, IPublishedSnapshotAccessor publishedSnapshotAccessor, IVariationContextAccessor variationContextAccessor)
         {
             ContentType = contentType;
 
@@ -84,53 +84,54 @@ namespace Umbraco.Web.PublishedCache.NuCache
             _publishedData = publishedData;
         }
 
-        // clone
-        public ContentNode(ContentNode origin, IPublishedContentType contentType = null)
+        public IContentNode Clone(IPublishedContentType contentType = null)
         {
-            Id = origin.Id;
-            Uid = origin.Uid;
-            ContentType = contentType ?? origin.ContentType;
-            Level = origin.Level;
-            Path = origin.Path;
-            SortOrder = origin.SortOrder;
-            ParentContentId = origin.ParentContentId;
-            FirstChildContentId = origin.FirstChildContentId;
-            LastChildContentId = origin.LastChildContentId;
-            NextSiblingContentId = origin.NextSiblingContentId;
-            PreviousSiblingContentId = origin.PreviousSiblingContentId;
-            CreateDate = origin.CreateDate;
-            CreatorId = origin.CreatorId;
+            var origin = this;
+            var cn = new ContentNode(origin.Id, origin.Uid, contentType ?? origin.ContentType,
+                origin.Level, origin.Path, origin.SortOrder, origin.ParentContentId, origin.CreateDate, origin.CreatorId, origin._draftData,
+                origin._publishedData, origin._publishedSnapshotAccessor, _variationContextAccessor);
 
-            _draftData = origin._draftData;
-            _publishedData = origin._publishedData;
-            _publishedSnapshotAccessor = origin._publishedSnapshotAccessor;
-            _variationContextAccessor = origin._variationContextAccessor;
+            cn.FirstChildContentId = origin.FirstChildContentId;
+            cn.LastChildContentId = origin.LastChildContentId;
+            cn.NextSiblingContentId = origin.NextSiblingContentId;
+            cn.PreviousSiblingContentId = origin.PreviousSiblingContentId;
+            return cn;
         }
-
+        // clone
+       
         // everything that is common to both draft and published versions
         // keep this as small as possible
 
-        
-        public readonly int Id;
-        public readonly Guid Uid;
-        public IPublishedContentType ContentType;
-        public readonly int Level;
-        public readonly string Path;
-        public readonly int SortOrder;
-        public readonly int ParentContentId;
+        private readonly int _id;
+        private readonly Guid _uid;
+        private readonly int _level;
+        private readonly string _path;
+        private readonly int _sortOrder;
+        private readonly int _parentContentId;
+
+        public int Id => _id;
+        public Guid Uid => _uid;
+        public IPublishedContentType ContentType { get; set; }
+        public int Level => _level;
+        public string Path => _path;
+        public int SortOrder => _sortOrder;
+        public int ParentContentId => _parentContentId;
 
         // TODO: Can we make everything readonly?? This would make it easier to debug and be less error prone especially for new developers.
         // Once a Node is created and exists in the cache it is readonly so we should be able to make that happen at the API level too.
-        public int FirstChildContentId;
-        public int LastChildContentId;
-        public int NextSiblingContentId;
-        public int PreviousSiblingContentId;
+        public int FirstChildContentId { get; set; }
+        public int LastChildContentId { get; set; }
+        public int NextSiblingContentId { get; set; }
+        public int PreviousSiblingContentId { get; set; }
 
-        public readonly DateTime CreateDate;
-        public readonly int CreatorId;
+        public readonly DateTime _createDate;
+        public readonly int _creatorId;
 
-        private ContentData _draftData;
-        private ContentData _publishedData;
+        public DateTime CreateDate => _createDate;
+        public int CreatorId => _creatorId;
+
+        private IContentData _draftData;
+        private IContentData _publishedData;
         private IVariationContextAccessor _variationContextAccessor;
         private IPublishedSnapshotAccessor _publishedSnapshotAccessor;
 
@@ -142,7 +143,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private IPublishedContent _draftModel;
         private IPublishedContent _publishedModel;
 
-        private IPublishedContent GetModel(ref IPublishedContent model, ContentData contentData)
+        private IPublishedContent GetModel(ref IPublishedContent model, IContentData contentData)
         {
             if (model != null) return model;
             if (contentData == null) return null;
@@ -167,12 +168,12 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         public ContentNodeKit ToKit()
             => new ContentNodeKit
-                {
-                    Node = this,
-                    ContentTypeId = ContentType.Id,
+            {
+                Node = this,
+                ContentTypeId = ContentType.Id,
 
-                    DraftData = _draftData,
-                    PublishedData = _publishedData
-                };
+                DraftData = _draftData,
+                PublishedData = _publishedData
+            };
     }
 }
