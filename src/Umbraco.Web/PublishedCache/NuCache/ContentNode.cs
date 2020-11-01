@@ -170,7 +170,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         public IPublishedContent PublishedModel => GetModel(ref _publishedModel, _publishedData);
 
-        public ContentNodeKit ToKit()
+        public IContentNodeKit ToKit()
             => new ContentNodeKit
             {
                 Node = this,

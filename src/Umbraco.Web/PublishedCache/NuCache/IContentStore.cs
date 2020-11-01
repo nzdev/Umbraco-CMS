@@ -29,12 +29,12 @@ namespace Umbraco.Web.PublishedCache.NuCache
         void NewContentTypesLocked(IEnumerable<IPublishedContentType> types);
         void ReleaseLocalDb();
         void SetAllContentTypesLocked(IEnumerable<IPublishedContentType> types);
-        bool SetAllFastSortedLocked(IEnumerable<ContentNodeKit> kits, bool fromDb);
-        bool SetAllLocked(IEnumerable<ContentNodeKit> kits);
-        bool SetBranchLocked(int rootContentId, IEnumerable<ContentNodeKit> kits);
-        bool SetLocked(ContentNodeKit kit);
+        bool SetAllFastSortedLocked(IEnumerable<IContentNodeKit> kits, bool fromDb);
+        bool SetAllLocked(IEnumerable<IContentNodeKit> kits);
+        bool SetBranchLocked(int rootContentId, IEnumerable<IContentNodeKit> kits);
+        bool SetLocked(IContentNodeKit kit);
         void UpdateContentTypesLocked(IEnumerable<IPublishedContentType> types);
-        void UpdateContentTypesLocked(IReadOnlyCollection<int> removedIds, IReadOnlyCollection<IPublishedContentType> refreshedTypes, IReadOnlyCollection<ContentNodeKit> kits);
+        void UpdateContentTypesLocked(IReadOnlyCollection<int> removedIds, IReadOnlyCollection<IPublishedContentType> refreshedTypes, IReadOnlyCollection<IContentNodeKit> kits);
         void UpdateDataTypesLocked(IEnumerable<int> dataTypeIds, Func<int, IPublishedContentType> getContentType);
 
         void Lock(WriteLockInfo lockInfo, bool forceGen = false);

@@ -13,6 +13,6 @@ namespace Umbraco.Web.PublishedCache.NuCache
            IPublishedSnapshotAccessor publishedSnapshotAccessor,
            IVariationContextAccessor variationContextAccessor,
            ILogger logger,
-           ITransactableDictionary<int, ContentNodeKit> localDb = null);
+           ITransactableDictionary<int, IContentNodeKit> localDb = null);
     }
 }

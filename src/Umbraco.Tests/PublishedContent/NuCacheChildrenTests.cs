@@ -45,7 +45,7 @@ namespace Umbraco.Tests.PublishedContent
             _snapshotService?.Dispose();
         }
 
-        private void Init(Func<IEnumerable<ContentNodeKit>> kits)
+        private void Init(Func<IEnumerable<IContentNodeKit>> kits)
         {
             Current.Reset();
 
@@ -169,7 +169,7 @@ namespace Umbraco.Tests.PublishedContent
             Mock.Get(factory).Setup(x => x.GetInstance(typeof(IVariationContextAccessor))).Returns(_variationAccesor);
         }
 
-        private IEnumerable<ContentNodeKit> GetNestedVariantKits()
+        private IEnumerable<IContentNodeKit> GetNestedVariantKits()
         {
             var paths = new Dictionary<int, string> { { -1, "-1" } };
 
@@ -191,7 +191,7 @@ namespace Umbraco.Tests.PublishedContent
             yield return CreateInvariantKit(13, 7, 2, paths);
         }
 
-        private IEnumerable<ContentNodeKit> GetInvariantKits()
+        private IEnumerable<IContentNodeKit> GetInvariantKits()
         {
             var paths = new Dictionary<int, string> { { -1, "-1" } };
 
@@ -213,7 +213,7 @@ namespace Umbraco.Tests.PublishedContent
             yield return CreateInvariantKit(12, 4, 2, paths);
         }
 
-        private ContentNodeKit CreateInvariantKit(int id, int parentId, int sortOrder, Dictionary<int, string> paths)
+        private IContentNodeKit CreateInvariantKit(int id, int parentId, int sortOrder, Dictionary<int, string> paths)
         {
             if (!paths.TryGetValue(parentId, out var parentPath))
                 throw new Exception("Unknown parent.");
@@ -230,8 +230,8 @@ namespace Umbraco.Tests.PublishedContent
                 VersionId = 1,
                 VersionDate = now,
                 WriterId = 0,
-                Properties = new Dictionary<string, IPropertyData[]>(),
-                CultureInfos = new Dictionary<string, ICultureVariation>()
+                Properties = new Dictionary<string, PropertyData[]>(),
+                CultureInfos = new Dictionary<string, CultureVariation>()
             };
 
             return new ContentNodeKit
@@ -243,7 +243,7 @@ namespace Umbraco.Tests.PublishedContent
             };
         }
 
-        private IEnumerable<ContentNodeKit> GetVariantKits()
+        private IEnumerable<IContentNodeKit> GetVariantKits()
         {
             var paths = new Dictionary<int, string> { { -1, "-1" } };
 
@@ -265,12 +265,12 @@ namespace Umbraco.Tests.PublishedContent
             yield return CreateVariantKit(12, 4, 2, paths);
         }
 
-        private static Dictionary<string, ICultureVariation> GetCultureInfos(int id, DateTime now)
+        private static Dictionary<string, CultureVariation> GetCultureInfos(int id, DateTime now)
         {
             var en = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
             var fr = new[] { 1, 3, 4, 6, 7, 9, 10, 12 };
 
-            var infos = new Dictionary<string, ICultureVariation>();
+            var infos = new Dictionary<string, CultureVariation>();
             if (en.Contains(id))
                 infos["en-US"] = new CultureVariation { Name = "N" + id + "-" + "en-US", Date = now, IsDraft = false };
             if (fr.Contains(id))
@@ -300,22 +300,22 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    Properties = new Dictionary<string, PropertyData[]>(),
                     CultureInfos = GetCultureInfos(id, now)
                 }
             };
         }
 
-        private IEnumerable<ContentNodeKit> GetVariantWithDraftKits()
+        private IEnumerable<IContentNodeKit> GetVariantWithDraftKits()
         {
             var paths = new Dictionary<int, string> { { -1, "-1" } };
 
-            Dictionary<string, ICultureVariation> GetCultureInfos(int id, DateTime now)
+            Dictionary<string, CultureVariation> GetCultureInfos(int id, DateTime now)
             {
                 var en = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
                 var fr = new[] { 1, 3, 4, 6, 7, 9, 10, 12 };
 
-                var infos = new Dictionary<string, ICultureVariation>();
+                var infos = new Dictionary<string, CultureVariation>();
                 if (en.Contains(id))
                     infos["en-US"] = new CultureVariation { Name = "N" + id + "-" + "en-US", Date = now, IsDraft = false };
                 if (fr.Contains(id))
@@ -340,7 +340,7 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
+                    Properties = new Dictionary<string, PropertyData[]>(),
                     CultureInfos = GetCultureInfos(id, now)
                 };
 
@@ -377,7 +377,7 @@ namespace Umbraco.Tests.PublishedContent
         [Test]
         public void EmptyTest()
         {
-            Init(() => Enumerable.Empty<ContentNodeKit>());
+            Init(() => Enumerable.Empty<IContentNodeKit>());
 
             var snapshot = _snapshotService.CreatePublishedSnapshot(previewToken: null);
             _snapshotAccessor.PublishedSnapshot = snapshot;
@@ -463,8 +463,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
-                    CultureInfos = new Dictionary<string, ICultureVariation>()
+                    Properties = new Dictionary<string, PropertyData[]>(),
+                    CultureInfos = new Dictionary<string, CultureVariation>()
                 }
             };
 
@@ -505,8 +505,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
-                    CultureInfos = new Dictionary<string, ICultureVariation>()
+                    Properties = new Dictionary<string, PropertyData[]>(),
+                    CultureInfos = new Dictionary<string, CultureVariation>()
                 }
             };
 
@@ -547,8 +547,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
-                    CultureInfos = new Dictionary<string, ICultureVariation>()
+                    Properties = new Dictionary<string, PropertyData[]>(),
+                    CultureInfos = new Dictionary<string, CultureVariation>()
                 }
             };
 
@@ -566,8 +566,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
-                    CultureInfos = new Dictionary<string, ICultureVariation>()
+                    Properties = new Dictionary<string, PropertyData[]>(),
+                    CultureInfos = new Dictionary<string, CultureVariation>()
                 }
             };
 
@@ -585,8 +585,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
-                    CultureInfos = new Dictionary<string, ICultureVariation>()
+                    Properties = new Dictionary<string, PropertyData[]>(),
+                    CultureInfos = new Dictionary<string, CultureVariation>()
                 }
             };
 
@@ -622,8 +622,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
-                    CultureInfos = new Dictionary<string, ICultureVariation>()
+                    Properties = new Dictionary<string, PropertyData[]>(),
+                    CultureInfos = new Dictionary<string, CultureVariation>()
                 }
             };
 
@@ -641,8 +641,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
-                    CultureInfos = new Dictionary<string, ICultureVariation>()
+                    Properties = new Dictionary<string, PropertyData[]>(),
+                    CultureInfos = new Dictionary<string, CultureVariation>()
                 }
             };
 
@@ -660,8 +660,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
-                    CultureInfos = new Dictionary<string, ICultureVariation>()
+                    Properties = new Dictionary<string, PropertyData[]>(),
+                    CultureInfos = new Dictionary<string, CultureVariation>()
                 }
             };
 
@@ -679,8 +679,8 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]>(),
-                    CultureInfos = new Dictionary<string, ICultureVariation>()
+                    Properties = new Dictionary<string, PropertyData[]>(),
+                    CultureInfos = new Dictionary<string, CultureVariation>()
                 }
             };
 
@@ -710,7 +710,7 @@ namespace Umbraco.Tests.PublishedContent
 
             var paths = new Dictionary<int, string> { { -1, "-1" } };
 
-            Init(() => new List<ContentNodeKit>
+            Init(() => new List<IContentNodeKit>
             {
                 CreateInvariantKit(1, -1, 1, paths),    // first level
                 CreateInvariantKit(2, 1, 1, paths),     // second level
@@ -1040,7 +1040,7 @@ namespace Umbraco.Tests.PublishedContent
         {
             //see https://github.com/umbraco/Umbraco-CMS/issues/6353
 
-            IEnumerable<ContentNodeKit> GetKits()
+            IEnumerable<IContentNodeKit> GetKits()
             {
                 var paths = new Dictionary<int, string> { { -1, "-1" } };
 
@@ -1074,7 +1074,7 @@ namespace Umbraco.Tests.PublishedContent
             // NOTE: these tests are not using real scopes, in which case a Scope does not control
             // how the snapshots generations work. We are forcing new snapshot generations manually.
 
-            IEnumerable<ContentNodeKit> GetKits()
+            IEnumerable<IContentNodeKit> GetKits()
             {
                 var paths = new Dictionary<int, string> { { -1, "-1" } };
 
@@ -1149,7 +1149,7 @@ namespace Umbraco.Tests.PublishedContent
             // NOTE: these tests are not using real scopes, in which case a Scope does not control
             // how the snapshots generations work. We are forcing new snapshot generations manually.
 
-            IEnumerable<ContentNodeKit> GetKits()
+            IEnumerable<IContentNodeKit> GetKits()
             {
                 var paths = new Dictionary<int, string> { { -1, "-1" } };
 
@@ -1220,7 +1220,7 @@ namespace Umbraco.Tests.PublishedContent
             // NOTE: these tests are not using real scopes, in which case a Scope does not control
             // how the snapshots generations work. We are forcing new snapshot generations manually.
 
-            IEnumerable<ContentNodeKit> GetKits()
+            IEnumerable<IContentNodeKit> GetKits()
             {
                 var paths = new Dictionary<int, string> { { -1, "-1" } };
 
@@ -1296,7 +1296,7 @@ namespace Umbraco.Tests.PublishedContent
             // NOTE: these tests are not using real scopes, in which case a Scope does not control
             // how the snapshots generations work. We are forcing new snapshot generations manually.
 
-            IEnumerable<ContentNodeKit> GetKits()
+            IEnumerable<IContentNodeKit> GetKits()
             {
                 var paths = new Dictionary<int, string> { { -1, "-1" } };
 

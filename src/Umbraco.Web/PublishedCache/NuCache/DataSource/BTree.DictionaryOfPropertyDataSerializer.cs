@@ -9,11 +9,11 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
     /// <summary>
     /// Serializes/Deserializes property data as a dictionary for BTree
     /// </summary>
-    internal class DictionaryOfPropertyDataSerializer : SerializerBase, ISerializer<IDictionary<string, IPropertyData[]>>, IDictionaryOfPropertyDataSerializer
+    internal class DictionaryOfPropertyDataSerializer : SerializerBase, ISerializer<IDictionary<string, PropertyData[]>>, IDictionaryOfPropertyDataSerializer
     {
-        public IDictionary<string, IPropertyData[]> ReadFrom(Stream stream)
+        public IDictionary<string, PropertyData[]> ReadFrom(Stream stream)
         {
-            var dict = new Dictionary<string, IPropertyData[]>(StringComparer.InvariantCultureIgnoreCase);
+            var dict = new Dictionary<string, PropertyData[]>(StringComparer.InvariantCultureIgnoreCase);
 
             // read properties count
             var pcount = PrimitiveSerializer.Int32.ReadFrom(stream);
@@ -51,7 +51,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             return dict;
         }
 
-        public void WriteTo(IDictionary<string, IPropertyData[]> value, Stream stream)
+        public void WriteTo(IDictionary<string, PropertyData[]> value, Stream stream)
         {
             // write properties count
             PrimitiveSerializer.Int32.WriteTo(value.Count, stream);

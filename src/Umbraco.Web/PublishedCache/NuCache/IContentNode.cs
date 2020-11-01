@@ -25,7 +25,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         bool HasPublishedCulture(string culture);
         void SetContentTypeAndData(IPublishedContentType contentType, IContentData draftData, IContentData publishedData, IPublishedSnapshotAccessor publishedSnapshotAccessor, IVariationContextAccessor variationContextAccessor);
-        ContentNodeKit ToKit();
+        IContentNodeKit ToKit();
         IContentNode Clone(IPublishedContentType contentType = null);
     }
 }

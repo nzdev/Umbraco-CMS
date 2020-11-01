@@ -292,6 +292,7 @@
     <Compile Include="PublishedCache\NuCache\BPlusTreeTransactableDictionaryFactory.cs" />
     <Compile Include="PublishedCache\NuCache\BPlusTreeTransactableDictionary.cs" />
     <Compile Include="PublishedCache\NuCache\IContentNode.cs" />
+    <Compile Include="PublishedCache\NuCache\IContentNodeKit.cs" />
     <Compile Include="PublishedCache\NuCache\IContentStore.cs" />
     <Compile Include="PublishedCache\NuCache\IContentStoreFactory.cs" />
     <Compile Include="PublishedCache\NuCache\ISnapshot.cs" />

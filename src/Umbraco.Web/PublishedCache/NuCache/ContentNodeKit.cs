@@ -4,12 +4,12 @@ using Umbraco.Web.PublishedCache.NuCache.DataSource;
 namespace Umbraco.Web.PublishedCache.NuCache
 {
     // what's needed to actually build a content node
-    public struct ContentNodeKit
+    public struct ContentNodeKit : IContentNodeKit
     {
-        public IContentNode Node;
-        public int ContentTypeId;
-        public IContentData DraftData;
-        public IContentData PublishedData;
+        public IContentNode Node { get; set; }
+        public int ContentTypeId { get; set; }
+        public IContentData DraftData { get; set; }
+        public IContentData PublishedData { get; set; }
 
         public bool IsEmpty => Node == null;
 
@@ -38,7 +38,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             Node.SetContentTypeAndData(contentType, draftData, publishedData, publishedSnapshotAccessor, variationContextAccessor);
         }
 
-        public ContentNodeKit Clone()
+        public IContentNodeKit Clone()
             => new ContentNodeKit
             {
                 ContentTypeId = ContentTypeId,

@@ -101,7 +101,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             return sql;
         }
 
-        public ContentNodeKit GetContentSource(IScope scope, int id)
+        public IContentNodeKit GetContentSource(IScope scope, int id)
         {
             var sql = ContentSourcesSelect(scope)
                 .Where<NodeDto>(x => x.NodeObjectType == Constants.ObjectTypes.Document && x.NodeId == id && !x.Trashed)
@@ -115,7 +115,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             return CreateContentNodeKit(dto, serializer);
         }
 
-        public IEnumerable<ContentNodeKit> GetAllContentSources(IScope scope)
+        public IEnumerable<IContentNodeKit> GetAllContentSources(IScope scope)
         {
             // Create a different query for the SQL vs the COUNT Sql since the auto-generated COUNT Sql will be inneficient
             var sql = ContentSourcesSelect(scope)
@@ -138,7 +138,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             }   
         }
 
-        public IEnumerable<ContentNodeKit> GetBranchContentSources(IScope scope, int id)
+        public IEnumerable<IContentNodeKit> GetBranchContentSources(IScope scope, int id)
         {
             var syntax = scope.SqlContext.SqlSyntax;
             var sql = ContentSourcesSelect(scope,
@@ -158,7 +158,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             }   
         }
 
-        public IEnumerable<ContentNodeKit> GetTypeContentSources(IScope scope, IEnumerable<int> ids)
+        public IEnumerable<IContentNodeKit> GetTypeContentSources(IScope scope, IEnumerable<int> ids)
         {
             if (!ids.Any()) yield break;
 
@@ -202,7 +202,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             return sql;
         }
 
-        public ContentNodeKit GetMediaSource(IScope scope, int id)
+        public IContentNodeKit GetMediaSource(IScope scope, int id)
         {
             var sql = MediaSourcesSelect(scope)
                 .Where<NodeDto>(x => x.NodeObjectType == Constants.ObjectTypes.Media && x.NodeId == id && !x.Trashed)
@@ -216,7 +216,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             return CreateMediaNodeKit(dto, serializer);
         }
 
-        public IEnumerable<ContentNodeKit> GetAllMediaSources(IScope scope)
+        public IEnumerable<IContentNodeKit> GetAllMediaSources(IScope scope)
         {
             var sql = MediaSourcesSelect(scope)
                 .Where<NodeDto>(x => x.NodeObjectType == Constants.ObjectTypes.Media && !x.Trashed)
@@ -233,7 +233,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             }   
         }
 
-        public IEnumerable<ContentNodeKit> GetBranchMediaSources(IScope scope, int id)
+        public IEnumerable<IContentNodeKit> GetBranchMediaSources(IScope scope, int id)
         {
             var syntax = scope.SqlContext.SqlSyntax;
             var sql = MediaSourcesSelect(scope,
@@ -253,7 +253,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             }   
         }
 
-        public IEnumerable<ContentNodeKit> GetTypeMediaSources(IScope scope, IEnumerable<int> ids)
+        public IEnumerable<IContentNodeKit> GetTypeMediaSources(IScope scope, IEnumerable<int> ids)
         {
             if (!ids.Any()) yield break;
 

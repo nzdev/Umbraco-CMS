@@ -22,18 +22,18 @@ namespace Umbraco.Web.PublishedCache.NuCache
             _contentDataSerializer = contentDataSerializer;
         }
 
-        public ITransactableDictionary<int, ContentNodeKit> Get(ContentCacheEntityType entityType)
+        public ITransactableDictionary<int, IContentNodeKit> Get(ContentCacheEntityType entityType)
         {
             switch (entityType)
             {
                 case ContentCacheEntityType.Document:
                     var localContentDbPath = GetContentDbPath();
                     var localContentCacheFilesExist = File.Exists(localContentDbPath);
-                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localContentDbPath, localContentCacheFilesExist, _contentDataSerializer), localContentDbPath, localContentCacheFilesExist);
+                    return new BPlusTreeTransactableDictionary<int, IContentNodeKit>(GetTree(localContentDbPath, localContentCacheFilesExist, _contentDataSerializer), localContentDbPath, localContentCacheFilesExist);
                 case ContentCacheEntityType.Media:
                     var localMediaDbPath = GetMediaDbPath();
                      var localMediaCacheFilesExist = File.Exists(localMediaDbPath);
-                    return new BPlusTreeTransactableDictionary<int, ContentNodeKit>(GetTree(localMediaDbPath, localMediaCacheFilesExist, _contentDataSerializer), localMediaDbPath, localMediaCacheFilesExist);
+                    return new BPlusTreeTransactableDictionary<int, IContentNodeKit>(GetTree(localMediaDbPath, localMediaCacheFilesExist, _contentDataSerializer), localMediaDbPath, localMediaCacheFilesExist);
                 case ContentCacheEntityType.Member:
                     throw new ArgumentException("Unsupported Entity Type", nameof(entityType));
                 default:
@@ -78,11 +78,11 @@ namespace Umbraco.Web.PublishedCache.NuCache
             return ok;
         }
 
-        public virtual BPlusTree<int, ContentNodeKit> GetTree(string filepath, bool exists, ISerializer<IContentData> contentDataSerializer = null)
+        public virtual BPlusTree<int, IContentNodeKit> GetTree(string filepath, bool exists, ISerializer<IContentData> contentDataSerializer = null)
         {
             var keySerializer = new PrimitiveSerializer();
             var valueSerializer = new ContentNodeKitSerializer(contentDataSerializer);
-            var options = new BPlusTree<int, ContentNodeKit>.OptionsV2(keySerializer, valueSerializer)
+            var options = new BPlusTree<int, IContentNodeKit>.OptionsV2(keySerializer, valueSerializer)
             {
                 CreateFile = exists ? CreatePolicy.IfNeeded : CreatePolicy.Always,
                 FileName = filepath,
@@ -96,7 +96,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 // other options?
             };
 
-            var tree = new BPlusTree<int, ContentNodeKit>(options);
+            var tree = new BPlusTree<int, IContentNodeKit>(options);
 
             // anything?
             //btree.

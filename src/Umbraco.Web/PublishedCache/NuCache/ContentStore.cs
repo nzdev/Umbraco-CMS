@@ -46,7 +46,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private readonly ConcurrentDictionary<Guid, int> _contentKeyToIdMap;
 
         private readonly ILogger _logger;
-        private ITransactableDictionary<int, ContentNodeKit> _localDb;
+        private ITransactableDictionary<int, IContentNodeKit> _localDb;
         private readonly ConcurrentQueue<GenObj> _genObjs;
         private GenObj _genObj;
         private readonly object _wlocko = new object();
@@ -54,7 +54,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private long _liveGen, _floorGen;
         private bool _nextGen, _collectAuto;
         private Task _collectTask;
-        private List<KeyValuePair<int, ContentNodeKit>> _wchanges;
+        private List<KeyValuePair<int, IContentNodeKit>> _wchanges;
 
         // TODO: collection trigger (ok for now)
         // see SnapDictionary notes
@@ -66,7 +66,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             IPublishedSnapshotAccessor publishedSnapshotAccessor,
             IVariationContextAccessor variationContextAccessor,
             ILogger logger,
-            ITransactableDictionary<int, ContentNodeKit> localDb = null)
+            ITransactableDictionary<int, IContentNodeKit> localDb = null)
         {
             _publishedSnapshotAccessor = publishedSnapshotAccessor;
             _variationContextAccessor = variationContextAccessor;
@@ -189,7 +189,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                         foreach (var change in _wchanges)
                         {
                             if (change.Value.IsNull)
-                                _localDb.TryRemove(change.Key, out ContentNodeKit unused);
+                                _localDb.TryRemove(change.Key, out IContentNodeKit unused);
                             else
                                 _localDb[change.Key] = change.Value;
                         }
@@ -273,10 +273,10 @@ namespace Umbraco.Web.PublishedCache.NuCache
             }
         }
 
-        private void RegisterChange(int id, ContentNodeKit kit)
+        private void RegisterChange(int id, IContentNodeKit kit)
         {
-            if (_wchanges == null) _wchanges = new List<KeyValuePair<int, ContentNodeKit>>();
-            _wchanges.Add(new KeyValuePair<int, ContentNodeKit>(id, kit));
+            if (_wchanges == null) _wchanges = new List<KeyValuePair<int, IContentNodeKit>>();
+            _wchanges.Add(new KeyValuePair<int, IContentNodeKit>(id, kit));
         }
 
         #endregion
@@ -381,14 +381,14 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <exception cref="InvalidOperationException">
         /// Thrown if this method is not called within a write lock
         /// </exception>
-        public void UpdateContentTypesLocked(IReadOnlyCollection<int> removedIds, IReadOnlyCollection<IPublishedContentType> refreshedTypes, IReadOnlyCollection<ContentNodeKit> kits)
+        public void UpdateContentTypesLocked(IReadOnlyCollection<int> removedIds, IReadOnlyCollection<IPublishedContentType> refreshedTypes, IReadOnlyCollection<IContentNodeKit> kits)
         {
             EnsureLocked();
 
             var removedIdsA = removedIds ?? Array.Empty<int>();
             var refreshedTypesA = refreshedTypes ?? Array.Empty<IPublishedContentType>();
             var refreshedIdsA = refreshedTypesA.Select(x => x.Id).ToList();
-            kits = kits ?? Array.Empty<ContentNodeKit>();
+            kits = kits ?? Array.Empty<IContentNodeKit>();
 
             if (kits.Count == 0 && refreshedIdsA.Count == 0 && removedIdsA.Count == 0)
                 return; //exit - there is nothing to do here
@@ -508,14 +508,14 @@ namespace Umbraco.Web.PublishedCache.NuCache
         }
 
         /// <summary>
-        /// Validate the <see cref="ContentNodeKit"/> and try to create a parent <see cref="LinkedNode{ContentNode}"/>
+        /// Validate the <see cref="IContentNodeKit"/> and try to create a parent <see cref="LinkedNode{ContentNode}"/>
         /// </summary>
         /// <param name="kit"></param>
         /// <param name="parent"></param>
         /// <returns>
         /// Returns false if the parent was not found or if the kit validation failed
         /// </returns>
-        private bool BuildKit(ContentNodeKit kit, out LinkedNode<IContentNode> parent)
+        private bool BuildKit(IContentNodeKit kit, out LinkedNode<IContentNode> parent)
         {
             // make sure parent exists
             parent = GetParentLink(kit.Node, null);
@@ -579,7 +579,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         }
 
         /// <summary>
-        /// Sets the data for a <see cref="ContentNodeKit"/>
+        /// Sets the data for a <see cref="IContentNodeKit"/>
         /// </summary>
         /// <param name="kit"></param>
         /// <returns></returns>
@@ -590,7 +590,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <exception cref="InvalidOperationException">
         /// Thrown if this method is not called within a write lock
         /// </exception>
-        public bool SetLocked(ContentNodeKit kit)
+        public bool SetLocked(IContentNodeKit kit)
         {
             EnsureLocked();
 
@@ -678,7 +678,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <exception cref="InvalidOperationException">
         /// Thrown if this method is not called within a write lock
         /// </exception>
-        public bool SetAllFastSortedLocked(IEnumerable<ContentNodeKit> kits, bool fromDb)
+        public bool SetAllFastSortedLocked(IEnumerable<IContentNodeKit> kits, bool fromDb)
         {
             EnsureLocked();
 
@@ -746,7 +746,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         }
 
         /// <summary>
-        /// Set all data for a collection of <see cref="ContentNodeKit"/>
+        /// Set all data for a collection of <see cref="IContentNodeKit"/>
         /// </summary>
         /// <param name="kits"></param>
         /// <returns></returns>
@@ -757,7 +757,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <exception cref="InvalidOperationException">
         /// Thrown if this method is not called within a write lock
         /// </exception>
-        public bool SetAllLocked(IEnumerable<ContentNodeKit> kits)
+        public bool SetAllLocked(IEnumerable<IContentNodeKit> kits)
         {
             EnsureLocked();
 
@@ -790,7 +790,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         }
 
         /// <summary>
-        /// Sets data for a branch of <see cref="ContentNodeKit"/>
+        /// Sets data for a branch of <see cref="IContentNodeKit"/>
         /// </summary>
         /// <param name="rootContentId"></param>
         /// <param name="kits"></param>
@@ -807,7 +807,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// <exception cref="InvalidOperationException">
         /// Thrown if this method is not called within a write lock
         /// </exception>
-        public bool SetBranchLocked(int rootContentId, IEnumerable<ContentNodeKit> kits)
+        public bool SetBranchLocked(int rootContentId, IEnumerable<IContentNodeKit> kits)
         {
             EnsureLocked();
 
@@ -1024,7 +1024,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             }
         }
 
-        private bool ParentPublishedLocked(ContentNodeKit kit)
+        private bool ParentPublishedLocked(IContentNodeKit kit)
         {
             if (kit.Node.ParentContentId < 0)
                 return true;

@@ -10,7 +10,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 {
     public class ContentStoreFactory : IContentStoreFactory
     {
-        public IContentStore GetContentStore(IPublishedSnapshotAccessor publishedSnapshotAccessor, IVariationContextAccessor variationContextAccessor, ILogger logger, ITransactableDictionary<int, ContentNodeKit> localDb = null)
+        public IContentStore GetContentStore(IPublishedSnapshotAccessor publishedSnapshotAccessor, IVariationContextAccessor variationContextAccessor, ILogger logger, ITransactableDictionary<int, IContentNodeKit> localDb = null)
         {
             return new ContentStore(publishedSnapshotAccessor, variationContextAccessor, logger, localDb);
         }

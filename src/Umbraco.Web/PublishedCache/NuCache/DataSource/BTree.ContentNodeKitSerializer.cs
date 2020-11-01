@@ -3,7 +3,7 @@ using CSharpTest.Net.Serialization;
 
 namespace Umbraco.Web.PublishedCache.NuCache.DataSource
 {
-    internal class ContentNodeKitSerializer : ISerializer<ContentNodeKit>
+    internal class ContentNodeKitSerializer : ISerializer<IContentNodeKit>
     {
         public ContentNodeKitSerializer(ISerializer<IContentData> contentDataSerializer = null)
         {
@@ -18,7 +18,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
 
         //static readonly ListOfIntSerializer ChildContentIdsSerializer = new ListOfIntSerializer();
 
-        public ContentNodeKit ReadFrom(Stream stream)
+        public IContentNodeKit ReadFrom(Stream stream)
         {
             var kit = new ContentNodeKit
             {
@@ -43,7 +43,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
             return kit;
         }
 
-        public void WriteTo(ContentNodeKit value, Stream stream)
+        public void WriteTo(IContentNodeKit value, Stream stream)
         {
             PrimitiveSerializer.Int32.WriteTo(value.Node.Id, stream);
             PrimitiveSerializer.Guid.WriteTo(value.Node.Uid, stream);

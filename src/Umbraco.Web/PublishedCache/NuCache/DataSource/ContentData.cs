@@ -16,11 +16,11 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
         public int? TemplateId { get; set; }
         public bool Published { get; set; }
 
-        public IDictionary<string, IPropertyData[]> Properties { get; set; }
+        public IDictionary<string, PropertyData[]> Properties { get; set; }
 
         /// <summary>
         /// The collection of language Id to name for the content item
         /// </summary>
-        public IReadOnlyDictionary<string, ICultureVariation> CultureInfos { get; set; }
+        public IReadOnlyDictionary<string, CultureVariation> CultureInfos { get; set; }
     }
 }

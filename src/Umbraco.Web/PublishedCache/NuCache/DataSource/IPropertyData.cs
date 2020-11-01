@@ -1,4 +1,7 @@
-﻿namespace Umbraco.Web.PublishedCache.NuCache.DataSource
+﻿using System.ComponentModel;
+using System.Runtime.Serialization;
+
+namespace Umbraco.Web.PublishedCache.NuCache.DataSource
 {
     public interface IPropertyData
     {

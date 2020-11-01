@@ -5,9 +5,9 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
 {
     public interface IContentData
     {
-        IReadOnlyDictionary<string, ICultureVariation> CultureInfos { get; set; }
+        IReadOnlyDictionary<string, CultureVariation> CultureInfos { get; set; }
         string Name { get; set; }
-        IDictionary<string, IPropertyData[]> Properties { get; set; }
+        IDictionary<string, PropertyData[]> Properties { get; set; }
         bool Published { get; set; }
         int? TemplateId { get; set; }
         string UrlSegment { get; set; }

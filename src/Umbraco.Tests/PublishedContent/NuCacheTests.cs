@@ -72,7 +72,7 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 2,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]> { { "prop", new[]
+                    Properties = new Dictionary<string, PropertyData[]> { { "prop", new[]
                     {
                         new PropertyData { Culture = "", Segment = "", Value = "val2" },
                         new PropertyData { Culture = "fr-FR", Segment = "", Value = "val-fr2" },
@@ -80,7 +80,7 @@ namespace Umbraco.Tests.PublishedContent
                         new PropertyData { Culture = "dk-DA", Segment = "", Value = "val-da2" },
                         new PropertyData { Culture = "de-DE", Segment = "", Value = "val-de2" }
                     } } },
-                    CultureInfos = new Dictionary<string, ICultureVariation>
+                    CultureInfos = new Dictionary<string, CultureVariation>
                     {
                         // draft data = everything, and IsDraft indicates what's edited
                         { "fr-FR", new CultureVariation { Name = "name-fr2", IsDraft = true, Date = new DateTime(2018, 01, 03, 01, 00, 00) } },
@@ -97,13 +97,13 @@ namespace Umbraco.Tests.PublishedContent
                     VersionId = 1,
                     VersionDate = DateTime.Now,
                     WriterId = 0,
-                    Properties = new Dictionary<string, IPropertyData[]> { { "prop", new[]
+                    Properties = new Dictionary<string, PropertyData[]> { { "prop", new[]
                     {
                         new PropertyData { Culture = "", Segment = "", Value = "val1" },
                         new PropertyData { Culture = "fr-FR", Segment = "", Value = "val-fr1" },
                         new PropertyData { Culture = "en-UK", Segment = "", Value = "val-uk1" }
                     } } },
-                    CultureInfos = new Dictionary<string, ICultureVariation>
+                    CultureInfos = new Dictionary<string, CultureVariation>
                     {
                         // published data = only what's actually published, and IsDraft has to be false
                         { "fr-FR", new CultureVariation { Name = "name-fr1", IsDraft = false, Date = new DateTime(2018, 01, 01, 01, 00, 00) } },

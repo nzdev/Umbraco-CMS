@@ -5,7 +5,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
 {
     internal interface IDictionaryOfPropertyDataSerializer
     {
-        IDictionary<string, IPropertyData[]> ReadFrom(Stream stream);
-        void WriteTo(IDictionary<string, IPropertyData[]> value, Stream stream);
+        IDictionary<string, PropertyData[]> ReadFrom(Stream stream);
+        void WriteTo(IDictionary<string, PropertyData[]> value, Stream stream);
     }
 }

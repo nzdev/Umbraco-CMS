@@ -19,7 +19,7 @@ namespace Umbraco.Tests.PublishedContent
             var now = DateTime.Now;
             var content = new ContentCacheDataModel
             {
-                PropertyData = new Dictionary<string, IPropertyData[]>
+                PropertyData = new Dictionary<string, PropertyData[]>
                 {
                     ["propertyOne"] = new[]
                     {
@@ -40,7 +40,7 @@ namespace Umbraco.Tests.PublishedContent
                         }
                     }
                 },
-                CultureData = new Dictionary<string, ICultureVariation>
+                CultureData = new Dictionary<string, CultureVariation>
                 {
                     ["en-US"] = new CultureVariation
                     {

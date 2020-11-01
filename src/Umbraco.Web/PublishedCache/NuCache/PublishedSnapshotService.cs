@@ -57,8 +57,8 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private readonly object _storesLock = new object();
         private readonly object _elementsLock = new object();
 
-        private ITransactableDictionary<int,ContentNodeKit> _localContentDb;
-        private ITransactableDictionary<int, ContentNodeKit> _localMediaDb;
+        private ITransactableDictionary<int, IContentNodeKit> _localContentDb;
+        private ITransactableDictionary<int, IContentNodeKit> _localMediaDb;
 
         // define constant - determines whether to use cache when previewing
         // to store eg routes, property converted values, anything - caching
@@ -464,7 +464,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         }
 
-        private bool LoadEntitiesFromLocalDbLocked(bool onStartup, ITransactableDictionary<int, ContentNodeKit> localDb, IContentStore store, string entityType)
+        private bool LoadEntitiesFromLocalDbLocked(bool onStartup, ITransactableDictionary<int, IContentNodeKit> localDb, IContentStore store, string entityType)
         {
             var kits = localDb.Select(x => x.Value)
                     .OrderBy(x => x.Node.Level)
@@ -1057,7 +1057,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                     : CreateContentTypes(PublishedItemType.Content, refreshedIds.ToArray()).ToArray();
 
                 var kits = refreshedIds.IsCollectionEmpty()
-                    ? Array.Empty<ContentNodeKit>()
+                    ? Array.Empty<IContentNodeKit>()
                     : _dataSource.GetTypeContentSources(scope, refreshedIds).ToArray();
 
                 _contentStore.UpdateContentTypesLocked(removedIds, typesA, kits);
@@ -1088,7 +1088,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                     : CreateContentTypes(PublishedItemType.Media, refreshedIds.ToArray()).ToArray();
 
                 var kits = refreshedIds == null
-                    ? Array.Empty<ContentNodeKit>()
+                    ? Array.Empty<IContentNodeKit>()
                     : _dataSource.GetTypeMediaSources(scope, refreshedIds).ToArray();
 
                 _mediaStore.UpdateContentTypesLocked(removedIds, typesA, kits);
@@ -1360,10 +1360,10 @@ namespace Umbraco.Web.PublishedCache.NuCache
             //var propertyEditorResolver = PropertyEditorResolver.Current;
             //var dataTypeService = ApplicationContext.Current.Services.DataTypeService;
 
-            var propertyData = new Dictionary<string, IPropertyData[]>();
+            var propertyData = new Dictionary<string, PropertyData[]>();
             foreach (var prop in content.Properties)
             {
-                var pdatas = new List<IPropertyData>();
+                var pdatas = new List<PropertyData>();
                 foreach (var pvalue in prop.Values)
                 {
                     // sanitize - properties should be ok but ... never knows
@@ -1399,7 +1399,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 propertyData[prop.Alias] = pdatas.ToArray();
             }
 
-            var cultureData = new Dictionary<string, ICultureVariation>();
+            var cultureData = new Dictionary<string, CultureVariation>();
 
             // sanitize - names should be ok but ... never knows
             if (content.ContentType.VariesByCulture())
