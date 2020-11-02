@@ -7,16 +7,17 @@ using System.IO;
 using System.Linq;
 using Umbraco.Core.Configuration;
 using Umbraco.Web.Install;
-using Umbraco.Web.PublishedCache.NuCache.DataSource;
 
 namespace Umbraco.Web.PublishedCache.NuCache
 {
+
     public class BPlusTreeTransactableDictionaryFactory : ITransactableDictionaryFactory
     {
         private readonly IGlobalSettings _globalSettings;
-        private readonly ISerializer<IContentData> _contentDataSerializer;
+        private readonly ISerializer<IContentNodeKit> _contentDataSerializer;
 
-        public BPlusTreeTransactableDictionaryFactory(IGlobalSettings globalSettings,ISerializer<IContentData> contentDataSerializer = null)
+        public BPlusTreeTransactableDictionaryFactory(IGlobalSettings globalSettings,
+            ISerializer<IContentNodeKit> contentDataSerializer)
         {
             _globalSettings = globalSettings;
             _contentDataSerializer = contentDataSerializer;
@@ -29,17 +30,24 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 case ContentCacheEntityType.Document:
                     var localContentDbPath = GetContentDbPath();
                     var localContentCacheFilesExist = File.Exists(localContentDbPath);
-                    return new BPlusTreeTransactableDictionary<int, IContentNodeKit>(GetTree(localContentDbPath, localContentCacheFilesExist, _contentDataSerializer), localContentDbPath, localContentCacheFilesExist);
+                    return GetDocumentBPlusTree(localContentDbPath, localContentCacheFilesExist);
                 case ContentCacheEntityType.Media:
                     var localMediaDbPath = GetMediaDbPath();
-                     var localMediaCacheFilesExist = File.Exists(localMediaDbPath);
-                    return new BPlusTreeTransactableDictionary<int, IContentNodeKit>(GetTree(localMediaDbPath, localMediaCacheFilesExist, _contentDataSerializer), localMediaDbPath, localMediaCacheFilesExist);
+                    var localMediaCacheFilesExist = File.Exists(localMediaDbPath);
+                    var fullLoadMediaDictionary = GetTree(localMediaDbPath, localMediaCacheFilesExist, _contentDataSerializer);
+                    return new BPlusTreeTransactableDictionary<int, IContentNodeKit>(fullLoadMediaDictionary, localMediaDbPath, localMediaCacheFilesExist);
                 case ContentCacheEntityType.Member:
                     throw new ArgumentException("Unsupported Entity Type", nameof(entityType));
                 default:
                     throw new ArgumentException("Unsupported Entity Type", nameof(entityType));
             }
         }
+        protected virtual ITransactableDictionary<int, IContentNodeKit> GetDocumentBPlusTree(string localContentDbPath, bool localContentCacheFilesExist)
+        {
+            var fullLoadDictionary = GetTree(localContentDbPath, localContentCacheFilesExist, _contentDataSerializer);
+            return new BPlusTreeTransactableDictionary<int, IContentNodeKit>(fullLoadDictionary, localContentDbPath, localContentCacheFilesExist);
+        }
+        
 
         private string GetContentDbPath()
         {
@@ -78,10 +86,9 @@ namespace Umbraco.Web.PublishedCache.NuCache
             return ok;
         }
 
-        public virtual BPlusTree<int, IContentNodeKit> GetTree(string filepath, bool exists, ISerializer<IContentData> contentDataSerializer = null)
+        public virtual BPlusTree<int, IContentNodeKit> GetTree(string filepath, bool exists, ISerializer<IContentNodeKit> valueSerializer,bool readOnly = false)
         {
             var keySerializer = new PrimitiveSerializer();
-            var valueSerializer = new ContentNodeKitSerializer(contentDataSerializer);
             var options = new BPlusTree<int, IContentNodeKit>.OptionsV2(keySerializer, valueSerializer)
             {
                 CreateFile = exists ? CreatePolicy.IfNeeded : CreatePolicy.Always,
@@ -92,7 +99,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
                 // default is 4096, min 2^9 = 512, max 2^16 = 64K
                 FileBlockSize = GetBlockSize(),
-
+                ReadOnly = readOnly
                 // other options?
             };
 

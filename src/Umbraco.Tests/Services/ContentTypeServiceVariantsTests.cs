@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using CSharpTest.Net.Serialization;
 using Moq;
 using NUnit.Framework;
 using Umbraco.Core;
@@ -53,7 +54,8 @@ namespace Umbraco.Tests.Services
             var mediaRepository = Mock.Of<IMediaRepository>();
             var memberRepository = Mock.Of<IMemberRepository>();
             var globalSettings = Factory.GetInstance<IGlobalSettings>();
-            ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory(globalSettings);
+            ISerializer<IContentNodeKit> fullLoadContentNodeKitSerializer = new ContentNodeKitSerializer(new ContentDataSerializer(new DictionaryOfPropertyDataSerializer(), new DictionaryOfCultureVariationSerializer()));
+            ITransactableDictionaryFactory transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory(globalSettings, fullLoadContentNodeKitSerializer);
             var nestedContentDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
             var contentStoreFactory = new ContentStoreFactory();
 

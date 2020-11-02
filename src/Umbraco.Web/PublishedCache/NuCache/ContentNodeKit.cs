@@ -1,4 +1,7 @@
-﻿using Umbraco.Core.Models.PublishedContent;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web.PublishedCache.NuCache.DataSource;
 
 namespace Umbraco.Web.PublishedCache.NuCache
@@ -10,6 +13,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         public int ContentTypeId { get; set; }
         public IContentData DraftData { get; set; }
         public IContentData PublishedData { get; set; }
+        public ContentNodeKitLoadState LoadState { get; set; }
 
         public bool IsEmpty => Node == null;
 
@@ -17,6 +21,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         public static ContentNodeKit Empty { get; } = new ContentNodeKit();
         public static ContentNodeKit Null { get; } = new ContentNodeKit { ContentTypeId = -1 };
+        
 
         public void Build(
             IPublishedContentType contentType,
@@ -39,12 +44,23 @@ namespace Umbraco.Web.PublishedCache.NuCache
         }
 
         public IContentNodeKit Clone()
-            => new ContentNodeKit
-            {
-                ContentTypeId = ContentTypeId,
-                DraftData = DraftData,
-                PublishedData = PublishedData,
-                Node = Node.Clone()
-            };
+        {
+           var clone = new ContentNodeKit
+               {
+                   ContentTypeId = ContentTypeId,
+                   DraftData = DraftData,
+                   PublishedData = PublishedData,
+                   Node = Node.Clone()
+               };
+            clone.SetLazyLoader(_lazyLoader);
+            return clone;
+        }
+            
+
+        Func<int, IContentNodeKit> _lazyLoader;
+        public void SetLazyLoader(Func<int, IContentNodeKit> lazyLoader)
+        {
+            _lazyLoader = lazyLoader;
+        }
     }
 }

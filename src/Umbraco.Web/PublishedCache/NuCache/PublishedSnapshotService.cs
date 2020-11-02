@@ -466,11 +466,24 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         private bool LoadEntitiesFromLocalDbLocked(bool onStartup, ITransactableDictionary<int, IContentNodeKit> localDb, IContentStore store, string entityType)
         {
-            var kits = localDb.Select(x => x.Value)
-                    .OrderBy(x => x.Node.Level)
-                    .ThenBy(x => x.Node.ParentContentId)
-                    .ThenBy(x => x.Node.SortOrder) // IMPORTANT sort by level + parentId + sortOrder
-                    .ToList();
+            ICollection<IContentNodeKit> kits;
+            if(localDb is ILazyLoadingTransactableDictionary<int,IContentNodeKit> lazyLocalDb)
+            {
+                kits = lazyLocalDb.GetEnumerator(ContentNodeKitLoadState.RoutingPropertiesLoaded).Select(x => x.Value)
+                   .OrderBy(x => x.Node.Level)
+                   .ThenBy(x => x.Node.ParentContentId)
+                   .ThenBy(x => x.Node.SortOrder) // IMPORTANT sort by level + parentId + sortOrder
+                   .ToList();
+            }
+            else
+            {
+                kits = localDb.Select(x => x.Value)
+                   .OrderBy(x => x.Node.Level)
+                   .ThenBy(x => x.Node.ParentContentId)
+                   .ThenBy(x => x.Node.SortOrder) // IMPORTANT sort by level + parentId + sortOrder
+                   .ToList();
+            }
+           
 
             if (kits.Count == 0)
             {

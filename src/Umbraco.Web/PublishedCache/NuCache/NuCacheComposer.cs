@@ -15,21 +15,41 @@ namespace Umbraco.Web.PublishedCache.NuCache
             base.Compose(composition);
 
             var serializer = ConfigurationManager.AppSettings["Umbraco.Web.PublishedCache.NuCache.Serializer"];
-            if (serializer != "MsgPack")
+            if (serializer == "MsgPack")
+            {
+                composition.RegisterUnique<IContentCacheDataSerializerFactory, MsgPackContentNestedDataSerializerFactory>();
+            }
+            else
             {
                 // TODO: This allows people to revert to the legacy serializer, by default it will be MessagePack
                 composition.RegisterUnique<IContentCacheDataSerializerFactory, JsonContentNestedDataSerializerFactory>();
             }
+
+            var nucacheProvider = ConfigurationManager.AppSettings["Umbraco.Web.PublishedCache.Nucache.Provider"];
+            if(nucacheProvider == "LazyBPlusTree")
+            {
+                composition.RegisterUnique<ISerializer<IContentNodeKit>, LazyContentNodeKitSerializer>();
+                composition.RegisterUnique<IDictionaryOfPropertyDataSerializer, DictionaryOfPropertyDataSerializer>();
+                composition.RegisterUnique<ISerializer<IReadOnlyDictionary<string, CultureVariation>>, DictionaryOfCultureVariationSerializer>();
+                composition.RegisterUnique<ISerializer<IContentData>, ContentDataSerializer>();
+
+                composition.RegisterUnique<ITransactableDictionaryFactory, LazyBPlusTreeTransactableDictionaryFactory>();
+                composition.RegisterUnique<IRoutingProperties,UmbracoRoutingConventionPropertySelector>();
+                composition.RegisterUnique<IBplusTreeLazySerializers, BPlusTreeLazySerializers>();
+            }
             else
             {
-                composition.RegisterUnique<IContentCacheDataSerializerFactory, MsgPackContentNestedDataSerializerFactory>();
-            }
-            
-            composition.RegisterUnique<ISerializer<IContentData>>(factory => new ContentDataSerializer(new DictionaryOfPropertyDataSerializer()));
+                composition.RegisterUnique<ISerializer<IContentNodeKit>, ContentNodeKitSerializer>();
+                composition.RegisterUnique<IDictionaryOfPropertyDataSerializer, DictionaryOfPropertyDataSerializer>();
+                composition.RegisterUnique<ISerializer<IReadOnlyDictionary<string, CultureVariation>>, DictionaryOfCultureVariationSerializer>();
+                composition.RegisterUnique<ISerializer<IContentData>, ContentDataSerializer>();
 
-            composition.RegisterUnique<ITransactableDictionaryFactory,BPlusTreeTransactableDictionaryFactory>();
+                composition.RegisterUnique<ITransactableDictionaryFactory, BPlusTreeTransactableDictionaryFactory>();
+            }
+           
 
             composition.RegisterUnique<IContentStoreFactory, ContentStoreFactory>();
+
 
             // register the NuCache database data source
             composition.RegisterUnique<IDataSource, DatabaseDataSource>();

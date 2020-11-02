@@ -9,12 +9,14 @@ namespace Umbraco.Web.PublishedCache.NuCache
 {
     public class BPlusTreeTransactableDictionary<TKey, TValue> : ITransactableDictionary<TKey, TValue>
     {
-        private readonly BPlusTree<TKey, TValue> _bplusTree;
-        private bool _disposedValue;
-        private readonly string _filePath;
-        private bool _isPopulated;
+        protected readonly BPlusTree<TKey, TValue> _bplusTree;
 
-        public BPlusTreeTransactableDictionary(BPlusTree<TKey, TValue> bplusTree, string filePath,bool localDbCacheFileExists)
+        protected bool _disposedValue;
+        protected readonly string _filePath;
+        protected bool _isPopulated;
+
+        public BPlusTreeTransactableDictionary(BPlusTree<TKey, TValue> bplusTree, string filePath,
+            bool localDbCacheFileExists)
         {
             _bplusTree = bplusTree;
             _filePath = filePath;
@@ -137,5 +139,6 @@ namespace Umbraco.Web.PublishedCache.NuCache
         }
 
         public bool IsPopulated() => _isPopulated;
+
     }
 }

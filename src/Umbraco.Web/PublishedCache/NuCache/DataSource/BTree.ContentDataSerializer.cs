@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using CSharpTest.Net.Serialization;
 
 namespace Umbraco.Web.PublishedCache.NuCache.DataSource
@@ -8,17 +9,13 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
     /// </summary>
     internal class ContentDataSerializer : ISerializer<IContentData>
     {
-        public ContentDataSerializer(IDictionaryOfPropertyDataSerializer dictionaryOfPropertyDataSerializer = null)
+        public ContentDataSerializer(IDictionaryOfPropertyDataSerializer dictionaryOfPropertyDataSerializer, ISerializer<IReadOnlyDictionary<string, CultureVariation>> cultureVariationsSerializer)
         {
             _dictionaryOfPropertyDataSerializer = dictionaryOfPropertyDataSerializer;
-            if(_dictionaryOfPropertyDataSerializer == null)
-            {
-                _dictionaryOfPropertyDataSerializer = DefaultPropertiesSerializer;
-            }
+            _cultureVariationsSerializer = cultureVariationsSerializer;
         }
-        private static readonly DictionaryOfPropertyDataSerializer DefaultPropertiesSerializer = new DictionaryOfPropertyDataSerializer();
-        private static readonly DictionaryOfCultureVariationSerializer DefaultCultureVariationsSerializer = new DictionaryOfCultureVariationSerializer();
         private readonly IDictionaryOfPropertyDataSerializer _dictionaryOfPropertyDataSerializer;
+        private readonly ISerializer<IReadOnlyDictionary<string, CultureVariation>> _cultureVariationsSerializer;
 
         public IContentData ReadFrom(Stream stream)
         {
@@ -32,7 +29,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
                 WriterId = PrimitiveSerializer.Int32.ReadFrom(stream),
                 TemplateId = PrimitiveSerializer.Int32.ReadFrom(stream),
                 Properties = _dictionaryOfPropertyDataSerializer.ReadFrom(stream), // TODO: We don't want to allocate empty arrays
-                CultureInfos = DefaultCultureVariationsSerializer.ReadFrom(stream) // TODO: We don't want to allocate empty arrays
+                CultureInfos = _cultureVariationsSerializer.ReadFrom(stream) // TODO: We don't want to allocate empty arrays
             };
         }
 
@@ -49,7 +46,7 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
                 PrimitiveSerializer.Int32.WriteTo(value.TemplateId.Value, stream);
             }
             _dictionaryOfPropertyDataSerializer.WriteTo(value.Properties, stream);
-            DefaultCultureVariationsSerializer.WriteTo(value.CultureInfos, stream);
+            _cultureVariationsSerializer.WriteTo(value.CultureInfos, stream);
         }
     }
 }
