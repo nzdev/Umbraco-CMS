@@ -7,22 +7,31 @@ using System.Threading.Tasks;
 
 namespace Umbraco.Web.PublishedCache.NuCache
 {
-    public class LazyLoadingDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
+    public class LazyLoadingDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        private IReadOnlyDictionary<TKey, TValue> _dictionary;
+        private IDictionary<TKey, TValue> _dictionary;
         private IReadOnlyDictionary<TKey, bool> _loadedProperties;
-        private Func<IReadOnlyDictionary<TKey,TValue>> _load;
+        private Func<IDictionary<TKey,TValue>> _load;
         private bool _materialized;
         private object _loadLock = new object();
-        public LazyLoadingDictionary(Dictionary<TKey, TValue> propertiesDictionary, IReadOnlyDictionary<TKey, bool> loadedStateDictionary, Func<IReadOnlyDictionary<TKey, TValue>> load, bool materialized)
+
+        public ICollection<TKey> Keys => _dictionary.Keys;
+
+        public ICollection<TValue> Values => _dictionary.Values;
+
+        public int Count => _dictionary.Count;
+
+        public bool IsReadOnly => _dictionary.IsReadOnly;
+
+        public TValue this[TKey key] { get => _dictionary[key]; set => _dictionary[key] = value; }
+
+        public LazyLoadingDictionary(IDictionary<TKey, TValue> propertiesDictionary, IReadOnlyDictionary<TKey, bool> loadedStateDictionary, Func<IDictionary<TKey, TValue>> load, bool materialized)
         {
             _dictionary = propertiesDictionary;
             _load = load;
             _materialized = materialized;
             _loadedProperties = loadedStateDictionary;
         }
-
-        public TValue this[TKey key] => GetByKey(key);
 
         private void MaterializeIfRequired(TKey key)
         {
@@ -57,39 +66,59 @@ namespace Umbraco.Web.PublishedCache.NuCache
             }
         }
 
-        private TValue GetByKey(TKey key)
-        {
-            MaterializeIfRequired(key);
-            return ((IReadOnlyDictionary<TKey, TValue>)_dictionary)[key];
-        }
-
-        public IEnumerable<TKey> Keys => ((IReadOnlyDictionary<TKey, TValue>)_dictionary).Keys;
-
-        public IEnumerable<TValue> Values => GetValues();
-
-        private IEnumerable<TValue> GetValues()
-        {
-            Materialize();
-            return ((IReadOnlyDictionary<TKey, TValue>)_dictionary).Values;
-        }
-
-        public int Count => ((IReadOnlyCollection<KeyValuePair<TKey, TValue>>)_dictionary).Count;
-
         public bool ContainsKey(TKey key)
         {
-            return ((IReadOnlyDictionary<TKey, TValue>)_dictionary).ContainsKey(key);
+            return _dictionary.ContainsKey(key);
+        }
+
+        public void Add(TKey key, TValue value)
+        {
+            _dictionary.Add(key, value);
+        }
+
+        public bool Remove(TKey key)
+        {
+            return _dictionary.Remove(key);
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            MaterializeIfRequired(key);
+            return _dictionary.TryGetValue(key, out value);
+        }
+
+        public void Add(KeyValuePair<TKey, TValue> item)
+        {
+            _dictionary.Add(item);
+        }
+
+        public void Clear()
+        {
+            _dictionary.Clear();
+        }
+
+        public bool Contains(KeyValuePair<TKey, TValue> item)
+        {
+            Materialize();
+            return _dictionary.Contains(item);
+        }
+
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            Materialize();
+            _dictionary.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(KeyValuePair<TKey, TValue> item)
+        {
+            Materialize();
+            return _dictionary.Remove(item);
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             Materialize();
-            return ((IEnumerable<KeyValuePair<TKey, TValue>>)_dictionary).GetEnumerator();
-        }
-
-        public bool TryGetValue(TKey key, out TValue value)
-        {
-            Materialize();
-            return ((IReadOnlyDictionary<TKey, TValue>)_dictionary).TryGetValue(key, out value);
+            return _dictionary.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

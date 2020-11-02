@@ -40,10 +40,31 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
             var hasPublished = PrimitiveSerializer.Boolean.ReadFrom(stream);
             if (hasPublished)
+            {
                 kit.PublishedData = _contentDataSerializer.ReadFrom(stream);
+                //Read Lazy property name count
+                int countLazyPropertyNames = PrimitiveSerializer.Int32.ReadFrom(stream);
+                //Read Lazy property names
+                for (int i = 0; i < countLazyPropertyNames; i++)
+                {
+                    var lazyPropAlias = PrimitiveSerializer.String.ReadFrom(stream);
+                    kit.PublishedData.Properties.Add(lazyPropAlias, null);
+                }
+            }
+
             var hasDraft = PrimitiveSerializer.Boolean.ReadFrom(stream);
             if (hasDraft)
+            {
                 kit.DraftData = _contentDataSerializer.ReadFrom(stream);
+                //Read Lazy property name count
+                int countLazyPropertyNames = PrimitiveSerializer.Int32.ReadFrom(stream);
+                //Read Lazy property names
+                for (int i = 0; i < countLazyPropertyNames; i++)
+                {
+                    var lazyPropAlias = PrimitiveSerializer.String.ReadFrom(stream);
+                    kit.DraftData.Properties.Add(lazyPropAlias, null);
+                }
+            }
 
             var hasAdditionalPublished = PrimitiveSerializer.Boolean.ReadFrom(stream);
             if (hasAdditionalPublished &&
@@ -99,6 +120,8 @@ namespace Umbraco.Web.PublishedCache.NuCache
             if (value.PublishedData != null)
             {
                 PrimitiveSerializer.Boolean.WriteTo(value.PublishedData != null, stream);//Routing published data
+                var eagerPropertyAliases = value.PublishedData.Properties.Where(x => _routingPropertySelector.EagerLoadProperties.ContainsKey(x.Key)).Select(x => x.Key);
+                var lazyPropertyAliases = value.PublishedData.Properties.Where(x => !eagerPropertyAliases.Any(y => y.Equals(x.Key))).Select(x=>x.Key);
                 IContentData publishedRoutingData = new ContentData()
                 {
                     Name = value.PublishedData.Name,
@@ -108,14 +131,23 @@ namespace Umbraco.Web.PublishedCache.NuCache
                     VersionDate = value.PublishedData.VersionDate,
                     VersionId = value.PublishedData.VersionId,
                     WriterId = value.PublishedData.WriterId,
-                    Properties = value.PublishedData.Properties.Where(x => _routingPropertySelector.EagerLoadProperties.ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value),
+                    Properties = value.PublishedData.Properties.Where(x => eagerPropertyAliases.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value),
                     CultureInfos = value.PublishedData.CultureInfos
                 };
                 _contentDataSerializer.WriteTo(publishedRoutingData, stream);
+                //Write Lazy property name count
+                PrimitiveSerializer.Int32.WriteTo(lazyPropertyAliases.Count(), stream);
+                //Write Lazy property names
+                foreach (var lazyPropertyAlias in lazyPropertyAliases)
+                {
+                    PrimitiveSerializer.String.WriteTo(lazyPropertyAlias, stream);
+                }
             }
             if (value.DraftData != null) //routing draft data
             {
                 PrimitiveSerializer.Boolean.WriteTo(value.PublishedData != null, stream);
+                var eagerPropertyAliases = value.DraftData.Properties.Where(x => _routingPropertySelector.EagerLoadProperties.ContainsKey(x.Key)).Select(x => x.Key);
+                var lazyPropertyAliases = value.DraftData.Properties.Where(x => !eagerPropertyAliases.Any(y => y.Equals(x.Key))).Select(x => x.Key);
                 IContentData draftRoutingData = new ContentData()
                 {
                     Name = value.DraftData.Name,
@@ -125,10 +157,17 @@ namespace Umbraco.Web.PublishedCache.NuCache
                     VersionDate = value.DraftData.VersionDate,
                     VersionId = value.DraftData.VersionId,
                     WriterId = value.DraftData.WriterId,
-                    Properties = value.DraftData.Properties.Where(x => _routingPropertySelector.EagerLoadProperties.ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value),
+                    Properties = value.DraftData.Properties.Where(x => eagerPropertyAliases.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value),
                     CultureInfos = value.DraftData.CultureInfos
                 };
                 _contentDataSerializer.WriteTo(draftRoutingData, stream);
+                //Write Lazy property name count
+                PrimitiveSerializer.Int32.WriteTo(lazyPropertyAliases.Count(), stream);
+                //Write Lazy property names
+                foreach (var lazyPropertyAlias in lazyPropertyAliases)
+                {
+                    PrimitiveSerializer.String.WriteTo(lazyPropertyAlias, stream);
+                }
             }
 
             //Remaining published data
