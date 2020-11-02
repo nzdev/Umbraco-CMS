@@ -48,7 +48,11 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 for (int i = 0; i < countLazyPropertyNames; i++)
                 {
                     var lazyPropAlias = PrimitiveSerializer.String.ReadFrom(stream);
-                    kit.PublishedData.Properties.Add(lazyPropAlias, null);
+                    if (!(_contentNodeKitLoadState == ContentNodeKitLoadState.All || _contentNodeKitLoadState == ContentNodeKitLoadState.AllPublishedPropertiesLoaded))
+                    {
+                        //Add lazy property alias if not fully loaded
+                        kit.PublishedData.Properties.Add(string.Intern(lazyPropAlias), null);
+                    }
                 }
             }
 
@@ -62,7 +66,11 @@ namespace Umbraco.Web.PublishedCache.NuCache
                 for (int i = 0; i < countLazyPropertyNames; i++)
                 {
                     var lazyPropAlias = PrimitiveSerializer.String.ReadFrom(stream);
-                    kit.DraftData.Properties.Add(lazyPropAlias, null);
+                    if(!(_contentNodeKitLoadState == ContentNodeKitLoadState.All || _contentNodeKitLoadState == ContentNodeKitLoadState.AllDraftPropertiesLoaded))
+                    {
+                        //Add lazy property alias if not fully loaded
+                        kit.DraftData.Properties.Add(string.Intern(lazyPropAlias), null);
+                    }
                 }
             }
 
