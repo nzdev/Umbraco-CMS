@@ -156,12 +156,13 @@ namespace Umbraco.Core.Persistence
                 case SqlServerSyntaxProvider.VersionName.V2014:
                 case SqlServerSyntaxProvider.VersionName.V2016:
                 case SqlServerSyntaxProvider.VersionName.V2017:
+                case SqlServerSyntaxProvider.VersionName.V2019:
                     _databaseType = DatabaseType.SqlServer2012;
                     break;
                 // else leave unchanged
             }
 
-            _logger.Debug<UmbracoDatabaseFactory>("SqlServer {SqlServerVersion}, DatabaseType is {DatabaseType} ({Source}).",
+            _logger.Debug<UmbracoDatabaseFactory, SqlServerSyntaxProvider.VersionName, DatabaseType, string>("SqlServer {SqlServerVersion}, DatabaseType is {DatabaseType} ({Source}).",
                 versionName, _databaseType, fromSettings ? "settings" : "detected");
         }
 
