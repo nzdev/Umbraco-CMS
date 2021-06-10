@@ -116,7 +116,7 @@ namespace EfCoreConverter
                     else if (prop.RefernceType == "ReferenceType.OneToOne")
                     {
                         //1-M
-                        statements.Add(SyntaxFactory.ParseStatement($"builder.HasOne(typeof({prop.PropertyType}), {prop.ReferenceMemberName});"));
+                        statements.Add(SyntaxFactory.ParseStatement($"builder.HasOne(typeof({prop.PropertyType}),nameof({model.DtoClassName}.{prop.PropertyName}));"));
                     }
                     else
                     {
