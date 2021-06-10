@@ -122,7 +122,45 @@ namespace EfCoreConverter
                     {
 
                     }
-                        
+                }
+                if (prop.Ignore)
+                {
+                    statements.Add(SyntaxFactory.ParseStatement($"builder.Ignore(x => x.{prop.PropertyName});"));
+                }
+                if(prop.NullSetting == "NullSettings.Null")
+                {
+
+                    statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).IsRequired(false);"));
+                }
+                else if (prop.NullSetting == "NullSettings.NotNull")
+                {
+                    statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).IsRequired(true);"));
+                }
+                if(!string.IsNullOrEmpty(prop.Length) && int.TryParse(prop.Length, out int length))
+                {
+                    statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasMaxLength(length);"));
+                }
+
+                if (prop.SpecialDbType != null)
+                {
+                    string dbType = null;
+                    if("SpecialDbTypes.NTEXT" == prop.SpecialDbType)
+                    {
+                        dbType = "NTEXT";
+                    }
+                    else if ("SpecialDbTypes.NVARCHARMAX" == prop.SpecialDbType)
+                    {
+                        dbType = "nvarchar(max)";
+                    }
+                    else if ("SpecialDbTypes.NCHAR" == prop.SpecialDbType)
+                    {
+                        dbType = "nchar";
+                    }
+                    else
+                    {
+
+                    } 
+                    statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasColumnType({dbType});"));
                 }
                 if (prop.Constraints.Any())
                 {
@@ -291,6 +329,30 @@ namespace EfCoreConverter
                             mpc.Name = nameContraint?.Expression?.ToString();
                             mp.Constraints.Add(mpc);
                         }
+                        else if (attr.Name.ToString() == "NullSetting")
+                        {
+                            var nullSetting = GetArgument(attr, 0, "NullSetting");
+                            mp.NullSetting = nullSetting?.Expression?.ToString();
+                        }
+                        else if (attr.Name.ToString() == "Length")
+                        {
+                            var length = GetArgument(attr, 0, "Length");
+                            mp.Length = length?.Expression?.ToString();
+                        }
+                        else if (attr.Name.ToString() == "SpecialDbType")
+                        {
+                            var dbType = GetArgument(attr, 0, "databaseType");
+                            mp.SpecialDbType = dbType?.Expression?.ToString();
+                        }
+                        else if (attr.Name.ToString() == "Ignore")
+                        {
+                          
+                            mp.Ignore = true;
+                        }
+                        else
+                        {
+
+                        }
                     }
                 }
             }
@@ -341,6 +403,10 @@ namespace EfCoreConverter
         public string ReferenceMemberName { get; set; }
 
         public List<PropertyConstraint> Constraints { get; set; } = new List<PropertyConstraint>();
+        public string NullSetting { get; internal set; }
+        public string Length { get; internal set; }
+        public string SpecialDbType { get; internal set; }
+        public bool Ignore { get; internal set; }
     }
 
     public class ModelPropertyIndex
