@@ -1,4 +1,4 @@
-﻿using NPoco;
+using NPoco;
 using Umbraco.Cms.Infrastructure.Persistence.DatabaseAnnotations;
 
 namespace Umbraco.Cms.Infrastructure.Persistence.Dtos
@@ -9,7 +9,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.Dtos
     [ExplicitColumns]
     public class DocumentDto
     {
-        private const string TableName = Cms.Core.Constants.DatabaseSchema.Tables.Document;
+        public const string TableName = Cms.Core.Constants.DatabaseSchema.Tables.Document;
 
         [Column("nodeId")]
         [PrimaryKeyColumn(AutoIncrement = false)]

@@ -23,6 +23,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Umbraco.Core\Umbraco.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.Infrastructure.Persistence.EfCore\Umbraco.Infrastructure.Persistence.EfCore.csproj" />
         <ProjectReference Include="..\Umbraco.Infrastructure\Umbraco.Infrastructure.csproj" />
         <ProjectReference Include="..\Umbraco.Web.Common\Umbraco.Web.Common.csproj" />
     </ItemGroup>

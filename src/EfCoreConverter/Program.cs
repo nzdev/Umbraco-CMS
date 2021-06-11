@@ -10,7 +10,7 @@ namespace EfCoreConverter
 {
     class Program
     {
-        private const string EntityConfigFolder = @"C:\Users\chadc\source\repos\V9\Umbraco-CMS\src\Umbraco.Infrastructure\Persistence\EfCore\EntityTypeConfigurations";
+        private const string EntityConfigFolder = @"C:\Users\chadc\source\repos\V9\Umbraco-CMS\src\Umbraco.Infrastructure.Persistence.EfCore\EntityTypeConfigurations";
 
         static void Main(string[] args)
         {
@@ -77,18 +77,50 @@ namespace EfCoreConverter
         private static List<StatementSyntax> GenerateEfConfigurationStatements(ModelConfig model)
         {
             List<StatementSyntax> statements = new List<StatementSyntax>();
+            if(model.TableName != null)
+            {
+                var cleanedTableName = !model.TableName.Contains("\"") ? $"{model.DtoClassName}.{model.TableName}" : model.TableName;
+                if (model.TableName.Contains("Cms.Core.Constants.DatabaseSchema.Tables"))
+                {
+                    cleanedTableName = model.TableName;
+                }
+                statements.Add(SyntaxFactory.ParseStatement($"builder.ToTable({cleanedTableName});"));
+            }
+            else
+            {
 
-            statements.Add(SyntaxFactory.ParseStatement($"builder.ToTable({model.TableName});"));
+            } 
             foreach (var prop in model.Properties)
             {
                 if (prop.IsPrimaryKey)
                 {
-                    statements.Add(SyntaxFactory.ParseStatement($"builder.HasKey(x => x.{prop.PropertyName});"));
+                    var pkName = string.IsNullOrEmpty(prop.PrimaryKeyDbName) ? "" : $".HasName({prop.PrimaryKeyDbName})";
+                    if (!string.IsNullOrEmpty(prop.PrimaryKeyOnColumns))
+                    {
+                        prop.PrimaryKeyOnColumns = prop.PrimaryKeyOnColumns.Replace("\"", "");
+                        var keyColumns = string.Join(",",prop.PrimaryKeyOnColumns.Split(",").Select(x=> $"x.{char.ToUpper(x.Trim()[0]) + x.Trim().Substring(1)}"));
+                        statements.Add(SyntaxFactory.ParseStatement($"builder.HasKey(x => new {{ {keyColumns}}}){pkName};"));
+                    }
+                    else
+                    {
+                        statements.Add(SyntaxFactory.ParseStatement($"builder.HasKey(x => x.{prop.PropertyName}){pkName};"));
+                    }
                     if (prop.PrimaryKeyAutoIncrement == "false")
                     {
                         statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).ValueGeneratedNever();"));
                     }
+                    else if (!string.IsNullOrEmpty(prop.PrimaryKeyIdentitySeed))
+                    {
+                        var start = prop.PrimaryKeyIdentitySeed;
+                        if(!int.TryParse(start,out int _))
+                        {
+                            start = $"{model.DtoClassName}.{prop.PrimaryKeyIdentitySeed}";
+                        }
+                        statements.Add(SyntaxFactory.ParseStatement($"builder.HasSequence<int>(\"{model.DtoClassName}_seq\", schema: \"dbo\").StartsAt({start}).IncrementsBy(1);"));
+                        statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasDefaultValueSql(\"NEXT VALUE FOR dbo.{model.DtoClassName}_seq\");"));
+                    }
                 }
+
                 if (!string.IsNullOrWhiteSpace(prop.DbColumnName))
                 {
                     statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasColumnName({prop.DbColumnName});"));
@@ -111,7 +143,7 @@ namespace EfCoreConverter
                     if (prop.RefernceType == "ReferenceType.Many")
                     {
                         //1-M
-                        statements.Add(SyntaxFactory.ParseStatement($"builder.HasMany(typeof({prop.PropertyType.Replace("List<", "").Replace(">", "")}), {prop.ReferenceMemberName});"));
+                        statements.Add(SyntaxFactory.ParseStatement($"builder.HasMany(typeof({prop.PropertyType.Replace("List<", "").Replace("HashSet<", "").Replace(">", "")}), {prop.ReferenceMemberName});"));
                     }
                     else if (prop.RefernceType == "ReferenceType.OneToOne")
                     {
@@ -127,7 +159,7 @@ namespace EfCoreConverter
                 {
                     statements.Add(SyntaxFactory.ParseStatement($"builder.Ignore(x => x.{prop.PropertyName});"));
                 }
-                if(prop.NullSetting == "NullSettings.Null")
+                if (prop.NullSetting == "NullSettings.Null")
                 {
 
                     statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).IsRequired(false);"));
@@ -136,15 +168,15 @@ namespace EfCoreConverter
                 {
                     statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).IsRequired(true);"));
                 }
-                if(!string.IsNullOrEmpty(prop.Length) && int.TryParse(prop.Length, out int length))
+                if (!string.IsNullOrEmpty(prop.Length) && int.TryParse(prop.Length, out int length))
                 {
-                    statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasMaxLength(length);"));
+                    statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasMaxLength({length});"));
                 }
 
                 if (prop.SpecialDbType != null)
                 {
                     string dbType = null;
-                    if("SpecialDbTypes.NTEXT" == prop.SpecialDbType)
+                    if ("SpecialDbTypes.NTEXT" == prop.SpecialDbType)
                     {
                         dbType = "NTEXT";
                     }
@@ -159,8 +191,8 @@ namespace EfCoreConverter
                     else
                     {
 
-                    } 
-                    statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasColumnType({dbType});"));
+                    }
+                    statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasColumnType(\"{dbType}\");"));
                 }
                 if (prop.Constraints.Any())
                 {
@@ -180,7 +212,7 @@ namespace EfCoreConverter
                                 }
                                 statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasDefaultValue({defaultInt});"));
                             }
-                            else if(!string.IsNullOrEmpty(constraint.Default) && int.TryParse(constraint.Default.Replace("\"",""), out int defaultIntS))
+                            else if (!string.IsNullOrEmpty(constraint.Default) && int.TryParse(constraint.Default.Replace("\"", ""), out int defaultIntS))
                             {
                                 if (!string.IsNullOrEmpty(constraint.Name))
                                 {
@@ -188,7 +220,7 @@ namespace EfCoreConverter
                                 }
                                 statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasDefaultValue({defaultIntS});"));
                             }
-                            else if(!string.IsNullOrEmpty(constraint.Default) && constraint.Default.Contains("\""))
+                            else if (!string.IsNullOrEmpty(constraint.Default) && constraint.Default.Contains("\""))
                             {
                                 statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasDefaultValueSql({constraint.Default});"));
                             }
@@ -214,7 +246,7 @@ namespace EfCoreConverter
                         }
                         else if (index.IndexType == "IndexTypes.NonClustered")
                         {
-                            statements.Add(SyntaxFactory.ParseStatement($"builder.HasIndex(x => x.{prop.PropertyName})"));
+                            statements.Add(SyntaxFactory.ParseStatement($"builder.HasIndex(x => x.{prop.PropertyName});"));
                         }
                         else
                         {
@@ -299,6 +331,13 @@ namespace EfCoreConverter
                             mp.PrimaryKeyDbName = pkName?.Expression?.ToString();
                             var pkAuto = GetArgument(attr, 1, "AutoIncrement");
                             mp.PrimaryKeyAutoIncrement = pkAuto?.Expression?.ToString();
+                            var pkOnColumns = GetArgument(attr, 3, "OnColumns");
+                            mp.PrimaryKeyOnColumns = pkOnColumns?.Expression?.ToString();
+                            var pkClustered = GetArgument(attr, 2, "Clustered");
+                            mp.PrimaryKeyClustered = pkClustered?.Expression?.ToString();
+                            var pkSeed = GetArgument(attr, 4, "IdentitySeed");
+                            mp.PrimaryKeyIdentitySeed = pkSeed?.Expression?.ToString();
+                            
                         }
                         else if (attr.Name.ToString() == "Index")
                         {
@@ -346,7 +385,7 @@ namespace EfCoreConverter
                         }
                         else if (attr.Name.ToString() == "Ignore")
                         {
-                          
+
                             mp.Ignore = true;
                         }
                         else
@@ -367,11 +406,12 @@ namespace EfCoreConverter
                 return null;
             }
             var byName = attr.ArgumentList.Arguments.FirstOrDefault(x => (x.NameColon != null && x.NameColon.GetText().ToString() == argName) || x.NameEquals != null && x.NameEquals.Name.Identifier.Text == argName);
-            if(byName != null)
+            if (byName != null)
             {
                 return byName;
             }
-            return attr.ArgumentList.Arguments.FirstOrDefault(x => (x.NameColon == null && index == count++));
+            count = 0;
+            return attr.ArgumentList.Arguments.FirstOrDefault(x => (x.NameColon == null && x.NameEquals ==null && index == count++));
         }
     }
     public class ModelConfig
@@ -392,6 +432,7 @@ namespace EfCoreConverter
         public string PropertyType { get; set; }
         public bool IsPrimaryKey { get; set; }
         public string PrimaryKeyDbName { get; set; }
+        public string PrimaryKeyObjectName { get; set; }
         public string PrimaryKeyAutoIncrement { get; set; }
         public bool IsForiegnKey { get; set; }
         public string ForiegnKeyDbName { get; set; }
@@ -407,6 +448,9 @@ namespace EfCoreConverter
         public string Length { get; internal set; }
         public string SpecialDbType { get; internal set; }
         public bool Ignore { get; internal set; }
+        public string PrimaryKeyOnColumns { get; internal set; }
+        public string PrimaryKeyClustered { get; internal set; }
+        public string PrimaryKeyIdentitySeed { get; internal set; }
     }
 
     public class ModelPropertyIndex
