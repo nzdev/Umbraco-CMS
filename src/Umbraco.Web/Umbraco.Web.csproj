@@ -292,6 +292,7 @@
     <Compile Include="PropertyEditors\ValueConverters\BlockEditorConverter.cs" />
     <Compile Include="PropertyEditors\ValueConverters\BlockListPropertyValueConverter.cs" />
     <Compile Include="PublishedCache\NuCache\DataSource\MsgPackContentNestedDataSerializerFactory.cs" />
+    <Compile Include="PublishedCache\NuCache\DataSource\PropertyDataSortedList.cs" />
     <Compile Include="PublishedCache\NuCache\NuCacheSerializerComponent.cs" />
     <Compile Include="PublishedCache\NuCache\NuCacheSerializerComposer.cs" />
     <Compile Include="PropertyEditors\ValueConverters\MediaPickerWithCropsValueConverter.cs" />
@@ -1169,7 +1170,9 @@
     <Compile Include="PublishedCache\IPublishedMediaCache.cs" />
     <Compile Include="PublishedContentExtensions.cs" />
     <Compile Include="ExamineExtensions.cs" />
-    <Compile Include="FormlessPage.cs" />
+    <Compile Include="FormlessPage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="HtmlHelperRenderExtensions.cs" />
     <Compile Include="Scheduling\SchedulerComponent.cs" />
     <Compile Include="ModelStateExtensions.cs" />

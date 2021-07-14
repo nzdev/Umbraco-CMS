@@ -30,7 +30,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private object _interValue;
 
         // the variant source and inter values
-        private Dictionary<CompositeStringStringKey, SourceInterValue> _sourceValues;
+        private IDictionary<CompositeStringStringKey, SourceInterValue> _sourceValues;
 
         // the variant and non-variant object values
         private CacheValues _cacheValues;
@@ -57,7 +57,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
                     else
                     {
                         if (_sourceValues == null)
-                            _sourceValues = new Dictionary<CompositeStringStringKey, SourceInterValue>();
+                            _sourceValues = new SortedList<CompositeStringStringKey, SourceInterValue>();
                         _sourceValues[new CompositeStringStringKey(sourceValue.Culture, sourceValue.Segment)]
                             = new SourceInterValue { Culture = sourceValue.Culture, Segment = sourceValue.Segment, SourceValue = sourceValue.Value };
                     }
@@ -180,7 +180,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             }
 
             if (_sourceValues == null)
-                _sourceValues = new Dictionary<CompositeStringStringKey, SourceInterValue>();
+                _sourceValues = new SortedList<CompositeStringStringKey, SourceInterValue>();
 
             var k = new CompositeStringStringKey(culture, segment);
             if (!_sourceValues.TryGetValue(k, out var vvalue))

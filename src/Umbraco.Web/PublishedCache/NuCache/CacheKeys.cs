@@ -20,22 +20,22 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         public static string PublishedContentChildren(Guid contentUid, bool previewing)
         {
-            return "NuCache.Content.Children[" + DraftOrPub(previewing) + ":" + contentUid + "]";
+            return "NC.C.C[" + DraftOrPub(previewing) + ":" + contentUid + "]";
         }
 
         public static string ContentCacheRoots(bool previewing)
         {
-            return "NuCache.ContentCache.Roots[" + DraftOrPub(previewing) + "]";
+            return "C.CC.R[" + DraftOrPub(previewing) + "]";
         }
 
         public static string MediaCacheRoots(bool previewing)
         {
-            return "NuCache.MediaCache.Roots[" + DraftOrPub(previewing) + "]";
+            return "N.MC.R[" + DraftOrPub(previewing) + "]";
         }
 
         public static string PublishedContentAsPreviewing(Guid contentUid)
         {
-            return "NuCache.Content.AsPreviewing[" + contentUid + "]";
+            return "N.C.AP[" + contentUid + "]";
         }
 
         public static string ProfileName(int userId)
@@ -45,7 +45,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         public static string PropertyCacheValues(Guid contentUid, string typeAlias, bool previewing)
         {
-            return "NuCache.Property.CacheValues[" + DraftOrPub(previewing) + contentUid + ":" + typeAlias + "]";
+            return (previewing ? "N.PC.D" : "N.PC.P") + contentUid + ":" + typeAlias;
         }
 
         // routes still use int id and not Guid uid, because routable nodes must have
@@ -54,12 +54,12 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         public static string ContentCacheRouteByContent(int id, bool previewing, string culture)
         {
-            return "NuCache.ContentCache.RouteByContent[" + DraftOrPub(previewing) + id + LangId(culture) + "]";
+            return (previewing ? "N.CC.RBCD["  : "N.CC.RBCP[" ) + id + LangId(culture);
         }
 
         public static string ContentCacheContentByRoute(string route, bool previewing, string culture)
         {
-            return "NuCache.ContentCache.ContentByRoute[" + DraftOrPub(previewing) + route + LangId(culture) + "]";
+            return (previewing ? "N.CC.CBRD[" : "N.CC.CBRP[") + route + LangId(culture);
         }
 
         //public static string ContentCacheRouteByContentStartsWith()

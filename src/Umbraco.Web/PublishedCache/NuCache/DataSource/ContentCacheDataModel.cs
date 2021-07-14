@@ -12,12 +12,14 @@ namespace Umbraco.Web.PublishedCache.NuCache.DataSource
     [DataContract] // NOTE: Use DataContract annotations here to control how MessagePack serializes/deserializes the data to use INT keys
     public class ContentCacheDataModel
     {
+        private IDictionary<string, PropertyData[]> _propertyData;
+
         // TODO: We don't want to allocate empty arrays
         //dont serialize empty properties
         [DataMember(Order = 0)]
         [JsonProperty("pd")]
         [JsonConverter(typeof(AutoInterningStringKeyCaseInsensitiveDictionaryConverter<PropertyData[]>))]
-        public Dictionary<string, PropertyData[]> PropertyData { get; set; }
+        public IDictionary<string, PropertyData[]> PropertyData { get => _propertyData; set => _propertyData = new PropertyDataSortedList(value); }
 
         [DataMember(Order = 1)]
         [JsonProperty("cd")]

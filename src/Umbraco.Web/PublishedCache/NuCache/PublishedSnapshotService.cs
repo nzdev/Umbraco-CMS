@@ -1419,7 +1419,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
             //var propertyEditorResolver = PropertyEditorResolver.Current;
             //var dataTypeService = ApplicationContext.Current.Services.DataTypeService;
 
-            var propertyData = new Dictionary<string, PropertyData[]>();
+            var propertyData = new PropertyDataSortedList(content.Properties.Count);
             foreach (var prop in content.Properties)
             {
                 var pdatas = new List<PropertyData>();

@@ -19,4 +19,4 @@ using System.Resources;
 
 // these are FYI and changed automatically
 [assembly: AssemblyFileVersion("8.15.0")]
-[assembly: AssemblyInformationalVersion("8.15.0-nzme-001")]
+[assembly: AssemblyInformationalVersion("8.15.0-nzme-002")]
