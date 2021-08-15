@@ -40,7 +40,6 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Composing
                     typeof(Guid).Assembly,
                     typeof(Assert).Assembly,
                     typeof(System.Xml.NameTable).Assembly,
-                    typeof(System.Configuration.GenericEnumConverter).Assembly,
                     ////typeof(TabPage).Assembly,
                     typeof(TypeFinder).Assembly,
                     typeof(UmbracoContext).Assembly,
@@ -48,10 +47,11 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Composing
                 };
             _typeLoader = new TypeLoader(
                 typeFinder,
+                new VaryingRuntimeHash(),
                 NoAppCache.Instance,
                 new DirectoryInfo(TestHelper.GetHostingEnvironment().MapPathContentRoot(Constants.SystemDirectories.TempData)),
                 Mock.Of<ILogger<TypeLoader>>(),
-                new ProfilingLogger(Mock.Of<ILogger<ProfilingLogger>>(), Mock.Of<IProfiler>()),
+                Mock.Of<IProfiler>(),
                 false,
                 assemblies);
         }

@@ -1,7 +1,7 @@
 (function () {
     "use strict";
 
-    function PackagesRepoController($scope, $route, $location, $timeout, ourPackageRepositoryResource, $q, packageResource, localStorageService, localizationService) {
+    function PackagesRepoController($scope, $timeout, ourPackageRepositoryResource, $q, packageResource, localStorageService, localizationService) {
 
         var vm = this;
 
@@ -14,25 +14,16 @@
             pageSize: 24
         };
         vm.searchQuery = "";
-        vm.installState = {
-            status: "",
-            progress: 0,
-            type: "ok"
-        };
         vm.selectCategory = selectCategory;
         vm.showPackageDetails = showPackageDetails;
         vm.setPackageViewState = setPackageViewState;
         vm.nextPage = nextPage;
         vm.prevPage = prevPage;
         vm.goToPage = goToPage;
-        vm.installPackage = installPackage;
-        vm.downloadPackage = downloadPackage;
         vm.openLightbox = openLightbox;
         vm.closeLightbox = closeLightbox;
         vm.search = search;
         vm.installCompleted = false;
-
-        var labels = {};
 
         var defaultSort = "Latest";
         var currSort = defaultSort;
@@ -56,26 +47,12 @@
 
             vm.loading = true;
 
-            var labelKeys = [
-                "packager_installStateImporting",
-                "packager_installStateInstalling",
-                "packager_installStateRestarting",
-                "packager_installStateComplete",
-                "packager_installStateCompleted"
-            ];
-
-            localizationService.localizeMany(labelKeys).then(function (values) {
-                labels.installStateImporting = values[0];
-                labels.installStateInstalling = values[1];
-                labels.installStateRestarting = values[2];
-                labels.installStateComplete = values[3];
-                labels.installStateCompleted = values[4];
-            });
-
             $q.all([
                 ourPackageRepositoryResource.getCategories()
                     .then(function (cats) {
-                        vm.categories = cats;
+                        vm.categories = cats.filter(function (cat) {
+                            return cat.name !== "Umbraco Pro";
+                        });
                     }),
                 ourPackageRepositoryResource.getPopular(8)
                     .then(function (pack) {
@@ -139,18 +116,8 @@
         function showPackageDetails(selectedPackage) {
             ourPackageRepositoryResource.getDetails(selectedPackage.id)
                 .then(function (pack) {
-                    packageResource.validateInstalled(pack.name, pack.latestVersion)
-                        .then(function () {
-                            //ok, can install
-                            vm.package = pack;
-                            vm.package.isValid = true;
-                            vm.packageViewState = "packageDetails";
-                        }, function () {
-                            //nope, cannot install
-                            vm.package = pack;
-                            vm.package.isValid = false;
-                            vm.packageViewState = "packageDetails";
-                        })
+                    vm.package = pack;
+                    vm.packageViewState = "packageDetails";
                 });
         }
 
@@ -182,96 +149,6 @@
                     vm.packages = pack.packages;
                     vm.pagination.totalPages = Math.ceil(pack.total / vm.pagination.pageSize);
                 });
-        }
-
-        function downloadPackage(selectedPackage) {
-            vm.loading = true;
-
-            packageResource
-                .fetch(selectedPackage.id)
-                .then(function (pack) {
-                    vm.packageViewState = "packageInstall";
-                    vm.loading = false;
-                    vm.localPackage = pack;
-                    vm.localPackage.allowed = true;
-                }, function (evt, status, headers, config) {
-
-                    if (status == 400) {
-                        //it's a validation error
-                        vm.installState.type = "error";
-                        vm.zipFile.serverErrorMessage = evt.message;
-                    }
-                });
-        }
-
-        function error(e, args) {
-            //This will return a rejection meaning that the promise change above will stop
-            return $q.reject();
-        }
-
-        function installPackage(selectedPackage) {
-
-            vm.installState.status = labels.installStateImporting;
-            vm.installState.progress = "0";
-
-            packageResource
-                .import(selectedPackage)
-                .then(function (pack) {
-                    vm.installState.status = labels.installStateInstalling;
-                    vm.installState.progress = "25";
-                    return packageResource.installFiles(pack);
-                },
-                    error)
-                .then(function (pack) {
-                    vm.installState.status = labels.installStateRestarting;
-                    vm.installState.progress = "50";
-                    var deferred = $q.defer();
-
-                    //check if the app domain is restarted ever 2 seconds
-                    var count = 0;
-                    function checkRestart() {
-                        $timeout(function () {
-                            packageResource.checkRestart(pack).then(function (d) {
-                                count++;
-                                //if there is an id it means it's not restarted yet but we'll limit it to only check 10 times
-                                if (d.isRestarting && count < 10) {
-                                    checkRestart();
-                                }
-                                else {
-                                    //it's restarted!
-                                    deferred.resolve(d);
-                                }
-                            },
-                                error);
-                        }, 2000);
-                    }
-
-                    checkRestart();
-
-                    return deferred.promise;
-                }, error)
-                .then(function (pack) {
-                    vm.installState.status = labels.installStateInstalling;
-                    vm.installState.progress = "75";
-                    return packageResource.installData(pack);
-                },
-                    error)
-                .then(function (pack) {
-                    vm.installState.status = labels.installStateComplete;
-                    vm.installState.progress = "100";
-                    return packageResource.cleanUp(pack);
-                },
-                    error)
-                .then(function (result) {
-
-                    //Put the package data in local storage so we can use after reloading
-                    localStorageService.set("packageInstallData", result);
-
-                    vm.installState.status = labels.installStateCompleted;
-                    vm.installCompleted = true;
-
-                },
-                    error);
         }
 
         function openLightbox(itemIndex, items) {

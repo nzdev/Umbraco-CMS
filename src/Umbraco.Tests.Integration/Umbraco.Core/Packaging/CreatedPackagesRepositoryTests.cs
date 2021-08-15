@@ -8,14 +8,20 @@ using System.IO.Compression;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Configuration;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Hosting;
+using Umbraco.Cms.Core.IO;
+using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Packaging;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Strings;
+using Umbraco.Cms.Tests.Common.Builders;
 using Umbraco.Cms.Tests.Common.Testing;
 using Umbraco.Cms.Tests.Integration.Testing;
 using Umbraco.Extensions;
+using File = System.IO.File;
 
 namespace Umbraco.Cms.Tests.Integration.Umbraco.Core.Packaging
 {
@@ -48,11 +54,13 @@ namespace Umbraco.Cms.Tests.Integration.Umbraco.Core.Packaging
 
         private IHostingEnvironment HostingEnvironment => GetRequiredService<IHostingEnvironment>();
 
-        private IUmbracoVersion UmbracoVersion => GetRequiredService<IUmbracoVersion>();
-
         private IMediaService MediaService => GetRequiredService<IMediaService>();
 
         private IMediaTypeService MediaTypeService => GetRequiredService<IMediaTypeService>();
+
+        private MediaFileManager MediaFileManager => GetRequiredService<MediaFileManager>();
+
+        private FileSystems FileSystems => GetRequiredService<FileSystems>();
 
         public ICreatedPackagesRepository PackageBuilder => new PackagesRepository(
             ContentService,
@@ -63,11 +71,11 @@ namespace Umbraco.Cms.Tests.Integration.Umbraco.Core.Packaging
             LocalizationService,
             HostingEnvironment,
             EntityXmlSerializer,
-            LoggerFactory,
-            UmbracoVersion,
             Microsoft.Extensions.Options.Options.Create(new GlobalSettings()),
             MediaService,
             MediaTypeService,
+            MediaFileManager,
+            FileSystems,
             "createdPackages.config",
 
             // temp paths
@@ -81,9 +89,6 @@ namespace Umbraco.Cms.Tests.Integration.Umbraco.Core.Packaging
             var def1 = new PackageDefinition
             {
                 Name = "test",
-                Url = "http://test.com",
-                Author = "Someone",
-                AuthorUrl = "http://test.com"
             };
 
             bool result = PackageBuilder.SavePackage(def1);
@@ -101,9 +106,6 @@ namespace Umbraco.Cms.Tests.Integration.Umbraco.Core.Packaging
             var def1 = new PackageDefinition
             {
                 Name = "test",
-                Url = "http://test.com",
-                Author = "Someone",
-                AuthorUrl = "http://test.com"
             };
 
             bool result = PackageBuilder.SavePackage(def1);
@@ -115,9 +117,6 @@ namespace Umbraco.Cms.Tests.Integration.Umbraco.Core.Packaging
             var def2 = new PackageDefinition
             {
                 Name = "test2",
-                Url = "http://test2.com",
-                Author = "Someone2",
-                AuthorUrl = "http://test2.com"
             };
 
             result = PackageBuilder.SavePackage(def2);
@@ -134,9 +133,6 @@ namespace Umbraco.Cms.Tests.Integration.Umbraco.Core.Packaging
             {
                 Id = 3, // doesn't exist
                 Name = "test",
-                Url = "http://test.com",
-                Author = "Someone",
-                AuthorUrl = "http://test.com"
             };
 
             bool result = PackageBuilder.SavePackage(def);
@@ -150,77 +146,163 @@ namespace Umbraco.Cms.Tests.Integration.Umbraco.Core.Packaging
             var def = new PackageDefinition
             {
                 Name = "test",
-                Url = "http://test.com",
-                Author = "Someone",
-                AuthorUrl = "http://test.com"
             };
             bool result = PackageBuilder.SavePackage(def);
 
             def.Name = "updated";
-            def.Files = new List<string> { "hello.txt", "world.png" };
             result = PackageBuilder.SavePackage(def);
             Assert.IsTrue(result);
 
             // re-get
             def = PackageBuilder.GetById(def.Id);
             Assert.AreEqual("updated", def.Name);
-            Assert.AreEqual(2, def.Files.Count);
 
             // TODO: There's a whole lot more assertions to be done
         }
 
         [Test]
-        public void Export()
+        public void GivenNestedDictionaryItems_WhenPackageExported_ThenTheXmlIsNested()
         {
-            string file1 = $"~/{_testBaseFolder}/App_Plugins/MyPlugin/package.manifest";
-            string file2 = $"~/{_testBaseFolder}/App_Plugins/MyPlugin/styles.css";
-            string mappedFile1 = HostingEnvironment.MapPathContentRoot(file1);
-            string mappedFile2 = HostingEnvironment.MapPathContentRoot(file2);
-            Directory.CreateDirectory(Path.GetDirectoryName(mappedFile1));
-            Directory.CreateDirectory(Path.GetDirectoryName(mappedFile2));
-            File.WriteAllText(mappedFile1, "hello world");
-            File.WriteAllText(mappedFile2, "hello world");
+            var parent = new DictionaryItem("Parent")
+            {
+                Key = Guid.NewGuid()
+            };
+            LocalizationService.Save(parent);
+            var child1 = new DictionaryItem(parent.Key, "Child1")
+            {
+                Key = Guid.NewGuid()
+            };
+            LocalizationService.Save(child1);
+            var child2 = new DictionaryItem(child1.Key, "Child2")
+            {
+                Key = Guid.NewGuid()
+            };
+            LocalizationService.Save(child2);
+            var child3 = new DictionaryItem(child2.Key, "Child3")
+            {
+                Key = Guid.NewGuid()
+            };
+            LocalizationService.Save(child3);
+            var child4 = new DictionaryItem(child3.Key, "Child4")
+            {
+                Key = Guid.NewGuid()
+            };
+            LocalizationService.Save(child4);
 
             var def = new PackageDefinition
             {
                 Name = "test",
-                Url = "http://test.com",
-                Author = "Someone",
-                AuthorUrl = "http://test.com",
-                Files = new List<string> { file1, file2 },
-                Actions = "<actions><Action alias='test' /></actions>"
+
+                // put these out of order to ensure that it doesn't matter.
+                DictionaryItems = new List<string>
+                {
+                    child2.Id.ToString(),
+                    child1.Id.ToString(),
+                    // we are missing 3 here so 4 will be orphaned and end up in the root
+                    child4.Id.ToString(),
+                    parent.Id.ToString()
+                }
+            };
+
+            PackageBuilder.SavePackage(def);
+
+            string packageXmlPath = PackageBuilder.ExportPackage(def);
+
+            using (var packageXmlStream = File.OpenRead(packageXmlPath))
+            {
+                var packageXml = XDocument.Load(packageXmlStream);
+                var dictionaryItems = packageXml.Root.Element("DictionaryItems");
+                Assert.IsNotNull(dictionaryItems);
+                var rootItems = dictionaryItems.Elements("DictionaryItem").ToList();
+                Assert.AreEqual(2, rootItems.Count);
+                Assert.AreEqual("Child4", rootItems[0].AttributeValue<string>("Name"));
+                Assert.AreEqual("Parent", rootItems[1].AttributeValue<string>("Name"));
+                var children = rootItems[1].Elements("DictionaryItem").ToList();
+                Assert.AreEqual(1, children.Count);
+                Assert.AreEqual("Child1", children[0].AttributeValue<string>("Name"));
+                children = children[0].Elements("DictionaryItem").ToList();
+                Assert.AreEqual(1, children.Count);
+                Assert.AreEqual("Child2", children[0].AttributeValue<string>("Name"));
+            }
+        }
+
+        [Test]
+        public void Export_Zip()
+        {
+            var mt = MediaTypeBuilder.CreateImageMediaType("testImage");
+            MediaTypeService.Save(mt);
+            var m1 = MediaBuilder.CreateMediaFile(mt, -1);
+            MediaService.Save(m1);
+
+            //Ensure a file exist
+            var fullPath = HostingEnvironment.MapPathWebRoot(m1.Properties[Constants.Conventions.Media.File].GetValue().ToString());
+            using (StreamWriter file1 = File.CreateText(fullPath))
+            {
+                file1.WriteLine("hello");
+            }
+
+            var def = new PackageDefinition
+            {
+                Name = "test",
+                MediaUdis = new List<GuidUdi>(){m1.GetUdi()}
+            };
+
+            bool result = PackageBuilder.SavePackage(def);
+            Assert.IsTrue(result);
+            Assert.IsTrue(def.PackagePath.IsNullOrWhiteSpace());
+
+            string packageXmlPath = PackageBuilder.ExportPackage(def);
+
+            def = PackageBuilder.GetById(def.Id); // re-get
+            Assert.IsNotNull(def.PackagePath);
+
+            using (FileStream packageZipStream = File.OpenRead(packageXmlPath))
+            using (ZipArchive zipArchive = PackageMigrationResource.GetPackageDataManifest(packageZipStream, out XDocument packageXml))
+            {
+                Assert.AreEqual("umbPackage", packageXml.Root.Name.ToString());
+                Assert.IsNotNull(zipArchive.GetEntry("media/media/test-file.txt"));
+
+                Assert.AreEqual(
+                    $"<MediaItems><MediaSet><testImage id=\"{m1.Id}\" key=\"{m1.Key}\" parentID=\"-1\" level=\"1\" creatorID=\"-1\" sortOrder=\"0\" createDate=\"{m1.CreateDate.ToString("s")}\" updateDate=\"{m1.UpdateDate.ToString("s")}\" nodeName=\"Test File\" urlName=\"test-file\" path=\"{m1.Path}\" isDoc=\"\" nodeType=\"{mt.Id}\" nodeTypeAlias=\"testImage\" writerName=\"\" writerID=\"0\" udi=\"{m1.GetUdi()}\" mediaFilePath=\"/media/test-file.txt\"><umbracoFile><![CDATA[/media/test-file.txt]]></umbracoFile><umbracoBytes><![CDATA[100]]></umbracoBytes><umbracoExtension><![CDATA[png]]></umbracoExtension></testImage></MediaSet></MediaItems>",
+                    packageXml.Element("umbPackage").Element("MediaItems").ToString(SaveOptions.DisableFormatting));
+
+                // TODO: There's a whole lot more assertions to be done
+
+            }
+        }
+
+
+        [Test]
+        public void Export_Xml()
+        {
+
+            var template = TemplateBuilder.CreateTextPageTemplate();
+
+            FileService.SaveTemplate(template);
+
+            var def = new PackageDefinition
+            {
+                Name = "test",
+                Templates = new []{template.Id.ToString()}
             };
             bool result = PackageBuilder.SavePackage(def);
             Assert.IsTrue(result);
             Assert.IsTrue(def.PackagePath.IsNullOrWhiteSpace());
 
-            string zip = PackageBuilder.ExportPackage(def);
+            string packageXmlPath = PackageBuilder.ExportPackage(def); // Get
 
             def = PackageBuilder.GetById(def.Id); // re-get
             Assert.IsNotNull(def.PackagePath);
 
-            using (ZipArchive archive = ZipFile.OpenRead(HostingEnvironment.MapPathWebRoot(zip)))
+            using (var packageXmlStream = File.OpenRead(packageXmlPath))
             {
-                Assert.AreEqual(3, archive.Entries.Count);
+                var xml = XDocument.Load(packageXmlStream);
+                Assert.AreEqual("umbPackage", xml.Root.Name.ToString());
 
-                // the 2 files we manually added
-                Assert.IsNotNull(archive.Entries.Where(x => x.Name == "package.manifest"));
-                Assert.IsNotNull(archive.Entries.Where(x => x.Name == "styles.css"));
+                Assert.AreEqual($"<Templates><Template><Name>Text page</Name><Alias>textPage</Alias><Design><![CDATA[@using Umbraco.Cms.Web.Common.PublishedModels;{Environment.NewLine}@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage{Environment.NewLine}@{{{Environment.NewLine}\tLayout = null;{Environment.NewLine}}}]]></Design></Template></Templates>", xml.Element("umbPackage").Element("Templates").ToString(SaveOptions.DisableFormatting));
 
-                // this is the actual package definition/manifest (not the developer manifest!)
-                ZipArchiveEntry packageXml = archive.Entries.FirstOrDefault(x => x.Name == "package.xml");
-                Assert.IsNotNull(packageXml);
+                // TODO: There's a whole lot more assertions to be done
 
-                using (Stream stream = packageXml.Open())
-                {
-                    var xml = XDocument.Load(stream);
-                    Assert.AreEqual("umbPackage", xml.Root.Name.ToString());
-                    Assert.AreEqual(2, xml.Root.Element("files").Elements("file").Count());
-
-                    Assert.AreEqual("<Actions><Action alias=\"test\" /></Actions>", xml.Element("umbPackage").Element("Actions").ToString(SaveOptions.DisableFormatting));
-
-                    // TODO: There's a whole lot more assertions to be done
-                }
             }
         }
     }

@@ -33,14 +33,13 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Composing
                     typeof(System.Guid).Assembly,
                     typeof(NUnit.Framework.Assert).Assembly,
                     typeof(System.Xml.NameTable).Assembly,
-                    typeof(System.Configuration.GenericEnumConverter).Assembly,
                     typeof(TypeFinder).Assembly,
                 };
 
         [Test]
         public void Find_Class_Of_Type_With_Attribute()
         {
-            var typeFinder = new TypeFinder(Mock.Of<ILogger<TypeFinder>>(), new DefaultUmbracoAssemblyProvider(GetType().Assembly, NullLoggerFactory.Instance), new VaryingRuntimeHash());
+            var typeFinder = new TypeFinder(Mock.Of<ILogger<TypeFinder>>(), new DefaultUmbracoAssemblyProvider(GetType().Assembly, NullLoggerFactory.Instance));
             IEnumerable<Type> typesFound = typeFinder.FindClassesOfTypeWithAttribute<TestEditor, MyTestAttribute>(_assemblies);
             Assert.AreEqual(2, typesFound.Count());
         }
@@ -48,15 +47,15 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Composing
         [Test]
         public void Find_Classes_With_Attribute()
         {
-            var typeFinder = new TypeFinder(Mock.Of<ILogger<TypeFinder>>(), new DefaultUmbracoAssemblyProvider(GetType().Assembly, NullLoggerFactory.Instance), new VaryingRuntimeHash());
+            var typeFinder = new TypeFinder(Mock.Of<ILogger<TypeFinder>>(), new DefaultUmbracoAssemblyProvider(GetType().Assembly, NullLoggerFactory.Instance));
             IEnumerable<Type> typesFound = typeFinder.FindClassesWithAttribute<TreeAttribute>(_assemblies);
             Assert.AreEqual(0, typesFound.Count()); // 0 classes in _assemblies are marked with [Tree]
 
             typesFound = typeFinder.FindClassesWithAttribute<TreeAttribute>(new[] { typeof(TreeAttribute).Assembly });
-            Assert.AreEqual(22, typesFound.Count()); // + classes in Umbraco.Web are marked with [Tree]
+            Assert.AreEqual(23, typesFound.Count()); // + classes in Umbraco.Web are marked with [Tree]
 
             typesFound = typeFinder.FindClassesWithAttribute<TreeAttribute>();
-            Assert.AreEqual(22, typesFound.Count()); // + classes in Umbraco.Web are marked with [Tree]
+            Assert.AreEqual(23, typesFound.Count()); // + classes in Umbraco.Web are marked with [Tree]
         }
 
         [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]

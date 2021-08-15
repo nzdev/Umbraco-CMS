@@ -2,6 +2,7 @@ name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd
 variables:
     buildConfiguration: Release
     SA_PASSWORD: UmbracoIntegration123!
+    UmbracoBuild: AzurePipeline
 resources:
     containers:
         - container: mssql
@@ -14,6 +15,29 @@ resources:
               - '1433:1433'
           options: '--name mssql'
 stages:
+    - stage: Determine_build_type
+      displayName: Determine build type
+      dependsOn: [ ]
+      jobs:
+          - job: Set_build_variables
+            displayName: Set build variables
+            pool:
+                vmImage: windows-latest
+            steps:
+                - task: PowerShell@1
+                  name: setReleaseVariable
+                  displayName: Set isRelease variable
+                  inputs:
+                      scriptType: inlineScript
+                      inlineScript: >
+                          $isRelease = [regex]::matches($env:BUILD_SOURCEBRANCH,"v\d+\/\d+.\d+.*")
+
+                          if ($isRelease.Count -gt 0){
+                             Write-Host "##vso[build.addbuildtag]Release build"
+                             Write-Host "##vso[task.setvariable variable=isRelease;isOutput=true]true"
+                          }else{
+                             Write-Host "##vso[task.setvariable variable=isRelease;isOutput=true]false"
+                          }
     - stage: Unit_Tests
       displayName: Unit Tests
       dependsOn: []
@@ -24,42 +48,60 @@ stages:
                 vmImage: ubuntu-latest
             steps:
                 - task: UseDotNet@2
-                  displayName: Use .Net Core sdk 5.x
+                  displayName: Use .Net 5.x
                   inputs:
                       version: 5.x
+                - task: DotNetCoreCLI@2
+                  displayName: dotnet build
+                  inputs:
+                      command: build
+                      projects: '**/umbraco-netcore-only.sln'
                 - task: DotNetCoreCLI@2
                   displayName: dotnet test
                   inputs:
                       command: test
                       projects: '**/*.Tests.UnitTests.csproj'
+                      arguments: '--no-build'
           - job: MacOS_Unit_Tests
             displayName: Mac OS
             pool:
                 vmImage: macOS-latest
             steps:
                 - task: UseDotNet@2
-                  displayName: Use .Net Core sdk 5.x
+                  displayName: Use .Net 5.x
                   inputs:
                       version: 5.x
+                - task: DotNetCoreCLI@2
+                  displayName: dotnet build
+                  inputs:
+                      command: build
+                      projects: '**/umbraco-netcore-only.sln'
                 - task: DotNetCoreCLI@2
                   displayName: dotnet test
                   inputs:
                       command: test
                       projects: '**/*.Tests.UnitTests.csproj'
+                      arguments: '--no-build'
           - job: Windows_Unit_Tests
             displayName: Windows
             pool:
                 vmImage: windows-latest
             steps:
                 - task: UseDotNet@2
-                  displayName: Use .Net Core sdk 5.x
+                  displayName: Use .Net 5.x
                   inputs:
                       version: 5.x
+                - task: DotNetCoreCLI@2
+                  displayName: dotnet build
+                  inputs:
+                      command: build
+                      projects: '**/umbraco.sln'
                 - task: DotNetCoreCLI@2
                   displayName: dotnet test
                   inputs:
                       command: test
                       projects: '**/*.Tests.UnitTests.csproj'
+                      arguments: '--no-build'
     - stage: Integration_Tests
       displayName: Integration Tests
       dependsOn: []
@@ -73,14 +115,20 @@ stages:
                 vmImage: ubuntu-latest
             steps:
                 - task: UseDotNet@2
-                  displayName: Use .Net Core sdk 5.x
+                  displayName: Use .Net 5.x
                   inputs:
                       version: 5.x
+                - task: DotNetCoreCLI@2
+                  displayName: dotnet build
+                  inputs:
+                      command: build
+                      projects: '**/umbraco-netcore-only.sln'
                 - task: DotNetCoreCLI@2
                   displayName: dotnet test
                   inputs:
                       command: test
                       projects: '**/Umbraco.Tests.Integration.csproj'
+                      arguments: '--no-build'
                   env:
                       UmbracoIntegrationTestConnectionString: 'Server=localhost,1433;User Id=sa;Password=$(SA_PASSWORD);'
           - job: Windows_Integration_Tests
@@ -90,16 +138,22 @@ stages:
                 vmImage: windows-latest
             steps:
                 - task: UseDotNet@2
-                  displayName: Use .Net Core sdk 5.x
+                  displayName: Use .Net 5.x
                   inputs:
                       version: 5.x
                 - powershell: sqllocaldb start mssqllocaldb
                   displayName: Start MSSQL LocalDb
                 - task: DotNetCoreCLI@2
+                  displayName: dotnet build
+                  inputs:
+                      command: build
+                      projects: '**/umbraco.sln'
+                - task: DotNetCoreCLI@2
                   displayName: dotnet test
                   inputs:
                       command: test
-                      projects: '**\Umbraco.Tests.Integration.csproj'
+                      projects: '**\Umbraco.Tests.Integration*.csproj'
+                      arguments: '--no-build'
     - stage: Acceptance_Tests
       displayName: Acceptance Tests
       dependsOn: []
@@ -126,7 +180,7 @@ stages:
                 vmImage: windows-latest
             steps:
                 - task: UseDotNet@2
-                  displayName: Use .Net Core sdk 5.x
+                  displayName: Use .Net 5.x
                   inputs:
                       version: 5.x
 
@@ -221,7 +275,7 @@ stages:
                 vmImage: ubuntu-latest
             steps:
                 - task: UseDotNet@2
-                  displayName: Use .Net Core sdk 5.x
+                  displayName: Use .Net 5.x
                   inputs:
                       version: 5.x
                 - task: Bash@3
@@ -311,7 +365,7 @@ stages:
                 vmImage: windows-latest
             steps:
                 - task: UseDotNet@2
-                  displayName: Use .Net Core sdk 5.x
+                  displayName: Use .Net 5.x
                   inputs:
                       version: 5.x
                 - task: NuGetToolInstaller@1
@@ -335,10 +389,9 @@ stages:
 
                         $isRelease = [regex]::matches($env:BUILD_SOURCEBRANCH,"v\d+\/\d+.\d+.*")
 
-
                         if ($isRelease.Count -gt 0){
                           $continuous = $version.Semver
-                          Write-Host "##vso[build.addbuildtag]Release build"
+
                         }
                         else
                         {
@@ -366,10 +419,7 @@ stages:
                             $a.symbols.version.defaultValue = $continuous
 
                             $a | ConvertTo-Json -depth 32| set-content $templatePath
-                            Write-Host "##vso[build.addbuildtag]Continuous build"
-
                           }
-
 
                         Write-Host "##vso[build.updatebuildnumber]$continuous.$(Build.BuildId)"
 
@@ -383,6 +433,15 @@ stages:
                           $ubuild = build\build.ps1 -get
 
                           $ubuild.PrepareBuild("vso")
+                - task: PowerShell@1
+                  displayName: Prepare JSON Schema
+                  inputs:
+                      scriptType: inlineScript
+                      inlineScript: |
+                          Write-Host "Working folder: $pwd"
+                          $ubuild = build\build.ps1 -get -continue
+
+                          $ubuild.CompileJsonSchema()
                 - task: NodeTool@0
                   displayName: Use Node 11.x
                   inputs:
@@ -401,7 +460,7 @@ stages:
                       publishJUnitResults: true
                       testResultsFiles: '**\TESTS-*.xml'
                 - task: PowerShell@1
-                  displayName: Prepare Packages & Zip
+                  displayName: Prepare Packages
                   inputs:
                       scriptType: inlineScript
                       inlineScript: |
@@ -410,19 +469,6 @@ stages:
 
                           $ubuild.CompileUmbraco()
                           $ubuild.PreparePackages()
-                          $ubuild.PackageZip()
-                - task: CopyFiles@2
-                  displayName: Copy Zip Files to Staging
-                  inputs:
-                      SourceFolder: build.out
-                      Contents: '*.zip'
-                      TargetFolder: $(build.artifactstagingdirectory)
-                      CleanTargetFolder: true
-                - task: PublishBuildArtifacts@1
-                  displayName: Publish Zip Files
-                  inputs:
-                      PathtoPublish: $(build.artifactstagingdirectory)
-                      ArtifactName: zips
                 - task: PowerShell@1
                   displayName: Verify & Package NuGet
                   inputs:
@@ -461,17 +507,17 @@ stages:
                   condition: succeededOrFailed()
     - stage: Artifacts_Docs
       displayName: 'Static Code Documentation'
-      dependsOn: []
-      condition: 'ne(variables[''Umbraco.IsReleaseBuild''], ''false'')'
+      dependsOn: [Determine_build_type]
       jobs:
           - job: Generate_Docs_CSharp
             timeoutInMinutes: 60
             displayName: Generate C# Docs
+            condition: eq(stageDependencies.Determine_build_type.Set_build_variables.outputs['setReleaseVariable.isRelease'], 'true')
             pool:
                 vmImage: windows-latest
             steps:
                 - task: UseDotNet@2
-                  displayName: Use .Net Core sdk 5.x
+                  displayName: Use .Net 5.x
                   inputs:
                       version: 5.x
                 - task: PowerShell@2
@@ -507,10 +553,10 @@ stages:
                       targetPath: $(Build.ArtifactStagingDirectory)\docs\csharp-docs.zip
                       artifact: docs-cs
                       publishLocation: pipeline
-
           - job: Generate_Docs_JS
             timeoutInMinutes: 60
             displayName: Generate JS Docs
+            condition: eq(stageDependencies.Determine_build_type.Set_build_variables.outputs['setReleaseVariable.isRelease'], 'true')
             pool:
                 vmImage: windows-latest
             steps:

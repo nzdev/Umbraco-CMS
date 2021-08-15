@@ -24,6 +24,8 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
     public class PostMigrationTests
     {
         private static readonly ILoggerFactory s_loggerFactory = NullLoggerFactory.Instance;
+        private IMigrationPlanExecutor GetMigrationPlanExecutor(IScopeProvider scopeProvider, IMigrationBuilder builder)
+            => new MigrationPlanExecutor(scopeProvider, s_loggerFactory, builder);
 
         [Test]
         public void ExecutesPlanPostMigration()
@@ -36,9 +38,9 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
                     switch (t.Name)
                     {
                         case nameof(NoopMigration):
-                            return new NoopMigration();
+                            return new NoopMigration(c);
                         case nameof(TestPostMigration):
-                            return new TestPostMigration();
+                            return new TestPostMigration(c);
                         default:
                             throw new NotSupportedException();
                     }
@@ -63,12 +65,11 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
             TestPostMigration.MigrateCount = 0;
 
             var upgrader = new Upgrader(plan);
+            IMigrationPlanExecutor executor = GetMigrationPlanExecutor(scopeProvider, builder);
             upgrader.Execute(
+                executor,
                 scopeProvider,
-                builder,
-                Mock.Of<IKeyValueService>(),
-                s_loggerFactory.CreateLogger<Upgrader>(),
-                s_loggerFactory);
+                Mock.Of<IKeyValueService>());
 
             Assert.AreEqual(1, TestPostMigration.MigrateCount);
         }
@@ -84,11 +85,11 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
                     switch (t.Name)
                     {
                         case nameof(NoopMigration):
-                            return new NoopMigration();
+                            return new NoopMigration(c);
                         case nameof(TestMigration):
                             return new TestMigration(c);
                         case nameof(TestPostMigration):
-                            return new TestPostMigration();
+                            return new TestPostMigration(c);
                         default:
                             throw new NotSupportedException();
                     }
@@ -112,15 +113,14 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
             TestMigration.MigrateCount = 0;
             TestPostMigration.MigrateCount = 0;
 
-            new MigrationContext(database, s_loggerFactory.CreateLogger<MigrationContext>());
+            new MigrationContext(plan, database, s_loggerFactory.CreateLogger<MigrationContext>());
 
             var upgrader = new Upgrader(plan);
+            IMigrationPlanExecutor executor = GetMigrationPlanExecutor(scopeProvider, builder);
             upgrader.Execute(
+                executor,
                 scopeProvider,
-                builder,
-                Mock.Of<IKeyValueService>(),
-                s_loggerFactory.CreateLogger<Upgrader>(),
-                s_loggerFactory);
+                Mock.Of<IKeyValueService>());
 
             Assert.AreEqual(1, TestMigration.MigrateCount);
             Assert.AreEqual(1, TestPostMigration.MigrateCount);
@@ -135,7 +135,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
 
             public static int MigrateCount { get; set; }
 
-            public override void Migrate()
+            protected override void Migrate()
             {
                 MigrateCount++;
 
@@ -143,11 +143,15 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
             }
         }
 
-        public class TestPostMigration : IMigration
+        public class TestPostMigration : MigrationBase
         {
+            public TestPostMigration(IMigrationContext context) : base(context)
+            {
+            }
+
             public static int MigrateCount { get; set; }
 
-            public void Migrate() => MigrateCount++;
+            protected override void Migrate() => MigrateCount++;
         }
     }
 }

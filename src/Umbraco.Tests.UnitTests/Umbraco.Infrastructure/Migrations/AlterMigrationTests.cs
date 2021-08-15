@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using Umbraco.Cms.Core.Migrations;
 using Umbraco.Cms.Infrastructure.Migrations;
 using Umbraco.Cms.Tests.Common.TestHelpers;
 using Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations.Stubs;
@@ -16,18 +17,28 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
     [TestFixture]
     public class AlterMigrationTests
     {
-        private readonly ILogger<MigrationContext> _logger = Mock.Of<ILogger<MigrationContext>>();
+        private readonly ILogger<MigrationContext> _logger = Mock.Of<ILogger<MigrationContext>>();        
+        private class TestPlan : MigrationPlan
+        {
+            public TestPlan() : base("Test")
+            {
+            }
+        }
+        private MigrationContext GetMigrationContext(out TestDatabase db)
+        {
+            db = new TestDatabase();
+            return new MigrationContext(new TestPlan(), db, _logger);
+        }
 
         [Test]
         public void Drop_Foreign_Key()
         {
             // Arrange
-            var database = new TestDatabase();
-            var context = new MigrationContext(database, _logger);
+            var context = GetMigrationContext(out var database);
             var stub = new DropForeignKeyMigrationStub(context);
 
             // Act
-            stub.Migrate();
+            stub.Run();
 
             foreach (TestDatabase.Operation op in database.Operations)
             {
@@ -44,11 +55,10 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
         [Test]
         public void CreateColumn()
         {
-            var database = new TestDatabase();
-            var context = new MigrationContext(database, _logger);
+            var context = GetMigrationContext(out var database);
             var migration = new CreateColumnMigration(context);
 
-            migration.Migrate();
+            migration.Run();
 
             foreach (TestDatabase.Operation op in database.Operations)
             {
@@ -68,17 +78,16 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
             {
             }
 
-            public override void Migrate() => Alter.Table("bar").AddColumn("foo").AsGuid().Do();
+            protected override void Migrate() => Alter.Table("bar").AddColumn("foo").AsGuid().Do();
         }
 
         [Test]
         public void AlterColumn()
         {
-            var database = new TestDatabase();
-            var context = new MigrationContext(database, _logger);
+            var context = GetMigrationContext(out var database);
             var migration = new AlterColumnMigration(context);
 
-            migration.Migrate();
+            migration.Run();
 
             foreach (TestDatabase.Operation op in database.Operations)
             {
@@ -98,7 +107,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
             {
             }
 
-            public override void Migrate() =>
+            protected override void Migrate() =>
 
                 // bad/good syntax...
                 //// Alter.Column("foo").OnTable("bar").AsGuid().NotNullable();
@@ -110,12 +119,11 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
         public void Can_Get_Up_Migration_From_MigrationStub()
         {
             // Arrange
-            var database = new TestDatabase();
-            var context = new MigrationContext(database, _logger);
+            var context = GetMigrationContext(out var database);
             var stub = new AlterUserTableMigrationStub(context);
 
             // Act
-            stub.Migrate();
+            stub.Run();
 
             // Assert
             Assert.That(database.Operations.Any(), Is.True);

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Web;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -10,9 +12,12 @@ using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Configuration;
 using Umbraco.Cms.Core.Hosting;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.PropertyEditors.ValueConverters;
+using Umbraco.Cms.Core.Web;
 using Umbraco.Cms.Core.WebAssets;
 using Umbraco.Cms.Web.Common.Controllers;
+using Umbraco.Cms.Web.Common.Security;
 
 namespace Umbraco.Extensions
 {
@@ -204,6 +209,58 @@ namespace Umbraco.Extensions
             return $"{version}.{runtimeMinifier.CacheBuster}".GenerateHash();
         }
 
+        public static IHtmlContent GetCropUrl(this IUrlHelper urlHelper, IPublishedContent mediaItem, string cropAlias, bool htmlEncode = true)
+        {
+            if (mediaItem == null)
+            {
+                return HtmlString.Empty;
+            }
+
+            var url = mediaItem.GetCropUrl(cropAlias: cropAlias, useCropDimensions: true);
+            return CreateHtmlString(url, htmlEncode);
+        }
+
+        private static IHtmlContent CreateHtmlString(string url, bool htmlEncode) => htmlEncode ? new HtmlString(HttpUtility.HtmlEncode(url)) : new HtmlString(url);
+
+        public static IHtmlContent GetCropUrl(this IUrlHelper urlHelper, IPublishedContent mediaItem, string propertyAlias, string cropAlias, bool htmlEncode = true)
+        {
+            if (mediaItem == null)
+            {
+                return HtmlString.Empty;
+            }
+
+            var url = mediaItem.GetCropUrl(propertyAlias: propertyAlias, cropAlias: cropAlias, useCropDimensions: true);
+            return CreateHtmlString(url, htmlEncode);
+        }
+
+        public static IHtmlContent GetCropUrl(this IUrlHelper urlHelper,
+            IPublishedContent mediaItem,
+            int? width = null,
+            int? height = null,
+            string propertyAlias = Constants.Conventions.Media.File,
+            string cropAlias = null,
+            int? quality = null,
+            ImageCropMode? imageCropMode = null,
+            ImageCropAnchor? imageCropAnchor = null,
+            bool preferFocalPoint = false,
+            bool useCropDimensions = false,
+            bool cacheBuster = true,
+            string furtherOptions = null,
+            ImageCropRatioMode? ratioMode = null,
+            bool upScale = true,
+            bool htmlEncode = true)
+        {
+            if (mediaItem == null)
+            {
+                return HtmlString.Empty;
+            }
+
+            var url = mediaItem.GetCropUrl(width, height, propertyAlias, cropAlias, quality, imageCropMode,
+                imageCropAnchor, preferFocalPoint, useCropDimensions, cacheBuster, furtherOptions, ratioMode,
+                upScale);
+            return CreateHtmlString(url, htmlEncode);
+        }
+
         public static IHtmlContent GetCropUrl(this IUrlHelper urlHelper,
             ImageCropperValue imageCropperValue,
             string cropAlias,
@@ -226,8 +283,54 @@ namespace Umbraco.Extensions
             var url = imageUrl.GetCropUrl(imageCropperValue, width, height, cropAlias, quality, imageCropMode,
                 imageCropAnchor, preferFocalPoint, useCropDimensions, cacheBusterValue, furtherOptions, ratioMode,
                 upScale);
-            return htmlEncode ? new HtmlString(HttpUtility.HtmlEncode(url)) : new HtmlString(url);
+            return CreateHtmlString(url, htmlEncode);
         }
 
+        /// <summary>
+        /// Generates a URL based on the current Umbraco URL with a custom query string that will route to the specified SurfaceController
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="action"></param>
+        /// <param name="controllerName"></param>
+        /// <returns></returns>
+        public static string SurfaceAction(this IUrlHelper url, IUmbracoContext umbracoContext, IDataProtectionProvider dataProtectionProvider,string action, string controllerName)
+        {
+            return url.SurfaceAction(umbracoContext, dataProtectionProvider, action, controllerName, null);
+        }
+
+        /// <summary>
+        /// Generates a URL based on the current Umbraco URL with a custom query string that will route to the specified SurfaceController
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="action"></param>
+        /// <param name="controllerName"></param>
+        /// <param name="additionalRouteVals"></param>
+        /// <returns></returns>
+        public static string SurfaceAction(this IUrlHelper url, IUmbracoContext umbracoContext, IDataProtectionProvider dataProtectionProvider,string action, string controllerName, object additionalRouteVals)
+        {
+            return url.SurfaceAction(umbracoContext, dataProtectionProvider, action, controllerName, "", additionalRouteVals);
+        }
+
+        /// <summary>
+        /// Generates a URL based on the current Umbraco URL with a custom query string that will route to the specified SurfaceController
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="action"></param>
+        /// <param name="controllerName"></param>
+        /// <param name="area"></param>
+        /// <param name="additionalRouteVals"></param>
+        /// <returns></returns>
+        public static string SurfaceAction(this IUrlHelper url, IUmbracoContext umbracoContext, IDataProtectionProvider dataProtectionProvider, string action, string controllerName, string area, object additionalRouteVals)
+        {
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            if (string.IsNullOrEmpty(action)) throw new ArgumentException("Value can't be empty.", nameof(action));
+            if (controllerName == null) throw new ArgumentNullException(nameof(controllerName));
+            if (string.IsNullOrEmpty(controllerName)) throw new ArgumentException("Value can't be empty.", nameof(controllerName));
+
+            var encryptedRoute = EncryptionHelper.CreateEncryptedRouteString(dataProtectionProvider, controllerName, action, area, additionalRouteVals);
+
+            var result = umbracoContext.OriginalRequestUrl.AbsolutePath.EnsureEndsWith('?') + "ufprt=" + encryptedRoute;
+            return result;
+        }
     }
 }

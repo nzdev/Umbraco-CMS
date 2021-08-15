@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
+using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.Configuration;
@@ -21,13 +22,14 @@ using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Hosting;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Logging;
+using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Strings;
 using Umbraco.Cms.Infrastructure.Migrations.Install;
 using Umbraco.Cms.Infrastructure.Persistence;
 using Umbraco.Cms.Infrastructure.Persistence.Mappers;
 using Umbraco.Cms.Tests.UnitTests.TestHelpers;
-using Constants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Components
 {
@@ -47,21 +49,35 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Components
             ILogger logger = loggerFactory.CreateLogger("GenericLogger");
             var globalSettings = new GlobalSettings();
             var connectionStrings = new ConnectionStrings();
-            var f = new UmbracoDatabaseFactory(loggerFactory.CreateLogger<UmbracoDatabaseFactory>(), loggerFactory, Options.Create(globalSettings), Options.Create(connectionStrings), new Lazy<IMapperCollection>(() => new MapperCollection(Enumerable.Empty<BaseMapper>())), TestHelper.DbProviderFactoryCreator,
-                new DatabaseSchemaCreatorFactory(loggerFactory.CreateLogger<DatabaseSchemaCreator>(), loggerFactory, new UmbracoVersion(), Mock.Of<IEventAggregator>()));
+            var mapperCollection = new NPocoMapperCollection(() => new[] { new NullableDateMapper() });
+            var f = new UmbracoDatabaseFactory(
+                loggerFactory.CreateLogger<UmbracoDatabaseFactory>(),
+                loggerFactory,
+                Options.Create(globalSettings),
+                Options.Create(connectionStrings),
+                new MapperCollection(() => Enumerable.Empty<BaseMapper>()),
+                TestHelper.DbProviderFactoryCreator,
+                new DatabaseSchemaCreatorFactory(loggerFactory.CreateLogger<DatabaseSchemaCreator>(), loggerFactory, new UmbracoVersion(), Mock.Of<IEventAggregator>()),
+                mapperCollection);
+
             var fs = new FileSystems(loggerFactory, IOHelper, Options.Create(globalSettings), Mock.Of<IHostingEnvironment>());
             var coreDebug = new CoreDebugSettings();
-            MediaFileManager mediaFileManager = new MediaFileManager(Mock.Of<IFileSystem>(),
-                Mock.Of<IMediaPathScheme>(), Mock.Of<ILogger<MediaFileManager>>(), Mock.Of<IShortStringHelper>());
+            var mediaFileManager = new MediaFileManager(
+                Mock.Of<IFileSystem>(),
+                Mock.Of<IMediaPathScheme>(),
+                Mock.Of<ILogger<MediaFileManager>>(),
+                Mock.Of<IShortStringHelper>(),
+                Mock.Of<IServiceProvider>(),
+                Options.Create(new ContentSettings()));
             IEventAggregator eventAggregator = Mock.Of<IEventAggregator>();
-            var p = new ScopeProvider(f, fs, Options.Create(coreDebug), mediaFileManager, loggerFactory.CreateLogger<ScopeProvider>(), loggerFactory, NoAppCache.Instance, eventAggregator);
+            var scopeProvider = new ScopeProvider(f, fs, Options.Create(coreDebug), mediaFileManager, loggerFactory.CreateLogger<ScopeProvider>(), loggerFactory, NoAppCache.Instance, eventAggregator);
 
             mock.Setup(x => x.GetService(typeof(ILogger))).Returns(logger);
             mock.Setup(x => x.GetService(typeof(ILogger<ComponentCollection>))).Returns(loggerFactory.CreateLogger<ComponentCollection>);
             mock.Setup(x => x.GetService(typeof(ILoggerFactory))).Returns(loggerFactory);
             mock.Setup(x => x.GetService(typeof(IProfilingLogger))).Returns(new ProfilingLogger(loggerFactory.CreateLogger<ProfilingLogger>(), Mock.Of<IProfiler>()));
             mock.Setup(x => x.GetService(typeof(IUmbracoDatabaseFactory))).Returns(f);
-            mock.Setup(x => x.GetService(typeof(IScopeProvider))).Returns(p);
+            mock.Setup(x => x.GetService(typeof(IScopeProvider))).Returns(scopeProvider);
 
             setup?.Invoke(mock);
             return mock.Object;
@@ -69,7 +85,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Components
 
         private static IServiceCollection MockRegister() => new ServiceCollection();
 
-        private static TypeLoader MockTypeLoader() => new TypeLoader(Mock.Of<ITypeFinder>(), Mock.Of<IAppPolicyCache>(), new DirectoryInfo(TestHelper.GetHostingEnvironment().MapPathContentRoot(Constants.SystemDirectories.TempData)), Mock.Of<ILogger<TypeLoader>>(), Mock.Of<IProfilingLogger>());
+        private static TypeLoader MockTypeLoader() => new TypeLoader(Mock.Of<ITypeFinder>(), new VaryingRuntimeHash(), Mock.Of<IAppPolicyCache>(), new DirectoryInfo(TestHelper.GetHostingEnvironment().MapPathContentRoot(Constants.SystemDirectories.TempData)), Mock.Of<ILogger<TypeLoader>>(), Mock.Of<IProfiler>());
 
         [Test]
         public void Boot1A()
@@ -429,7 +445,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Components
         public void AllComposers()
         {
             ITypeFinder typeFinder = TestHelper.GetTypeFinder();
-            var typeLoader = new TypeLoader(typeFinder, AppCaches.Disabled.RuntimeCache, new DirectoryInfo(TestHelper.GetHostingEnvironment().MapPathContentRoot(Constants.SystemDirectories.TempData)), Mock.Of<ILogger<TypeLoader>>(), Mock.Of<IProfilingLogger>());
+            var typeLoader = new TypeLoader(typeFinder, new VaryingRuntimeHash(), AppCaches.Disabled.RuntimeCache, new DirectoryInfo(TestHelper.GetHostingEnvironment().MapPathContentRoot(Constants.SystemDirectories.TempData)), Mock.Of<ILogger<TypeLoader>>(), Mock.Of<IProfiler>());
 
             IServiceCollection register = MockRegister();
             var builder = new UmbracoBuilder(register, Mock.Of<IConfiguration>(), TestHelper.GetMockedTypeLoader());
@@ -458,13 +474,14 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Components
         }
 
         [ComposeAfter(typeof(Composer4))]
-        public class Composer2 : TestComposerBase, ICoreComposer
+        public class Composer2 : TestComposerBase
         {
         }
 
         public class Composer3 : TestComposerBase, IUserComposer
         {
         }
+
 
         public class Composer4 : TestComposerBase
         {
@@ -526,6 +543,8 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Components
         {
         }
 
+        [ComposeAfter(typeof(Composer2))]
+        [ComposeAfter(typeof(Composer4))]
         public class Composer9 : TestComposerBase, ITestComposer
         {
         }
@@ -541,7 +560,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Components
         }
 
         [ComposeAfter(typeof(Composer4), true)]
-        public class Composer12 : TestComposerBase, ICoreComposer
+        public class Composer12 : TestComposerBase
         {
         }
 

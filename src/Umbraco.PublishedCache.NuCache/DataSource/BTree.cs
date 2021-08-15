@@ -1,16 +1,16 @@
-﻿using System.Configuration;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Serialization;
 using Umbraco.Cms.Core.Configuration.Models;
+using Umbraco.Cms.Core.Exceptions;
 
 namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 {
-    internal class BTree
+    public class BTree
     {
-        public static BPlusTree<int, ContentNodeKit> GetTree(string filepath, bool exists, NuCacheSettings settings)
+        public static BPlusTree<int, ContentNodeKit> GetTree(string filepath, bool exists, NuCacheSettings settings, ContentDataSerializer contentDataSerializer = null)
         {
             var keySerializer = new PrimitiveSerializer();
-            var valueSerializer = new ContentNodeKitSerializer();
+            var valueSerializer = new ContentNodeKitSerializer(contentDataSerializer);
             var options = new BPlusTree<int, ContentNodeKit>.OptionsV2(keySerializer, valueSerializer)
             {
                 CreateFile = exists ? CreatePolicy.IfNeeded : CreatePolicy.Always,
@@ -37,6 +37,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             //btree.
 
             return tree;
+
         }
 
         private static int GetBlockSize(NuCacheSettings settings)
@@ -53,9 +54,9 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             for (var i = blockSize; i != 1; i >>= 1)
                 bit++;
             if (1 << bit != blockSize)
-                throw new ConfigurationErrorsException($"Invalid block size value \"{blockSize}\": must be a power of two.");
+                throw new ConfigurationException($"Invalid block size value \"{blockSize}\": must be a power of two.");
             if (blockSize < 512 || blockSize > 65536)
-                throw new ConfigurationErrorsException($"Invalid block size value \"{blockSize}\": must be >= 512 and <= 65536.");
+                throw new ConfigurationException($"Invalid block size value \"{blockSize}\": must be >= 512 and <= 65536.");
 
             return blockSize;
         }

@@ -11,7 +11,6 @@ using Moq;
 using NPoco;
 using NUnit.Framework;
 using Umbraco.Cms.Core.Configuration.Models;
-using Umbraco.Cms.Core.Migrations;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Infrastructure.Migrations;
@@ -51,11 +50,13 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
                         case "DeleteRedirectUrlTable":
                             return new DeleteRedirectUrlTable(c);
                         case "NoopMigration":
-                            return new NoopMigration();
+                            return new NoopMigration(c);
                         default:
                             throw new NotSupportedException();
                     }
                 });
+
+            var executor = new MigrationPlanExecutor(scopeProvider, loggerFactory, migrationBuilder);
 
             MigrationPlan plan = new MigrationPlan("default")
                 .From(string.Empty)
@@ -72,8 +73,8 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
                 // read current state
                 var sourceState = kvs.GetValue("Umbraco.Tests.MigrationPlan") ?? string.Empty;
 
-                // execute plan
-                state = plan.Execute(s, sourceState, migrationBuilder, loggerFactory.CreateLogger<MigrationPlan>(), loggerFactory);
+                // execute plan                
+                state = executor.Execute(plan, sourceState);
 
                 // save new state
                 kvs.SetValue("Umbraco.Tests.MigrationPlan", sourceState, state);
@@ -227,7 +228,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Migrations
             {
             }
 
-            public override void Migrate() => Delete.Table("umbracoRedirectUrl").Do();
+            protected override void Migrate() => Delete.Table("umbracoRedirectUrl").Do();
         }
     }
 }

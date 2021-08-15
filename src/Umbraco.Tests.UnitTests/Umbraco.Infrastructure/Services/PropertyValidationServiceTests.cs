@@ -26,7 +26,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Services
         private void MockObjects(out PropertyValidationService validationService, out IDataType dt)
         {
             var textService = new Mock<ILocalizedTextService>();
-            textService.Setup(x => x.Localize(It.IsAny<string>(), Thread.CurrentThread.CurrentCulture, null)).Returns("Localized text");
+            textService.Setup(x => x.Localize(It.IsAny<string>(),It.IsAny<string>(), Thread.CurrentThread.CurrentCulture, null)).Returns("Localized text");
 
             var dataTypeService = new Mock<IDataTypeService>();
             IDataType dataType = Mock.Of<IDataType>(
@@ -43,7 +43,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Infrastructure.Services
             Mock.Get(dataEditor).Setup(x => x.GetValueEditor(It.IsAny<object>()))
                 .Returns(new CustomTextOnlyValueEditor(new DataEditorAttribute(Constants.PropertyEditors.Aliases.TextBox, "Test Textbox", "textbox"),   textService.Object, Mock.Of<IShortStringHelper>(), new JsonNetSerializer(), Mock.Of<IIOHelper>()));
 
-            var propEditors = new PropertyEditorCollection(new DataEditorCollection(new[] { dataEditor }));
+            var propEditors = new PropertyEditorCollection(new DataEditorCollection(() => new[] { dataEditor }));
 
             validationService = new PropertyValidationService(propEditors, dataTypeService.Object, Mock.Of<ILocalizedTextService>());
         }

@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
+using Umbraco.Cms.Core.Collections;
 using Umbraco.Cms.Core.Configuration;
 using Umbraco.Cms.Core.Configuration.Models;
+using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Extensions;
 using IHostingEnvironment = Umbraco.Cms.Core.Hosting.IHostingEnvironment;
 
@@ -13,13 +16,14 @@ namespace Umbraco.Cms.Web.Common.AspNetCore
 {
     public class AspNetCoreHostingEnvironment : IHostingEnvironment
     {
-        private readonly ISet<Uri> _applicationUrls = new HashSet<Uri>();
+        private readonly ConcurrentHashSet<Uri> _applicationUrls = new ConcurrentHashSet<Uri>();
         private readonly IServiceProvider _serviceProvider;
         private readonly IOptionsMonitor<HostingSettings> _hostingSettings;
         private readonly IOptionsMonitor<WebRoutingSettings> _webRoutingSettings;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private string _applicationId;
         private string _localTempPath;
+        private UrlMode _urlProviderMode;
 
         public AspNetCoreHostingEnvironment(
             IServiceProvider serviceProvider,
@@ -31,6 +35,7 @@ namespace Umbraco.Cms.Web.Common.AspNetCore
             _hostingSettings = hostingSettings ?? throw new ArgumentNullException(nameof(hostingSettings));
             _webRoutingSettings = webRoutingSettings ?? throw new ArgumentNullException(nameof(webRoutingSettings));
             _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
+            _urlProviderMode = _webRoutingSettings.CurrentValue.UrlProviderMode;
 
             SiteName = webHostEnvironment.ApplicationName;
             ApplicationPhysicalPath = webHostEnvironment.ContentRootPath;
@@ -142,7 +147,7 @@ namespace Umbraco.Cms.Web.Common.AspNetCore
         /// <inheritdoc/>
         public string ToAbsolute(string virtualPath)
         {
-            if (!virtualPath.StartsWith("~/") && !virtualPath.StartsWith("/"))
+            if (!virtualPath.StartsWith("~/") && !virtualPath.StartsWith("/") && _urlProviderMode != UrlMode.Absolute)
             {
                 throw new InvalidOperationException($"The value {virtualPath} for parameter {nameof(virtualPath)} must start with ~/ or /");
             }
@@ -168,6 +173,7 @@ namespace Umbraco.Cms.Web.Common.AspNetCore
             // (this is a simplified version of what was in 7.x)
             // note: should this be optional? is it expensive?
 
+            
             if (currentApplicationUrl is null)
             {
                 return;
@@ -181,9 +187,10 @@ namespace Umbraco.Cms.Web.Common.AspNetCore
             var change = !_applicationUrls.Contains(currentApplicationUrl);
             if (change)
             {
-                _applicationUrls.Add(currentApplicationUrl);
-
-                ApplicationMainUrl = currentApplicationUrl;
+                if (_applicationUrls.TryAdd(currentApplicationUrl))
+                {
+                    ApplicationMainUrl = currentApplicationUrl;
+                }
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reflection;
 using NPoco;
@@ -75,8 +75,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.DatabaseModelDefinitions
             var databaseTypeAttribute = propertyInfo.FirstAttribute<SpecialDbTypeAttribute>();
             if (databaseTypeAttribute != null)
             {
-                definition.HasSpecialDbType = true;
-                definition.DbType = databaseTypeAttribute.DatabaseType;
+                definition.CustomDbType = databaseTypeAttribute.DatabaseType;
             }
             else
             {
@@ -165,6 +164,14 @@ namespace Umbraco.Cms.Infrastructure.Persistence.DatabaseModelDefinitions
                 foreach (var column in columns)
                 {
                     definition.Columns.Add(new IndexColumnDefinition {Name = column, Direction = Direction.Ascending});
+                }
+            }
+            if (string.IsNullOrEmpty(attribute.IncludeColumns) == false)
+            {
+                var columns = attribute.IncludeColumns.Split(',').Select(p => p.Trim());
+                foreach (var column in columns)
+                {
+                    definition.IncludeColumns.Add(new IndexColumnDefinition { Name = column, Direction = Direction.Ascending });
                 }
             }
             return definition;

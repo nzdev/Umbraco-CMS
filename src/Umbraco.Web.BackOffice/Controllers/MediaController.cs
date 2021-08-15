@@ -67,7 +67,6 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         private readonly IContentTypeBaseServiceProvider _contentTypeBaseServiceProvider;
         private readonly IRelationService _relationService;
         private readonly IImageUrlGenerator _imageUrlGenerator;
-        private readonly IJsonSerializer _serializer;
         private readonly IAuthorizationService _authorizationService;
         private readonly AppCaches _appCaches;
         private readonly ILogger<MediaController> _logger;
@@ -90,6 +89,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             IRelationService relationService,
             PropertyEditorCollection propertyEditors,
             MediaFileManager mediaFileManager,
+            MediaUrlGeneratorCollection mediaUrlGenerators,
             IHostingEnvironment hostingEnvironment,
             IImageUrlGenerator imageUrlGenerator,
             IJsonSerializer serializer,
@@ -111,10 +111,10 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             _relationService = relationService;
             _propertyEditors = propertyEditors;
             _mediaFileManager = mediaFileManager;
+            _mediaUrlGenerators = mediaUrlGenerators;
             _hostingEnvironment = hostingEnvironment;
             _logger = loggerFactory.CreateLogger<MediaController>();
             _imageUrlGenerator = imageUrlGenerator;
-            _serializer = serializer;
             _authorizationService = authorizationService;
             _appCaches = appCaches;
         }
@@ -157,7 +157,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 Id = Constants.System.RecycleBinMedia,
                 Alias = "recycleBin",
                 ParentId = -1,
-                Name = _localizedTextService.Localize("general/recycleBin"),
+                Name = _localizedTextService.Localize("general", "recycleBin"),
                 ContentTypeAlias = "recycleBin",
                 CreateDate = DateTime.Now,
                 IsContainer = true,
@@ -232,7 +232,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         /// <param name="ids"></param>
         /// <returns></returns>
         [FilterAllowedOutgoingMedia(typeof(IEnumerable<MediaItemDisplay>))]
-        public IEnumerable<MediaItemDisplay> GetByIds([FromQuery]int[] ids)
+        public IEnumerable<MediaItemDisplay> GetByIds([FromQuery] int[] ids)
         {
             var foundMedia = _mediaService.GetByIds(ids);
             return foundMedia.Select(media => _umbracoMapper.Map<MediaItemDisplay>(media));
@@ -289,6 +289,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         private int[] _userStartNodes;
         private readonly PropertyEditorCollection _propertyEditors;
         private readonly MediaFileManager _mediaFileManager;
+        private readonly MediaUrlGeneratorCollection _mediaUrlGenerators;
         private readonly IHostingEnvironment _hostingEnvironment;
 
 
@@ -318,7 +319,8 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 var nodes = _mediaService.GetByIds(UserStartNodes).ToArray();
                 if (nodes.Length == 0)
                     return new PagedResult<ContentItemBasic<ContentPropertyBasic>>(0, 0, 0);
-                if (pageSize < nodes.Length) pageSize = nodes.Length; // bah
+                if (pageSize < nodes.Length)
+                    pageSize = nodes.Length; // bah
                 var pr = new PagedResult<ContentItemBasic<ContentPropertyBasic>>(nodes.Length, pageNumber, pageSize)
                 {
                     Items = nodes.Select(_umbracoMapper.Map<IMedia, ContentItemBasic<ContentPropertyBasic>>)
@@ -350,7 +352,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             else
             {
                 //better to not use this without paging where possible, currently only the sort dialog does
-                children = _mediaService.GetPagedChildren(id,0, int.MaxValue, out var total).ToList();
+                children = _mediaService.GetPagedChildren(id, 0, int.MaxValue, out var total).ToList();
                 totalChildren = children.Count;
             }
 
@@ -452,9 +454,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 var moveResult = _mediaService.MoveToRecycleBin(foundMedia, _backofficeSecurityAccessor.BackOfficeSecurity.GetUserId().ResultOr(Constants.Security.SuperUserId));
                 if (moveResult == false)
                 {
-                    //returning an object of INotificationModel will ensure that any pending
-                    // notification messages are added to the response.
-                    return new ValidationErrorResult(new SimpleNotificationModel());
+                    return ValidationProblem();
                 }
             }
             else
@@ -462,9 +462,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 var deleteResult = _mediaService.Delete(foundMedia, _backofficeSecurityAccessor.BackOfficeSecurity.GetUserId().ResultOr(Constants.Security.SuperUserId));
                 if (deleteResult == false)
                 {
-                    //returning an object of INotificationModel will ensure that any pending
-                    // notification messages are added to the response.
-                    return new ValidationErrorResult(new SimpleNotificationModel());
+                    return ValidationProblem();
                 }
             }
 
@@ -500,11 +498,11 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
 
             if (sourceParentID == destinationParentID)
             {
-                return new ValidationErrorResult(new SimpleNotificationModel(new BackOfficeNotification("",_localizedTextService.Localize("media/moveToSameFolderFailed"),NotificationStyle.Error)));
+                return ValidationProblem(new SimpleNotificationModel(new BackOfficeNotification("", _localizedTextService.Localize("media", "moveToSameFolderFailed"), NotificationStyle.Error)));
             }
             if (moveResult == false)
             {
-                return new ValidationErrorResult(new SimpleNotificationModel());
+                return ValidationProblem();
             }
             else
             {
@@ -563,9 +561,8 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 {
                     //ok, so the absolute mandatory data is invalid and it's new, we cannot actually continue!
                     // add the model state to the outgoing object and throw validation response
-                    var forDisplay = _umbracoMapper.Map<MediaItemDisplay>(contentItem.PersistedContent);
-                    forDisplay.Errors = ModelState.ToErrorDictionary();
-                    return new ValidationErrorResult(forDisplay);
+                    MediaItemDisplay forDisplay = _umbracoMapper.Map<MediaItemDisplay>(contentItem.PersistedContent);
+                    return ValidationProblem(forDisplay, ModelState);
                 }
             }
 
@@ -578,8 +575,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             //lastly, if it is not valid, add the model state to the outgoing object and throw a 403
             if (!ModelState.IsValid)
             {
-                display.Errors = ModelState.ToErrorDictionary();
-                return new ValidationErrorResult(display, StatusCodes.Status403Forbidden);
+                return ValidationProblem(display, ModelState, StatusCodes.Status403Forbidden);
             }
 
             //put the correct msgs in
@@ -590,8 +586,8 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                     if (saveStatus.Success)
                     {
                         display.AddSuccessNotification(
-                            _localizedTextService.Localize("speechBubbles/editMediaSaved"),
-                            _localizedTextService.Localize("speechBubbles/editMediaSavedText"));
+                            _localizedTextService.Localize("speechBubbles", "editMediaSaved"),
+                            _localizedTextService.Localize("speechBubbles", "editMediaSavedText"));
                     }
                     else
                     {
@@ -602,7 +598,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                         // is no Id to redirect to!
                         if (saveStatus.Result.Result == OperationResultType.FailedCancelledByEvent && IsCreatingAction(contentItem.Action))
                         {
-                            return new ValidationErrorResult(display);
+                            return ValidationProblem(display);
                         }
                     }
 
@@ -622,7 +618,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         {
             _mediaService.EmptyRecycleBin(_backofficeSecurityAccessor.BackOfficeSecurity.GetUserId().ResultOr(Constants.Security.SuperUserId));
 
-            return new UmbracoNotificationSuccessResponse(_localizedTextService.Localize("defaultdialogs/recycleBinIsEmpty"));
+            return Ok(_localizedTextService.Localize("defaultdialogs", "recycleBinIsEmpty"));
         }
 
         /// <summary>
@@ -661,7 +657,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 if (_mediaService.Sort(sortedMedia) == false)
                 {
                     _logger.LogWarning("Media sorting failed, this was probably caused by an event being cancelled");
-                    return new ValidationErrorResult("Media sorting failed, this was probably caused by an event being cancelled");
+                    return ValidationProblem("Media sorting failed, this was probably caused by an event being cancelled");
                 }
                 return Ok();
             }
@@ -674,7 +670,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
 
         public async Task<ActionResult<MediaItemDisplay>> PostAddFolder(PostedFolder folder)
         {
-            var parentIdResult = await GetParentIdAsIntAsync(folder.ParentId, validatePermissions:true);
+            var parentIdResult = await GetParentIdAsIntAsync(folder.ParentId, validatePermissions: true);
             if (!(parentIdResult.Result is null))
             {
                 return new ActionResult<MediaItemDisplay>(parentIdResult.Result);
@@ -698,7 +694,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         /// <remarks>
         /// We cannot validate this request with attributes (nicely) due to the nature of the multi-part for data.
         /// </remarks>
-        public async Task<IActionResult> PostAddFile([FromForm]string path, [FromForm]string currentFolder, [FromForm]string contentTypeAlias, List<IFormFile> file)
+        public async Task<IActionResult> PostAddFile([FromForm] string path, [FromForm] string currentFolder, [FromForm] string contentTypeAlias, List<IFormFile> file)
         {
             var root = _hostingEnvironment.MapPathContentRoot(Constants.SystemDirectories.TempFileUploads);
             //ensure it exists
@@ -711,7 +707,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             }
 
             //get the string json from the request
-            var parentIdResult = await GetParentIdAsIntAsync(currentFolder, validatePermissions:true);
+            var parentIdResult = await GetParentIdAsIntAsync(currentFolder, validatePermissions: true);
             if (!(parentIdResult.Result is null))
             {
                 return parentIdResult.Result;
@@ -779,7 +775,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             //get the files
             foreach (var formFile in file)
             {
-                var fileName =  formFile.FileName.Trim(Constants.CharArrays.DoubleQuote).TrimEnd();
+                var fileName = formFile.FileName.Trim(Constants.CharArrays.DoubleQuote).TrimEnd();
                 var safeFileName = fileName.ToSafeFileName(ShortStringHelper);
                 var ext = safeFileName.Substring(safeFileName.LastIndexOf('.') + 1).ToLower();
 
@@ -794,11 +790,13 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                         foreach (var mediaTypeItem in mediaTypes)
                         {
                             var fileProperty = mediaTypeItem.CompositionPropertyTypes.FirstOrDefault(x => x.Alias == "umbracoFile");
-                            if (fileProperty != null) {
+                            if (fileProperty != null)
+                            {
                                 var dataTypeKey = fileProperty.DataTypeKey;
                                 var dataType = _dataTypeService.GetDataType(dataTypeKey);
 
-                                if (dataType != null && dataType.Configuration is IFileExtensionsConfig fileExtensionsConfig) {
+                                if (dataType != null && dataType.Configuration is IFileExtensionsConfig fileExtensionsConfig)
+                                {
                                     var fileExtensions = fileExtensionsConfig.FileExtensions;
                                     if (fileExtensions != null)
                                     {
@@ -830,22 +828,21 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
 
                     await using (var stream = formFile.OpenReadStream())
                     {
-                        f.SetValue(_mediaFileManager,_shortStringHelper, _contentTypeBaseServiceProvider, _serializer, Constants.Conventions.Media.File,fileName, stream);
+                        f.SetValue(_mediaFileManager, _mediaUrlGenerators, _shortStringHelper, _contentTypeBaseServiceProvider, Constants.Conventions.Media.File, fileName, stream);
                     }
 
 
                     var saveResult = _mediaService.Save(f, _backofficeSecurityAccessor.BackOfficeSecurity.CurrentUser.Id);
                     if (saveResult == false)
                     {
-                        AddCancelMessage(tempFiles,
-                            message: _localizedTextService.Localize("speechBubbles/operationCancelledText") + " -- " + mediaItemName);
+                        AddCancelMessage(tempFiles, _localizedTextService.Localize("speechBubbles", "operationCancelledText") + " -- " + mediaItemName);
                     }
                 }
                 else
                 {
                     tempFiles.Notifications.Add(new BackOfficeNotification(
-                        _localizedTextService.Localize("speechBubbles/operationFailedHeader"),
-                        _localizedTextService.Localize("media/disallowedFileType"),
+                        _localizedTextService.Localize("speechBubbles", "operationFailedHeader"),
+                        _localizedTextService.Localize("media", "disallowedFileType"),
                         NotificationStyle.Warning));
                 }
             }
@@ -919,7 +916,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 }
                 else
                 {
-                    return new ValidationErrorResult("The request was not formatted correctly, the parentId is not an integer, Guid or UDI");
+                    return ValidationProblem("The request was not formatted correctly, the parentId is not an integer, Guid or UDI");
                 }
             }
 
@@ -931,10 +928,10 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 var authorizationResult = await _authorizationService.AuthorizeAsync(User, new MediaPermissionsResource(_mediaService.GetById(intParentId)), requirement);
                 if (!authorizationResult.Succeeded)
                 {
-                    return new ValidationErrorResult(
+                    return ValidationProblem(
                     new SimpleNotificationModel(new BackOfficeNotification(
-                        _localizedTextService.Localize("speechBubbles/operationFailedHeader"),
-                        _localizedTextService.Localize("speechBubbles/invalidUserPermissionsText"),
+                        _localizedTextService.Localize("speechBubbles", "operationFailedHeader"),
+                        _localizedTextService.Localize("speechBubbles", "invalidUserPermissionsText"),
                         NotificationStyle.Warning)),
                         StatusCodes.Status403Forbidden);
                 }
@@ -969,8 +966,8 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 if (toMove.ContentType.AllowedAsRoot == false && mediaTypeService.GetAll().Any(ct => ct.AllowedAsRoot))
                 {
                     var notificationModel = new SimpleNotificationModel();
-                    notificationModel.AddErrorNotification(_localizedTextService.Localize("moveOrCopy/notAllowedAtRoot"), "");
-                    return new ValidationErrorResult(notificationModel);
+                    notificationModel.AddErrorNotification(_localizedTextService.Localize("moveOrCopy", "notAllowedAtRoot"), "");
+                    return ValidationProblem(notificationModel);
                 }
             }
             else
@@ -987,16 +984,16 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                     .Any(x => x.Value == toMove.ContentType.Id) == false)
                 {
                     var notificationModel = new SimpleNotificationModel();
-                    notificationModel.AddErrorNotification(_localizedTextService.Localize("moveOrCopy/notAllowedByContentType"), "");
-                    return new ValidationErrorResult(notificationModel);
+                    notificationModel.AddErrorNotification(_localizedTextService.Localize("moveOrCopy", "notAllowedByContentType"), "");
+                    return ValidationProblem(notificationModel);
                 }
 
                 // Check on paths
                 if ((string.Format(",{0},", parent.Path)).IndexOf(string.Format(",{0},", toMove.Id), StringComparison.Ordinal) > -1)
                 {
                     var notificationModel = new SimpleNotificationModel();
-                    notificationModel.AddErrorNotification(_localizedTextService.Localize("moveOrCopy/notAllowedByPath"), "");
-                    return new ValidationErrorResult(notificationModel);
+                    notificationModel.AddErrorNotification(_localizedTextService.Localize("moveOrCopy", "notAllowedByPath"), "");
+                    return ValidationProblem(notificationModel);
                 }
             }
 

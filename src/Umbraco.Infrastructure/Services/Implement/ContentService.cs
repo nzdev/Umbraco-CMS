@@ -194,11 +194,34 @@ namespace Umbraco.Cms.Core.Services.Implement
             // TODO: what about culture?
 
             var contentType = GetContentType(contentTypeAlias);
-            if (contentType == null)
-                throw new ArgumentException("No content type with that alias.", nameof(contentTypeAlias));
+            return Create(name, parentId, contentType, userId);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="IContent"/> object of a specified content type.
+        /// </summary>
+        /// <remarks>This method simply returns a new, non-persisted, IContent without any identity. It
+        /// is intended as a shortcut to creating new content objects that does not invoke a save
+        /// operation against the database.
+        /// </remarks>
+        /// <param name="name">The name of the content object.</param>
+        /// <param name="parentId">The identifier of the parent, or -1.</param>
+        /// <param name="contentType">The content type of the content</param>
+        /// <param name="userId">The optional id of the user creating the content.</param>
+        /// <returns>The content object.</returns>
+        public IContent Create(string name, int parentId, IContentType contentType,
+            int userId = Constants.Security.SuperUserId)
+        {
+            if (contentType is null)
+            {
+                throw new ArgumentException("Content type must be specified", nameof(contentType));
+            }
+
             var parent = parentId > 0 ? GetById(parentId) : null;
-            if (parentId > 0 && parent == null)
+            if (parentId > 0 && parent is null)
+            {
                 throw new ArgumentException("No content with that id.", nameof(parentId));
+            }
 
             var content = new Content(name, parentId, contentType, userId);
 
@@ -356,10 +379,8 @@ namespace Umbraco.Cms.Core.Services.Implement
         /// </summary>
         /// <param name="contents"></param>
         /// <param name="userId"></param>
-        /// <param name="raiseEvents"></param>
         /// <returns></returns>
-        Attempt<OperationResult> IContentServiceBase<IContent>.Save(IEnumerable<IContent> contents, int userId,
-            bool raiseEvents) => Attempt.Succeed(Save(contents, userId, raiseEvents));
+        Attempt<OperationResult> IContentServiceBase<IContent>.Save(IEnumerable<IContent> contents, int userId) => Attempt.Succeed(Save(contents, userId));
 
         /// <summary>
         /// Gets <see cref="IContent"/> objects by Ids
@@ -733,7 +754,7 @@ namespace Umbraco.Cms.Core.Services.Implement
         #region Save, Publish, Unpublish
 
         /// <inheritdoc />
-        public OperationResult Save(IContent content, int userId = Cms.Core.Constants.Security.SuperUserId, bool raiseEvents = true)
+        public OperationResult Save(IContent content, int userId = Cms.Core.Constants.Security.SuperUserId)
         {
             PublishedState publishedState = content.PublishedState;
             if (publishedState != PublishedState.Published && publishedState != PublishedState.Unpublished)
@@ -751,13 +772,13 @@ namespace Umbraco.Cms.Core.Services.Implement
             using (IScope scope = ScopeProvider.CreateScope())
             {
                 var savingNotification = new ContentSavingNotification(content, eventMessages);
-                if (raiseEvents && scope.Notifications.PublishCancelable(savingNotification))
+                if (scope.Notifications.PublishCancelable(savingNotification))
                 {
                     scope.Complete();
                     return OperationResult.Cancel(eventMessages);
                 }
 
-                scope.WriteLock(Cms.Core.Constants.Locks.ContentTree);
+                scope.WriteLock(Constants.Locks.ContentTree);
 
                 if (content.HasIdentity == false)
                 {
@@ -777,10 +798,12 @@ namespace Umbraco.Cms.Core.Services.Implement
 
                 _documentRepository.Save(content);
 
-                if (raiseEvents)
-                {
-                    scope.Notifications.Publish(new ContentSavedNotification(content, eventMessages).WithStateFrom(savingNotification));
-                }
+                scope.Notifications.Publish(new ContentSavedNotification(content, eventMessages).WithStateFrom(savingNotification));
+
+                // TODO: we had code here to FORCE that this event can never be suppressed. But that just doesn't make a ton of sense?!
+                // I understand that if its suppressed that the caches aren't updated, but that would be expected. If someone
+                // is supressing events then I think it's expected that nothing will happen. They are probably doing it for perf
+                // reasons like bulk import and in those cases we don't want this occuring.
                 scope.Notifications.Publish(new ContentTreeChangeNotification(content, TreeChangeTypes.RefreshNode, eventMessages));
 
                 if (culturesChanging != null)
@@ -800,7 +823,7 @@ namespace Umbraco.Cms.Core.Services.Implement
         }
 
         /// <inheritdoc />
-        public OperationResult Save(IEnumerable<IContent> contents, int userId = Cms.Core.Constants.Security.SuperUserId, bool raiseEvents = true)
+        public OperationResult Save(IEnumerable<IContent> contents, int userId = Cms.Core.Constants.Security.SuperUserId)
         {
             EventMessages eventMessages = EventMessagesFactory.Get();
             IContent[] contentsA = contents.ToArray();
@@ -808,7 +831,7 @@ namespace Umbraco.Cms.Core.Services.Implement
             using (IScope scope = ScopeProvider.CreateScope())
             {
                 var savingNotification = new ContentSavingNotification(contentsA, eventMessages);
-                if (raiseEvents && scope.Notifications.PublishCancelable(savingNotification))
+                if (scope.Notifications.PublishCancelable(savingNotification))
                 {
                     scope.Complete();
                     return OperationResult.Cancel(eventMessages);
@@ -827,11 +850,10 @@ namespace Umbraco.Cms.Core.Services.Implement
                     _documentRepository.Save(content);
                 }
 
-                if (raiseEvents)
-                {
-                    scope.Notifications.Publish(new ContentSavedNotification(contentsA, eventMessages).WithStateFrom(savingNotification));
-                }
+                scope.Notifications.Publish(new ContentSavedNotification(contentsA, eventMessages).WithStateFrom(savingNotification));
+                // TODO: See note above about supressing events
                 scope.Notifications.Publish(new ContentTreeChangeNotification(contentsA, TreeChangeTypes.RefreshNode, eventMessages));
+
                 Audit(AuditType.Save, userId == -1 ? 0 : userId, Cms.Core.Constants.System.Root, "Saved multiple content");
 
                 scope.Complete();
@@ -841,7 +863,7 @@ namespace Umbraco.Cms.Core.Services.Implement
         }
 
         /// <inheritdoc />
-        public PublishResult SaveAndPublish(IContent content, string culture = "*", int userId = Cms.Core.Constants.Security.SuperUserId, bool raiseEvents = true)
+        public PublishResult SaveAndPublish(IContent content, string culture = "*", int userId = Cms.Core.Constants.Security.SuperUserId)
         {
             var evtMsgs = EventMessagesFactory.Get();
 
@@ -889,14 +911,14 @@ namespace Umbraco.Cms.Core.Services.Implement
                 // we don't care about the response here, this response will be rechecked below but we need to set the culture info values now.
                 content.PublishCulture(impact);
 
-                var result = CommitDocumentChangesInternal(scope, content, evtMsgs, allLangs, savingNotification.State, userId, raiseEvents);
+                var result = CommitDocumentChangesInternal(scope, content, evtMsgs, allLangs, savingNotification.State, userId);
                 scope.Complete();
                 return result;
             }
         }
 
         /// <inheritdoc />
-        public PublishResult SaveAndPublish(IContent content, string[] cultures, int userId = 0, bool raiseEvents = true)
+        public PublishResult SaveAndPublish(IContent content, string[] cultures, int userId = 0)
         {
             if (content == null) throw new ArgumentNullException(nameof(content));
             if (cultures == null) throw new ArgumentNullException(nameof(cultures));
@@ -915,7 +937,7 @@ namespace Umbraco.Cms.Core.Services.Implement
                 var evtMsgs = EventMessagesFactory.Get();
 
                 var savingNotification = new ContentSavingNotification(content, evtMsgs);
-                if (raiseEvents && scope.Notifications.PublishCancelable(savingNotification))
+                if (scope.Notifications.PublishCancelable(savingNotification))
                 {
                     return new PublishResult(PublishResultType.FailedPublishCancelledByEvent, evtMsgs, content);
                 }
@@ -925,7 +947,7 @@ namespace Umbraco.Cms.Core.Services.Implement
                 if (cultures.Length == 0 && !varies)
                 {
                     //no cultures specified and doesn't vary, so publish it, else nothing to publish
-                    return SaveAndPublish(content, userId: userId, raiseEvents: raiseEvents);
+                    return SaveAndPublish(content, userId: userId);
                 }
 
                 if (cultures.Any(x => x == null || x == "*"))
@@ -936,9 +958,11 @@ namespace Umbraco.Cms.Core.Services.Implement
                 // publish the culture(s)
                 // we don't care about the response here, this response will be rechecked below but we need to set the culture info values now.
                 foreach (var impact in impacts)
+                {
                     content.PublishCulture(impact);
+                }
 
-                var result = CommitDocumentChangesInternal(scope, content, evtMsgs, allLangs, savingNotification.State, userId, raiseEvents);
+                var result = CommitDocumentChangesInternal(scope, content, evtMsgs, allLangs, savingNotification.State, userId);
                 scope.Complete();
                 return result;
             }
@@ -1044,7 +1068,7 @@ namespace Umbraco.Cms.Core.Services.Implement
         /// <para>The document is *always* saved, even when publishing fails.</para>
         /// </remarks>
         internal PublishResult CommitDocumentChanges(IContent content,
-            int userId = Cms.Core.Constants.Security.SuperUserId, bool raiseEvents = true)
+            int userId = Cms.Core.Constants.Security.SuperUserId)
         {
             using (var scope = ScopeProvider.CreateScope())
             {
@@ -1060,7 +1084,7 @@ namespace Umbraco.Cms.Core.Services.Implement
 
                 var allLangs = _languageRepository.GetMany().ToList();
 
-                var result = CommitDocumentChangesInternal(scope, content, evtMsgs, allLangs, savingNotification.State, userId, raiseEvents);
+                var result = CommitDocumentChangesInternal(scope, content, evtMsgs, allLangs, savingNotification.State, userId);
                 scope.Complete();
                 return result;
             }
@@ -1074,7 +1098,6 @@ namespace Umbraco.Cms.Core.Services.Implement
         /// <param name="allLangs"></param>
         /// <param name="notificationState"></param>
         /// <param name="userId"></param>
-        /// <param name="raiseEvents"></param>
         /// <param name="branchOne"></param>
         /// <param name="branchRoot"></param>
         /// <param name="eventMessages"></param>
@@ -1088,8 +1111,8 @@ namespace Umbraco.Cms.Core.Services.Implement
         private PublishResult CommitDocumentChangesInternal(IScope scope, IContent content,
             EventMessages eventMessages, IReadOnlyCollection<ILanguage> allLangs,
             IDictionary<string, object> notificationState,
-            int userId = Cms.Core.Constants.Security.SuperUserId,
-            bool raiseEvents = true, bool branchOne = false, bool branchRoot = false)
+            int userId = Constants.Security.SuperUserId,
+            bool branchOne = false, bool branchRoot = false)
         {
             if (scope == null)
             {
@@ -1246,10 +1269,7 @@ namespace Umbraco.Cms.Core.Services.Implement
             SaveDocument(content);
 
             // raise the Saved event, always
-            if (raiseEvents)
-            {
-                scope.Notifications.Publish(new ContentSavedNotification(content, eventMessages).WithState(notificationState));
-            }
+            scope.Notifications.Publish(new ContentSavedNotification(content, eventMessages).WithState(notificationState));
 
             if (unpublishing) // we have tried to unpublish - won't happen in a branch
             {
@@ -2358,9 +2378,8 @@ namespace Umbraco.Cms.Core.Services.Implement
         /// </remarks>
         /// <param name="items"></param>
         /// <param name="userId"></param>
-        /// <param name="raiseEvents"></param>
         /// <returns>Result indicating what action was taken when handling the command.</returns>
-        public OperationResult Sort(IEnumerable<IContent> items, int userId = Cms.Core.Constants.Security.SuperUserId, bool raiseEvents = true)
+        public OperationResult Sort(IEnumerable<IContent> items, int userId = Cms.Core.Constants.Security.SuperUserId)
         {
             var evtMsgs = EventMessagesFactory.Get();
 
@@ -2371,7 +2390,7 @@ namespace Umbraco.Cms.Core.Services.Implement
             {
                 scope.WriteLock(Cms.Core.Constants.Locks.ContentTree);
 
-                var ret = Sort(scope, itemsA, userId, evtMsgs, raiseEvents);
+                var ret = Sort(scope, itemsA, userId, evtMsgs);
                 scope.Complete();
                 return ret;
             }
@@ -2387,9 +2406,8 @@ namespace Umbraco.Cms.Core.Services.Implement
         /// </remarks>
         /// <param name="ids"></param>
         /// <param name="userId"></param>
-        /// <param name="raiseEvents"></param>
         /// <returns>Result indicating what action was taken when handling the command.</returns>
-        public OperationResult Sort(IEnumerable<int> ids, int userId = Cms.Core.Constants.Security.SuperUserId, bool raiseEvents = true)
+        public OperationResult Sort(IEnumerable<int> ids, int userId = Cms.Core.Constants.Security.SuperUserId)
         {
             var evtMsgs = EventMessagesFactory.Get();
 
@@ -2401,29 +2419,27 @@ namespace Umbraco.Cms.Core.Services.Implement
                 scope.WriteLock(Cms.Core.Constants.Locks.ContentTree);
                 var itemsA = GetByIds(idsA).ToArray();
 
-                var ret = Sort(scope, itemsA, userId, evtMsgs, raiseEvents);
+                var ret = Sort(scope, itemsA, userId, evtMsgs);
                 scope.Complete();
                 return ret;
             }
         }
 
-        private OperationResult Sort(IScope scope, IContent[] itemsA, int userId, EventMessages eventMessages, bool raiseEvents)
+        private OperationResult Sort(IScope scope, IContent[] itemsA, int userId, EventMessages eventMessages)
         {
             var sortingNotification = new ContentSortingNotification(itemsA, eventMessages);
             var savingNotification = new ContentSavingNotification(itemsA, eventMessages);
-            if (raiseEvents)
-            {
-                // raise cancelable sorting event
-                if (scope.Notifications.PublishCancelable(sortingNotification))
-                {
-                    return OperationResult.Cancel(eventMessages);
-                }
 
-                // raise cancelable saving event
-                if (scope.Notifications.PublishCancelable(savingNotification))
-                {
-                    return OperationResult.Cancel(eventMessages);
-                }
+            // raise cancelable sorting event
+            if (scope.Notifications.PublishCancelable(sortingNotification))
+            {
+                return OperationResult.Cancel(eventMessages);
+            }
+
+            // raise cancelable saving event
+            if (scope.Notifications.PublishCancelable(savingNotification))
+            {
+                return OperationResult.Cancel(eventMessages);
             }
 
             var published = new List<IContent>();
@@ -2456,16 +2472,13 @@ namespace Umbraco.Cms.Core.Services.Implement
                 _documentRepository.Save(content);
             }
 
-            if (raiseEvents)
-            {
-                //first saved, then sorted
-                scope.Notifications.Publish(new ContentSavedNotification(itemsA, eventMessages).WithStateFrom(savingNotification));
-                scope.Notifications.Publish(new ContentSortedNotification(itemsA, eventMessages).WithStateFrom(sortingNotification));
-            }
+            //first saved, then sorted
+            scope.Notifications.Publish(new ContentSavedNotification(itemsA, eventMessages).WithStateFrom(savingNotification));
+            scope.Notifications.Publish(new ContentSortedNotification(itemsA, eventMessages).WithStateFrom(sortingNotification));
 
             scope.Notifications.Publish(new ContentTreeChangeNotification(saved, TreeChangeTypes.RefreshNode, eventMessages));
 
-            if (raiseEvents && published.Any())
+            if (published.Any())
             {
                 scope.Notifications.Publish(new ContentPublishedNotification(published, eventMessages));
             }

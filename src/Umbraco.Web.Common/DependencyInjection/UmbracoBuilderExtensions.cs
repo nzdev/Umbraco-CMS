@@ -102,19 +102,24 @@ namespace Umbraco.Extensions
 
             var requestCache = new HttpContextRequestAppCache(httpContextAccessor);
             var appCaches = AppCaches.Create(requestCache);
-            services.AddUnique(appCaches);
 
             IProfiler profiler = GetWebProfiler(config);
-            services.AddUnique(profiler);
 
             ILoggerFactory loggerFactory = LoggerFactory.Create(cfg => cfg.AddSerilog(Log.Logger, false));
-            TypeLoader typeLoader = services.AddTypeLoader(Assembly.GetEntryAssembly(), webHostEnvironment, tempHostingEnvironment, loggerFactory, appCaches, config, profiler);
+
+            TypeLoader typeLoader = services.AddTypeLoader(
+                Assembly.GetEntryAssembly(),
+                tempHostingEnvironment,
+                loggerFactory,
+                appCaches,
+                config,
+                profiler);
 
             // adds the umbraco startup filter which will call UseUmbraco early on before
             // other start filters are applied (depending on the ordering of IStartupFilters in DI).
             services.AddTransient<IStartupFilter, UmbracoApplicationServicesCapture>();
 
-            return new UmbracoBuilder(services, config, typeLoader, loggerFactory);
+            return new UmbracoBuilder(services, config, typeLoader, loggerFactory, profiler, appCaches, tempHostingEnvironment);
         }
 
         /// <summary>
@@ -145,7 +150,8 @@ namespace Umbraco.Extensions
                 DbProviderFactories.GetFactory,
                 factory.GetServices<ISqlSyntaxProvider>(),
                 factory.GetServices<IBulkSqlInsertProvider>(),
-                factory.GetServices<IEmbeddedDatabaseCreator>()
+                factory.GetServices<IEmbeddedDatabaseCreator>(),
+                factory.GetServices<IProviderSpecificMapperFactory>()
             ));
 
             builder.AddCoreInitialServices();
@@ -348,15 +354,20 @@ namespace Umbraco.Extensions
                     var dllPath = Path.Combine(binFolder, "Umbraco.Persistence.SqlCe.dll");
                     var umbSqlCeAssembly = Assembly.LoadFrom(dllPath);
 
-                    var sqlCeSyntaxProviderType = umbSqlCeAssembly.GetType("Umbraco.Cms.Persistence.SqlCe.SqlCeSyntaxProvider");
-                    var sqlCeBulkSqlInsertProviderType = umbSqlCeAssembly.GetType("Umbraco.Cms.Persistence.SqlCe.SqlCeBulkSqlInsertProvider");
-                    var sqlCeEmbeddedDatabaseCreatorType = umbSqlCeAssembly.GetType("Umbraco.Cms.Persistence.SqlCe.SqlCeEmbeddedDatabaseCreator");
+                    Type sqlCeSyntaxProviderType = umbSqlCeAssembly.GetType("Umbraco.Cms.Persistence.SqlCe.SqlCeSyntaxProvider");
+                    Type sqlCeBulkSqlInsertProviderType = umbSqlCeAssembly.GetType("Umbraco.Cms.Persistence.SqlCe.SqlCeBulkSqlInsertProvider");
+                    Type sqlCeEmbeddedDatabaseCreatorType = umbSqlCeAssembly.GetType("Umbraco.Cms.Persistence.SqlCe.SqlCeEmbeddedDatabaseCreator");
+                    Type sqlCeSpecificMapperFactory = umbSqlCeAssembly.GetType("Umbraco.Cms.Persistence.SqlCe.SqlCeSpecificMapperFactory");
 
-                    if (!(sqlCeSyntaxProviderType is null || sqlCeBulkSqlInsertProviderType is null || sqlCeEmbeddedDatabaseCreatorType is null))
+                    if (!(sqlCeSyntaxProviderType is null
+                          || sqlCeBulkSqlInsertProviderType is null
+                          || sqlCeEmbeddedDatabaseCreatorType is null
+                          || sqlCeSpecificMapperFactory is null))
                     {
                         builder.Services.AddSingleton(typeof(ISqlSyntaxProvider), sqlCeSyntaxProviderType);
                         builder.Services.AddSingleton(typeof(IBulkSqlInsertProvider), sqlCeBulkSqlInsertProviderType);
                         builder.Services.AddSingleton(typeof(IEmbeddedDatabaseCreator), sqlCeEmbeddedDatabaseCreatorType);
+                        builder.Services.AddSingleton(typeof(IProviderSpecificMapperFactory), sqlCeSpecificMapperFactory);
                     }
 
                     var sqlCeAssembly = Assembly.LoadFrom(Path.Combine(binFolder, "System.Data.SqlServerCe.dll"));

@@ -7,6 +7,13 @@ namespace Umbraco.Cms.Core
         /// </summary>
         public static class Conventions
         {
+            public static class Migrations
+            {
+                public const string UmbracoUpgradePlanName = "Umbraco.Core";
+                public const string KeyValuePrefix = "Umbraco.Core.Upgrader.State+";
+                public const string UmbracoUpgradePlanKey = KeyValuePrefix + UmbracoUpgradePlanName;
+            }
+
             public static class PermissionCategories
             {
                 public const string ContentCategory = "content";
@@ -115,24 +122,44 @@ namespace Umbraco.Cms.Core
                 public const string Image = "Image";
 
                 /// <summary>
-                /// MediaType alias for a video.
+                /// MediaType name for a video.
                 /// </summary>
                 public const string Video = "Video";
 
                 /// <summary>
-                /// MediaType alias for an audio.
+                /// MediaType name for an audio.
                 /// </summary>
                 public const string Audio = "Audio";
 
                 /// <summary>
-                /// MediaType alias for an article.
+                /// MediaType name for an article.
                 /// </summary>
                 public const string Article = "Article";
 
                 /// <summary>
-                /// MediaType alias for vector graphics.
+                /// MediaType name for vector graphics.
                 /// </summary>
                 public const string VectorGraphics = "VectorGraphics";
+
+                /// <summary>
+                /// MediaType alias for a video.
+                /// </summary>
+                public const string VideoAlias = "umbracoMediaVideo";
+
+                /// <summary>
+                /// MediaType alias for an audio.
+                /// </summary>
+                public const string AudioAlias = "umbracoMediaAudio";
+
+                /// <summary>
+                /// MediaType alias for an article.
+                /// </summary>
+                public const string ArticleAlias = "umbracoMediaArticle";
+
+                /// <summary>
+                /// MediaType alias for vector graphics.
+                /// </summary>
+                public const string VectorGraphicsAlias = "umbracoMediaVectorGraphics";
 
                 /// <summary>
                 /// MediaType alias indicating allowing auto-selection.

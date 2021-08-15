@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Hosting;
 using Umbraco.Cms.Core.IO;
@@ -30,7 +32,7 @@ namespace Umbraco.Extensions
         /// <summary>
         /// Adds all required components to run the Umbraco back office
         /// </summary>
-        public static IUmbracoBuilder AddBackOffice(this IUmbracoBuilder builder) => builder
+        public static IUmbracoBuilder AddBackOffice(this IUmbracoBuilder builder, Action<IMvcBuilder> configureMvc = null) => builder
                 .AddConfiguration()
                 .AddUmbracoCore()
                 .AddWebComponents()
@@ -41,7 +43,7 @@ namespace Umbraco.Extensions
                 .AddMembersIdentity()
                 .AddBackOfficeAuthorizationPolicies()
                 .AddUmbracoProfiler()
-                .AddMvcAndRazor()
+                .AddMvcAndRazor(configureMvc)
                 .AddWebServer()
                 .AddPreviewSupport()
                 .AddHostedServices()
@@ -49,6 +51,8 @@ namespace Umbraco.Extensions
                 .AddDistributedCache()
                 .AddModelsBuilderDashboard()
                 .AddUnattendedInstallInstallCreateUser()
+                .AddCoreNotifications()
+                .AddLogViewer()
                 .AddExamine()
                 .AddExamineIndexes();
 
@@ -57,7 +61,6 @@ namespace Umbraco.Extensions
             builder.AddNotificationAsyncHandler<UnattendedInstallNotification, CreateUnattendedUserNotificationHandler>();
             return builder;
         }
-
 
         /// <summary>
         /// Adds Umbraco preview support

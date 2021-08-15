@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.DataProtection;
@@ -18,6 +19,7 @@ using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Hosting;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Logging;
+using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Cms.Core.Web.Mvc;
 using Umbraco.Cms.Web.Common.Controllers;
@@ -82,11 +84,11 @@ namespace Umbraco.Extensions
 
         }
 
-        public static IHtmlContent CachedPartial(
+        public static async Task<IHtmlContent> CachedPartialAsync(
             this IHtmlHelper htmlHelper,
             string partialViewName,
             object model,
-            int cachedSeconds,
+            TimeSpan cacheTimeout,
             bool cacheByPage = false,
             bool cacheByMember = false,
             ViewDataDictionary viewData = null,
@@ -99,10 +101,12 @@ namespace Umbraco.Extensions
             {
                 cacheKey.AppendFormat("{0}-", cultureName);
             }
+
+            var umbracoContextAccessor = GetRequiredService<IUmbracoContextAccessor>(htmlHelper);
+            var umbracoContext = umbracoContextAccessor.UmbracoContext;
+
             if (cacheByPage)
             {
-                var umbracoContextAccessor = GetRequiredService<IUmbracoContextAccessor>(htmlHelper);
-                var umbracoContext = umbracoContextAccessor.UmbracoContext;
                 if (umbracoContext == null)
                 {
                     throw new InvalidOperationException("Cannot cache by page if the UmbracoContext has not been initialized, this parameter can only be used in the context of an Umbraco request");
@@ -113,11 +117,9 @@ namespace Umbraco.Extensions
 
             if (cacheByMember)
             {
-                // TODO reintroduce when members are migrated
-                throw new NotImplementedException("Reintroduce when members are migrated");
-                // var helper = Current.MembershipHelper;
-                // var currentMember = helper.GetCurrentMember();
-                // cacheKey.AppendFormat("m{0}-", currentMember?.Id ?? 0);
+                var memberManager = htmlHelper.ViewContext.HttpContext.RequestServices.GetRequiredService<IMemberManager>();
+                var currentMember = await memberManager.GetCurrentMemberAsync();
+                cacheKey.AppendFormat("m{0}-", currentMember?.Id ?? "0");
             }
 
             if (contextualKeyBuilder != null)
@@ -129,7 +131,7 @@ namespace Umbraco.Extensions
             var appCaches = GetRequiredService<AppCaches>(htmlHelper);
             var hostingEnvironment = GetRequiredService<IHostingEnvironment>(htmlHelper);
 
-            return appCaches.CachedPartialView(hostingEnvironment, htmlHelper, partialViewName, model, cachedSeconds, cacheKey.ToString(), viewData);
+            return appCaches.CachedPartialView(hostingEnvironment, umbracoContext, htmlHelper, partialViewName, model, cacheTimeout, cacheKey.ToString(), viewData);
         }
 
         // public static IHtmlContent EditorFor<T>(this IHtmlHelper htmlHelper, string templateName = "", string htmlFieldName = "", object additionalViewData = null)
@@ -791,73 +793,73 @@ namespace Umbraco.Extensions
         /// <summary>
         /// Strips all HTML tags from a given string, all contents of the tags will remain.
         /// </summary>
-        public static IHtmlContent StripHtml(this HtmlHelper helper, IHtmlContent html, params string[] tags)
+        public static IHtmlContent StripHtml(this IHtmlHelper helper, IHtmlContent html, params string[] tags)
             => helper.StripHtml(html.ToHtmlString(), tags);
 
         /// <summary>
         /// Strips all HTML tags from a given string, all contents of the tags will remain.
         /// </summary>
-        public static IHtmlContent StripHtml(this HtmlHelper helper, string html, params string[] tags)
+        public static IHtmlContent StripHtml(this IHtmlHelper helper, string html, params string[] tags)
             => StringUtilities.StripHtmlTags(html, tags);
 
         /// <summary>
         /// Will take the first non-null value in the collection and return the value of it.
         /// </summary>
-        public static string Coalesce(this HtmlHelper helper, params object[] args)
+        public static string Coalesce(this IHtmlHelper helper, params object[] args)
             => StringUtilities.Coalesce(args);
 
         /// <summary>
         /// Joins any number of int/string/objects into one string
         /// </summary>
-        public static string Concatenate(this HtmlHelper helper, params object[] args)
+        public static string Concatenate(this IHtmlHelper helper, params object[] args)
             => StringUtilities.Concatenate(args);
 
         /// <summary>
         /// Joins any number of int/string/objects into one string and separates them with the string separator parameter.
         /// </summary>
-        public static string Join(this HtmlHelper helper, string separator, params object[] args)
+        public static string Join(this IHtmlHelper helper, string separator, params object[] args)
             => StringUtilities.Join(separator, args);
 
         /// <summary>
         /// Truncates a string to a given length, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent Truncate(this HtmlHelper helper, IHtmlContent html, int length)
+        public static IHtmlContent Truncate(this IHtmlHelper helper, IHtmlContent html, int length)
             => helper.Truncate(html.ToHtmlString(), length, true, false);
 
         /// <summary>
         /// Truncates a string to a given length, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent Truncate(this HtmlHelper helper, IHtmlContent html, int length, bool addElipsis)
+        public static IHtmlContent Truncate(this IHtmlHelper helper, IHtmlContent html, int length, bool addElipsis)
             => helper.Truncate(html.ToHtmlString(), length, addElipsis, false);
 
         /// <summary>
         /// Truncates a string to a given length, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent Truncate(this HtmlHelper helper, IHtmlContent html, int length, bool addElipsis, bool treatTagsAsContent)
+        public static IHtmlContent Truncate(this IHtmlHelper helper, IHtmlContent html, int length, bool addElipsis, bool treatTagsAsContent)
             => helper.Truncate(html.ToHtmlString(), length, addElipsis, treatTagsAsContent);
 
         /// <summary>
         /// Truncates a string to a given length, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent Truncate(this HtmlHelper helper, string html, int length)
+        public static IHtmlContent Truncate(this IHtmlHelper helper, string html, int length)
             => helper.Truncate(html, length, true, false);
 
         /// <summary>
         /// Truncates a string to a given length, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent Truncate(this HtmlHelper helper, string html, int length, bool addElipsis)
+        public static IHtmlContent Truncate(this IHtmlHelper helper, string html, int length, bool addElipsis)
             => helper.Truncate(html, length, addElipsis, false);
 
         /// <summary>
         /// Truncates a string to a given length, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent Truncate(this HtmlHelper helper, string html, int length, bool addElipsis, bool treatTagsAsContent)
+        public static IHtmlContent Truncate(this IHtmlHelper helper, string html, int length, bool addElipsis, bool treatTagsAsContent)
             => StringUtilities.Truncate(html, length, addElipsis, treatTagsAsContent);
 
         /// <summary>
         /// Truncates a string to a given amount of words, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent TruncateByWords(this HtmlHelper helper, string html, int words)
+        public static IHtmlContent TruncateByWords(this IHtmlHelper helper, string html, int words)
         {
             int length = StringUtilities.WordsToLength(html, words);
 
@@ -867,7 +869,7 @@ namespace Umbraco.Extensions
         /// <summary>
         /// Truncates a string to a given amount of words, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent TruncateByWords(this HtmlHelper helper, string html, int words, bool addElipsis)
+        public static IHtmlContent TruncateByWords(this IHtmlHelper helper, string html, int words, bool addElipsis)
         {
             int length = StringUtilities.WordsToLength(html, words);
 
@@ -877,7 +879,7 @@ namespace Umbraco.Extensions
         /// <summary>
         /// Truncates a string to a given amount of words, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent TruncateByWords(this HtmlHelper helper, IHtmlContent html, int words)
+        public static IHtmlContent TruncateByWords(this IHtmlHelper helper, IHtmlContent html, int words)
         {
             int length = StringUtilities.WordsToLength(html.ToHtmlString(), words);
 
@@ -887,7 +889,7 @@ namespace Umbraco.Extensions
         /// <summary>
         /// Truncates a string to a given amount of words, can add a ellipsis at the end (...). Method checks for open HTML tags, and makes sure to close them
         /// </summary>
-        public static IHtmlContent TruncateByWords(this HtmlHelper helper, IHtmlContent html, int words, bool addElipsis)
+        public static IHtmlContent TruncateByWords(this IHtmlHelper helper, IHtmlContent html, int words, bool addElipsis)
         {
             int length = StringUtilities.WordsToLength(html.ToHtmlString(), words);
 

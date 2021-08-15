@@ -7,8 +7,9 @@ using Umbraco.Cms.Core.Editors;
 using Umbraco.Cms.Core.HealthChecks;
 using Umbraco.Cms.Core.HealthChecks.NotificationMethods;
 using Umbraco.Cms.Core.Manifest;
+using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Core.Media.EmbedProviders;
-using Umbraco.Cms.Core.PackageActions;
+using Umbraco.Cms.Core.Packaging;
 using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.PropertyEditors.Validators;
 using Umbraco.Cms.Core.Routing;
@@ -33,7 +34,8 @@ namespace Umbraco.Cms.Core.DependencyInjection
         {
             builder.CacheRefreshers().Add(() => builder.TypeLoader.GetCacheRefreshers());
             builder.DataEditors().Add(() => builder.TypeLoader.GetDataEditors());
-            builder.Actions().Add(() => builder.TypeLoader.GetTypes<IAction>());
+            builder.Actions().Add(() => builder.TypeLoader.GetActions());
+
             // register known content apps
             builder.ContentApps()
                 .Append<ListViewContentAppFactory>()
@@ -43,6 +45,7 @@ namespace Umbraco.Cms.Core.DependencyInjection
                 .Append<ContentTypeListViewContentAppFactory>()
                 .Append<ContentTypePermissionsContentAppFactory>()
                 .Append<ContentTypeTemplatesContentAppFactory>();
+
             // all built-in finders in the correct order,
             // devs can then modify this list on application startup
             builder.ContentFinders()
@@ -86,7 +89,6 @@ namespace Umbraco.Cms.Core.DependencyInjection
                 .Add<RedirectUrlDashboard>()
                 .Add<SettingsDashboard>()
                 .Add(builder.TypeLoader.GetTypes<IDashboard>());
-            builder.PackageActions().Add(() => builder.TypeLoader.GetPackageActions());
             builder.DataValueReferenceFactories();
             builder.PropertyValueConverters().Append(builder.TypeLoader.GetTypes<IPropertyValueConverter>());
             builder.UrlSegmentProviders().Append<DefaultUrlSegmentProvider>();
@@ -204,11 +206,11 @@ namespace Umbraco.Cms.Core.DependencyInjection
             => builder.WithCollectionBuilder<CacheRefresherCollectionBuilder>();
 
         /// <summary>
-        /// Gets the package actions collection builder.
+        /// Gets the map definitions collection builder.
         /// </summary>
         /// <param name="builder">The builder.</param>
-        internal static PackageActionCollectionBuilder PackageActions(this IUmbracoBuilder builder)
-            => builder.WithCollectionBuilder<PackageActionCollectionBuilder>();
+        public static MapDefinitionCollectionBuilder MapDefinitions(this IUmbracoBuilder builder)
+            => builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>();
 
         /// <summary>
         /// Gets the data editor collection builder.

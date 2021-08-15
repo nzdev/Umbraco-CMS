@@ -86,9 +86,13 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                     view.Content = display.Content;
                     var result = _fileService.CreatePartialView(view, display.Snippet, currentUser.Id);
                     if (result.Success)
+                    {
                         return Ok();
+                    }
                     else
-                        return ValidationErrorResult.CreateNotificationValidationErrorResult(result.Exception.Message);
+                    {
+                        return ValidationProblem(result.Exception.Message);
+                    }
 
                 case Constants.Trees.PartialViewMacros:
                     var viewMacro = new PartialView(PartialViewType.PartialViewMacro, display.VirtualPath);
@@ -97,7 +101,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                     if (resultMacro.Success)
                         return Ok();
                     else
-                        return ValidationErrorResult.CreateNotificationValidationErrorResult(resultMacro.Exception.Message);
+                        return ValidationProblem(resultMacro.Exception.Message);
 
                 case Constants.Trees.Scripts:
                     var script = new Script(display.VirtualPath);
@@ -123,7 +127,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             if (string.IsNullOrWhiteSpace(parentId)) throw new ArgumentException("Value cannot be null or whitespace.", "parentId");
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", "name");
             if (name.ContainsAny(Path.GetInvalidPathChars())) {
-                return ValidationErrorResult.CreateNotificationValidationErrorResult(_localizedTextService.Localize("codefile/createFolderIllegalChars"));
+                return ValidationProblem(_localizedTextService.Localize("codefile", "createFolderIllegalChars"));
             }
 
             // if the parentId is root (-1) then we just need an empty string as we are
@@ -209,7 +213,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                     }
                     break;
                 case Constants.Trees.Scripts:
-                    var script = _fileService.GetScriptByName(virtualPath);
+                    var script = _fileService.GetScript(virtualPath);
                     if (script != null)
                     {
                         var display = _umbracoMapper.Map<IScript, CodeFileDisplay>(script);
@@ -220,7 +224,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                     }
                     break;
                 case Constants.Trees.Stylesheets:
-                    var stylesheet = _fileService.GetStylesheetByName(virtualPath);
+                    var stylesheet = _fileService.GetStylesheet(virtualPath);
                     if (stylesheet != null)
                     {
                         var display = _umbracoMapper.Map<IStylesheet, CodeFileDisplay>(stylesheet);
@@ -367,7 +371,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                         _fileService.DeleteScriptFolder(virtualPath);
                         return Ok();
                     }
-                    if (_fileService.GetScriptByName(virtualPath) != null)
+                    if (_fileService.GetScript(virtualPath) != null)
                     {
                         _fileService.DeleteScript(virtualPath, currentUser.Id);
                         return Ok();
@@ -379,7 +383,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                         _fileService.DeleteStyleSheetFolder(virtualPath);
                         return Ok();
                     }
-                    if (_fileService.GetStylesheetByName(virtualPath) != null)
+                    if (_fileService.GetStylesheet(virtualPath) != null)
                     {
                         _fileService.DeleteStylesheet(virtualPath, currentUser.Id);
                         return Ok();
@@ -418,8 +422,8 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                     }
 
                     display.AddErrorNotification(
-                        _localizedTextService.Localize("speechBubbles/partialViewErrorHeader"),
-                        _localizedTextService.Localize("speechBubbles/partialViewErrorText"));
+                        _localizedTextService.Localize("speechBubbles", "partialViewErrorHeader"),
+                        _localizedTextService.Localize("speechBubbles", "partialViewErrorText"));
                     break;
 
                 case Constants.Trees.PartialViewMacros:
@@ -433,8 +437,8 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                     }
 
                     display.AddErrorNotification(
-                        _localizedTextService.Localize("speechBubbles/partialViewErrorHeader"),
-                        _localizedTextService.Localize("speechBubbles/partialViewErrorText"));
+                        _localizedTextService.Localize("speechBubbles", "partialViewErrorHeader"),
+                        _localizedTextService.Localize("speechBubbles", "partialViewErrorText"));
                     break;
 
                 case Constants.Trees.Scripts:
@@ -536,7 +540,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         private IScript CreateOrUpdateScript(CodeFileDisplay display)
         {
             return CreateOrUpdateFile(display, ".js", _fileSystems.ScriptsFileSystem,
-                name => _fileService.GetScriptByName(name),
+                name => _fileService.GetScript(name),
                 (script, userId) => _fileService.SaveScript(script, userId),
                 name => new Script(name));
         }
@@ -544,7 +548,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         private IStylesheet CreateOrUpdateStylesheet(CodeFileDisplay display)
         {
             return CreateOrUpdateFile(display, ".css", _fileSystems.StylesheetsFileSystem,
-                name => _fileService.GetStylesheetByName(name),
+                name => _fileService.GetStylesheet(name),
                 (stylesheet, userId) => _fileService.SaveStylesheet(stylesheet, userId),
                 name => new Stylesheet(name)
             );

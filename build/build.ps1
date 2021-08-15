@@ -211,6 +211,18 @@
     # /p:UmbracoBuild tells the csproj that we are building from PS, not VS
   })
 
+  $ubuild.DefineMethod("CompileJsonSchema",
+  {
+    Write-Host "Generating JSON Schema for AppSettings"
+    Write-Host "Logging to $($this.BuildTemp)\json.schema.log"
+
+    ## NOTE: Need to specify the outputfile to point to the build temp folder
+    &dotnet run --project "$($this.SolutionRoot)\src\JsonSchema\JsonSchema.csproj" `
+        -c Release > "$($this.BuildTemp)\json.schema.log" `
+        -- `
+        --outputFile "$($this.BuildTemp)\WebApp\umbraco\config\appsettings-schema.json"
+  })
+
   $ubuild.DefineMethod("PrepareTests",
   {
     Write-Host "Prepare Tests"
@@ -351,35 +363,12 @@
   $this.RemoveDirectory("$tmp\Templates\UmbracoProject\bin")
   })
 
-  $ubuild.DefineMethod("PackageZip",
-  {
-
-    Write-Host "Create Zip packages"
-
-    $src = "$($this.SolutionRoot)\src"
-    $tmp = $this.BuildTemp
-    $out = $this.BuildOutput
-
-    Write-Host "Zip all binaries"
-    &$this.BuildEnv.Zip a -r "$out\UmbracoCms.AllBinaries.$($this.Version.Semver).zip" `
-      "$tmp\bin\*" `
-      "-x!dotless.Core.*" `
-      > $null
-    if (-not $?) { throw "Failed to zip UmbracoCms.AllBinaries." }
-
-    Write-Host "Zip cms"
-    &$this.BuildEnv.Zip a -r "$out\UmbracoCms.$($this.Version.Semver).zip" `
-      "$tmp\WebApp\*" `
-      "-x!dotless.Core.*" "-x!Content_Types.xml" "-x!*.pdb" `
-      > $null
-    if (-not $?) { throw "Failed to zip UmbracoCms." }
-  })
 
   $ubuild.DefineMethod("PrepareBuild",
   {
-    $this.TempStoreFile("$($this.SolutionRoot)\src\Umbraco.Web.UI\web.config")
-    Write-Host "Create clean web.config"
-    $this.CopyFile("$($this.SolutionRoot)\src\Umbraco.Web.UI\web.Template.config", "$($this.SolutionRoot)\src\Umbraco.Web.UI\web.config")
+    # $this.TempStoreFile("$($this.SolutionRoot)\src\Umbraco.Web.UI\web.config")
+    # Write-Host "Create clean web.config"
+    # $this.CopyFile("$($this.SolutionRoot)\src\Umbraco.Web.UI\web.Template.config", "$($this.SolutionRoot)\src\Umbraco.Web.UI\web.config")
 
     Write-host "Set environment"
     $env:UMBRACO_VERSION=$this.Version.Semver.ToString()
@@ -514,7 +503,7 @@
     Pop-Location
 
     # change baseUrl
-    $BaseUrl = "https://our.umbraco.com/apidocs/v8/ui/"
+    $BaseUrl = "https://apidocs.umbraco.com/v9/ui/"
     $IndexPath = "./api/index.html"
     (Get-Content $IndexPath).replace('origin + location.href.substr(origin.length).replace(rUrl, indexFile)', "`'" + $BaseUrl + "`'") | Set-Content $IndexPath
 
@@ -534,14 +523,14 @@
     if ($this.OnError()) { return }
     $this.CompileUmbraco()
     if ($this.OnError()) { return }
+    $this.CompileJsonSchema()
+    if ($this.OnError()) { return }
     $this.PrepareTests()
     if ($this.OnError()) { return }
     $this.CompileTests()
     if ($this.OnError()) { return }
     # not running tests
     $this.PreparePackages()
-    if ($this.OnError()) { return }
-    $this.PackageZip()
     if ($this.OnError()) { return }
     $this.VerifyNuGet()
     if ($this.OnError()) { return }

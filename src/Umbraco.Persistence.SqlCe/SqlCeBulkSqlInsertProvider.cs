@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlServerCe;
+using System.Data.SqlTypes;
 using System.Linq;
 using NPoco;
 using Umbraco.Cms.Infrastructure.Persistence;
@@ -16,13 +17,12 @@ namespace Umbraco.Cms.Persistence.SqlCe
 
         public int BulkInsertRecords<T>(IUmbracoDatabase database, IEnumerable<T> records)
         {
-            var recordsA = records.ToArray();
-            if (recordsA.Length == 0) return 0;
+            if (!records.Any()) return 0;
 
             var pocoData = database.PocoDataFactory.ForType(typeof(T));
             if (pocoData == null) throw new InvalidOperationException("Could not find PocoData for " + typeof(T));
 
-            return BulkInsertRecordsSqlCe(database, pocoData, recordsA);
+            return BulkInsertRecordsSqlCe(database, pocoData, records.ToArray());
 
         }
 
@@ -64,6 +64,17 @@ namespace Umbraco.Cms.Persistence.SqlCe
                             if (NPocoDatabaseExtensions.IncludeColumn(pocoData, columns[i]))
                             {
                                 var val = columns[i].Value.GetValue(record);
+
+                                if (val is byte[])
+                                {
+                                    var bytes = val as byte[];
+                                    updatableRecord.SetSqlBinary(i, new SqlBinary(bytes));
+                                }
+                                else
+                                {
+                                    updatableRecord.SetValue(i, val);
+                                }
+
                                 updatableRecord.SetValue(i, val);
                             }
                         }
