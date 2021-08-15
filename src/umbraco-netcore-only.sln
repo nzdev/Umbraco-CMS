@@ -145,14 +145,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Umbraco.Examine.Lucene", "U
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfCoreConverter", "EfCoreConverter\EfCoreConverter.csproj", "{ACD8D35A-715B-45AF-8A87-88C5101BD61A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Infrastructure.Persistence.EfCore", "Umbraco.Infrastructure.Persistence.EfCore\Umbraco.Infrastructure.Persistence.EfCore.csproj", "{0D743859-1D72-4CBA-B999-5AF85FE2FE28}"
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Tests.Integration.SqlCe", "Umbraco.Tests.Integration.SqlCe\Umbraco.Tests.Integration.SqlCe.csproj", "{7A58F7CB-786F-43D6-A946-7BFA1B70D0AA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Umbraco.Infrastructure.Persistence.EfCore", "Umbraco.Infrastructure.Persistence.EfCore\Umbraco.Infrastructure.Persistence.EfCore.csproj", "{0D743859-1D72-4CBA-B999-5AF85FE2FE28}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Examine.Lucene", "Umbraco.Examine.Lucene\Umbraco.Examine.Lucene.csproj", "{96EF355C-A7C8-460E-96D7-ABCE0D489762}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Umbraco.Tests.Integration.SqlCe", "Umbraco.Tests.Integration.SqlCe\Umbraco.Tests.Integration.SqlCe.csproj", "{7A58F7CB-786F-43D6-A946-7BFA1B70D0AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.TestData", "Umbraco.TestData\Umbraco.TestData.csproj", "{C44B4389-6E2A-441E-9A10-7CE818CA63A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Umbraco.TestData", "Umbraco.TestData\Umbraco.TestData.csproj", "{C44B4389-6E2A-441E-9A10-7CE818CA63A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Tests.Benchmarks", "Umbraco.Tests.Benchmarks\Umbraco.Tests.Benchmarks.csproj", "{37B6264F-A279-42A6-AB83-CC3A3950C3E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Umbraco.Tests.Benchmarks", "Umbraco.Tests.Benchmarks\Umbraco.Tests.Benchmarks.csproj", "{37B6264F-A279-42A6-AB83-CC3A3950C3E2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -220,10 +219,6 @@ Global
 		{7A58F7CB-786F-43D6-A946-7BFA1B70D0AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A58F7CB-786F-43D6-A946-7BFA1B70D0AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A58F7CB-786F-43D6-A946-7BFA1B70D0AA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{96EF355C-A7C8-460E-96D7-ABCE0D489762}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{96EF355C-A7C8-460E-96D7-ABCE0D489762}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{96EF355C-A7C8-460E-96D7-ABCE0D489762}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{96EF355C-A7C8-460E-96D7-ABCE0D489762}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C44B4389-6E2A-441E-9A10-7CE818CA63A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C44B4389-6E2A-441E-9A10-7CE818CA63A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C44B4389-6E2A-441E-9A10-7CE818CA63A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
