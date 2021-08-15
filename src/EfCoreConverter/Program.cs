@@ -53,7 +53,8 @@ namespace EfCoreConverter
             var classDeclaration = SyntaxFactory.ClassDeclaration($"{model.DtoClassName}EntityTypeConfiguration");
             classDeclaration = classDeclaration.AddModifiers(SyntaxFactory.Token(SyntaxKind.InternalKeyword));
             classDeclaration = classDeclaration.AddBaseListTypes(
-               SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IEntityTypeConfiguration<{model.DtoClassName}>")));
+               SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IEntityTypeConfiguration<{model.DtoClassName}>")),
+               SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IOnModelCreating")));
 
             // Create a stament with the body of a method.
             (List<StatementSyntax> statements, List<StatementSyntax> modelCreatingStatements) = GenerateEfConfigurationStatements(model);

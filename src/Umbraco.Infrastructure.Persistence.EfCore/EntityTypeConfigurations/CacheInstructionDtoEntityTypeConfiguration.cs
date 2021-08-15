@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class CacheInstructionDtoEntityTypeConfiguration : IEntityTypeConfiguration<CacheInstructionDto>
+    internal class CacheInstructionDtoEntityTypeConfiguration : IEntityTypeConfiguration<CacheInstructionDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<CacheInstructionDto> builder)
         {

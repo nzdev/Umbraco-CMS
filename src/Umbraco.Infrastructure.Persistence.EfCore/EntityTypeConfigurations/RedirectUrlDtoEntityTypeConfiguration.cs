@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class RedirectUrlDtoEntityTypeConfiguration : IEntityTypeConfiguration<RedirectUrlDto>
+    internal class RedirectUrlDtoEntityTypeConfiguration : IEntityTypeConfiguration<RedirectUrlDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<RedirectUrlDto> builder)
         {

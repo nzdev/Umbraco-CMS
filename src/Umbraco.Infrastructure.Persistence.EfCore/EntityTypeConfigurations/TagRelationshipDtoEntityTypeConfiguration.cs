@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class TagRelationshipDtoEntityTypeConfiguration : IEntityTypeConfiguration<TagRelationshipDto>
+    internal class TagRelationshipDtoEntityTypeConfiguration : IEntityTypeConfiguration<TagRelationshipDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<TagRelationshipDto> builder)
         {

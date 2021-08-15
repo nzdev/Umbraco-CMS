@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class UserStartNodeDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserStartNodeDto>
+    internal class UserStartNodeDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserStartNodeDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<UserStartNodeDto> builder)
         {

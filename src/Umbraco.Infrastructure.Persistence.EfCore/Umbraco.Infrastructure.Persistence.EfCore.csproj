@@ -12,8 +12,4 @@
     <ProjectReference Include="..\Umbraco.Infrastructure\Umbraco.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="EntityTypeConfigurations\" />
-  </ItemGroup>
-
 </Project>

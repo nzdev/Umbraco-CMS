@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class Member2MemberGroupDtoEntityTypeConfiguration : IEntityTypeConfiguration<Member2MemberGroupDto>
+    internal class Member2MemberGroupDtoEntityTypeConfiguration : IEntityTypeConfiguration<Member2MemberGroupDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<Member2MemberGroupDto> builder)
         {

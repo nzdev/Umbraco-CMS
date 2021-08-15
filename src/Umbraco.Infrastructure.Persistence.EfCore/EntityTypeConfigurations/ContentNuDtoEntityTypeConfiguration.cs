@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentNuDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentNuDto>
+    internal class ContentNuDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentNuDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<ContentNuDto> builder)
         {

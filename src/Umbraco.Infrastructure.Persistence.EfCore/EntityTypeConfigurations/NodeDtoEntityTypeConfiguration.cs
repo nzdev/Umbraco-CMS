@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class NodeDtoEntityTypeConfiguration : IEntityTypeConfiguration<NodeDto>
+    internal class NodeDtoEntityTypeConfiguration : IEntityTypeConfiguration<NodeDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<NodeDto> builder)
         {

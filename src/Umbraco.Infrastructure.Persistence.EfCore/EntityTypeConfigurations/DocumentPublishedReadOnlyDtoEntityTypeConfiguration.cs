@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class DocumentPublishedReadOnlyDtoEntityTypeConfiguration : IEntityTypeConfiguration<DocumentPublishedReadOnlyDto>
+    internal class DocumentPublishedReadOnlyDtoEntityTypeConfiguration : IEntityTypeConfiguration<DocumentPublishedReadOnlyDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<DocumentPublishedReadOnlyDto> builder)
         {

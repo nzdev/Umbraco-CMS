@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class KeyValueDtoEntityTypeConfiguration : IEntityTypeConfiguration<KeyValueDto>
+    internal class KeyValueDtoEntityTypeConfiguration : IEntityTypeConfiguration<KeyValueDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<KeyValueDto> builder)
         {

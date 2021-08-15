@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class User2NodeNotifyDtoEntityTypeConfiguration : IEntityTypeConfiguration<User2NodeNotifyDto>
+    internal class User2NodeNotifyDtoEntityTypeConfiguration : IEntityTypeConfiguration<User2NodeNotifyDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<User2NodeNotifyDto> builder)
         {

@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class LanguageDtoEntityTypeConfiguration : IEntityTypeConfiguration<LanguageDto>
+    internal class LanguageDtoEntityTypeConfiguration : IEntityTypeConfiguration<LanguageDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<LanguageDto> builder)
         {

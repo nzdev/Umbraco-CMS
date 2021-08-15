@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class LogViewerQueryDtoEntityTypeConfiguration : IEntityTypeConfiguration<LogViewerQueryDto>
+    internal class LogViewerQueryDtoEntityTypeConfiguration : IEntityTypeConfiguration<LogViewerQueryDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<LogViewerQueryDto> builder)
         {

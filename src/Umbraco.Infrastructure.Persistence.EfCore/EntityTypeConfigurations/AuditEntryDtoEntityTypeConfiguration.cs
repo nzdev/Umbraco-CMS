@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class AuditEntryDtoEntityTypeConfiguration : IEntityTypeConfiguration<AuditEntryDto>
+    internal class AuditEntryDtoEntityTypeConfiguration : IEntityTypeConfiguration<AuditEntryDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<AuditEntryDto> builder)
         {

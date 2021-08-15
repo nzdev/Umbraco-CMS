@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentVersionCultureVariationDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentVersionCultureVariationDto>
+    internal class ContentVersionCultureVariationDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentVersionCultureVariationDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<ContentVersionCultureVariationDto> builder)
         {

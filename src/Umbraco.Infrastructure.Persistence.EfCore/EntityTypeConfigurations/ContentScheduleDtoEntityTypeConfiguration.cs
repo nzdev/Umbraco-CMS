@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentScheduleDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentScheduleDto>
+    internal class ContentScheduleDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentScheduleDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<ContentScheduleDto> builder)
         {

@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ConsentDtoEntityTypeConfiguration : IEntityTypeConfiguration<ConsentDto>
+    internal class ConsentDtoEntityTypeConfiguration : IEntityTypeConfiguration<ConsentDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<ConsentDto> builder)
         {

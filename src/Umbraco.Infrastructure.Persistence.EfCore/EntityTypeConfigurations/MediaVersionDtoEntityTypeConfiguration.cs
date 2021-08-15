@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class MediaVersionDtoEntityTypeConfiguration : IEntityTypeConfiguration<MediaVersionDto>
+    internal class MediaVersionDtoEntityTypeConfiguration : IEntityTypeConfiguration<MediaVersionDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<MediaVersionDto> builder)
         {

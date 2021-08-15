@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class MacroDtoEntityTypeConfiguration : IEntityTypeConfiguration<MacroDto>
+    internal class MacroDtoEntityTypeConfiguration : IEntityTypeConfiguration<MacroDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<MacroDto> builder)
         {

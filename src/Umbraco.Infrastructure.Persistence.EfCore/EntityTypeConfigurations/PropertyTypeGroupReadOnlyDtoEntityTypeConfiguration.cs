@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class PropertyTypeGroupReadOnlyDtoEntityTypeConfiguration : IEntityTypeConfiguration<PropertyTypeGroupReadOnlyDto>
+    internal class PropertyTypeGroupReadOnlyDtoEntityTypeConfiguration : IEntityTypeConfiguration<PropertyTypeGroupReadOnlyDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<PropertyTypeGroupReadOnlyDto> builder)
         {

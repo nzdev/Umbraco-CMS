@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentTypeAllowedContentTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentTypeAllowedContentTypeDto>
+    internal class ContentTypeAllowedContentTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentTypeAllowedContentTypeDto>, IOnModelCreating
     {
         public void Configure(EntityTypeBuilder<ContentTypeAllowedContentTypeDto> builder)
         {
