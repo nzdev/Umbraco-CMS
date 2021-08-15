@@ -37,6 +37,11 @@ namespace EfCoreConverter
             var configStr = GenerateEfDtoConfiguration(modelCollector.CurrentModel);
             File.WriteAllText(Path.Combine(EntityConfigFolder, $"{modelCollector.CurrentModel.DtoClassName}EntityTypeConfiguration.cs"), configStr);
             //Generate clean POCO
+
+            var root2 = (CompilationUnitSyntax)tree.GetRoot();
+            var modelCollector2 = new EfcoreDtoNoAnnotationsWalker();
+            var updated = modelCollector2.Visit(root2);
+            File.WriteAllText(file.FullName, updated.ToFullString());
         }
         static string GenerateEfDtoConfiguration(ModelConfig model)
         {
@@ -98,7 +103,7 @@ namespace EfCoreConverter
             else
             {
 
-            } 
+            }
             foreach (var prop in model.Properties)
             {
                 if (prop.IsPrimaryKey)
@@ -107,7 +112,7 @@ namespace EfCoreConverter
                     if (!string.IsNullOrEmpty(prop.PrimaryKeyOnColumns))
                     {
                         prop.PrimaryKeyOnColumns = prop.PrimaryKeyOnColumns.Replace("\"", "");
-                        var keyColumns = string.Join(",",prop.PrimaryKeyOnColumns.Split(",").Select(x=> $"x.{char.ToUpper(x.Trim()[0]) + x.Trim().Substring(1)}"));
+                        var keyColumns = string.Join(",", prop.PrimaryKeyOnColumns.Split(",").Select(x => $"x.{char.ToUpper(x.Trim()[0]) + x.Trim().Substring(1)}"));
                         statements.Add(SyntaxFactory.ParseStatement($"builder.HasKey(x => new {{ {keyColumns}}}){pkName};"));
                     }
                     else
@@ -121,7 +126,7 @@ namespace EfCoreConverter
                     else if (!string.IsNullOrEmpty(prop.PrimaryKeyIdentitySeed))
                     {
                         var start = prop.PrimaryKeyIdentitySeed;
-                        if(!int.TryParse(start,out int _))
+                        if (!int.TryParse(start, out int _))
                         {
                             start = $"{model.DtoClassName}.{prop.PrimaryKeyIdentitySeed}";
                         }
@@ -267,6 +272,71 @@ namespace EfCoreConverter
             return (statements, onModelCreatingStatements);
         }
     }
+
+
+    class EfcoreDtoNoAnnotationsWalker : CSharpSyntaxRewriter
+    {
+        public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+        {
+            var newAttributes = new SyntaxList<AttributeListSyntax>();
+
+            foreach (var attributeList in node.AttributeLists)
+            {
+                var nodesToRemove =
+                    attributeList
+                    .Attributes
+                    .ToArray();
+
+                //If the lists are the same length, we are removing all attributes and can just avoid populating newAttributes.
+                if (nodesToRemove.Length != attributeList.Attributes.Count)
+                {
+                    var newAttribute =
+                        (AttributeListSyntax)VisitAttributeList(
+                            attributeList.RemoveNodes(nodesToRemove, SyntaxRemoveOptions.KeepNoTrivia));
+
+                    newAttributes = newAttributes.Add(newAttribute);
+                }
+            }
+
+            //Get the leading trivia (the newlines and comments)
+            var leadTriv = node.GetLeadingTrivia();
+            node = node.WithAttributeLists(newAttributes);
+
+            //Append the leading trivia to the method
+            node = node.WithLeadingTrivia(leadTriv);
+            return node;
+        }
+        public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+        {
+            var newAttributes = new SyntaxList<AttributeListSyntax>();
+
+            foreach (var attributeList in node.AttributeLists)
+            {
+                var nodesToRemove =
+                    attributeList
+                    .Attributes
+                    .ToArray();
+
+                //If the lists are the same length, we are removing all attributes and can just avoid populating newAttributes.
+                if (nodesToRemove.Length != attributeList.Attributes.Count)
+                {
+                    var newAttribute =
+                        (AttributeListSyntax)VisitAttributeList(
+                            attributeList.RemoveNodes(nodesToRemove, SyntaxRemoveOptions.KeepNoTrivia));
+
+                    newAttributes = newAttributes.Add(newAttribute);
+                }
+            }
+
+            //Get the leading trivia (the newlines and comments)
+            var leadTriv = node.GetLeadingTrivia();
+            node = node.WithAttributeLists(newAttributes);
+
+            //Append the leading trivia to the method
+            node = node.WithLeadingTrivia(leadTriv);
+            return node;
+        }
+    }
     class EfCoreModelConfigurationWalker : CSharpSyntaxWalker
     {
         public ModelConfig CurrentModel { get; set; }
@@ -333,7 +403,7 @@ namespace EfCoreConverter
                             var fkName = GetArgument(attr, 1, "Name");
                             mp.ForiegnKeyDbName = fkName?.Expression?.ToString();
                             //Workaround
-                            if(mp.ForiegnKeyDbName != null && mp.ForiegnKeyDbName.EndsWith("_umbracoUser_id\""))
+                            if (mp.ForiegnKeyDbName != null && mp.ForiegnKeyDbName.EndsWith("_umbracoUser_id\""))
                             {
                                 mp.ForiegnKeyDbName = "\"FK_\" + " + "Cms.Core.Constants.DatabaseSchema.Tables.UserLogin" + " + \"_umbracoUser_id\"";
                             }
@@ -351,7 +421,7 @@ namespace EfCoreConverter
                             mp.PrimaryKeyClustered = pkClustered?.Expression?.ToString();
                             var pkSeed = GetArgument(attr, 4, "IdentitySeed");
                             mp.PrimaryKeyIdentitySeed = pkSeed?.Expression?.ToString();
-                            
+
                         }
                         else if (attr.Name.ToString() == "Index")
                         {
@@ -425,7 +495,7 @@ namespace EfCoreConverter
                 return byName;
             }
             count = 0;
-            return attr.ArgumentList.Arguments.FirstOrDefault(x => (x.NameColon == null && x.NameEquals ==null && index == count++));
+            return attr.ArgumentList.Arguments.FirstOrDefault(x => (x.NameColon == null && x.NameEquals == null && index == count++));
         }
     }
     public class ModelConfig
