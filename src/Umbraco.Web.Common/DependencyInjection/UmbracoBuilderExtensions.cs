@@ -58,6 +58,7 @@ using Umbraco.Cms.Web.Common.RuntimeMinification;
 using Umbraco.Cms.Web.Common.Security;
 using Umbraco.Cms.Web.Common.Templates;
 using Umbraco.Cms.Web.Common.UmbracoContext;
+using Umbraco.Infrastructure.Persistence.EfCore.Extensions;
 using IHostingEnvironment = Umbraco.Cms.Core.Hosting.IHostingEnvironment;
 
 namespace Umbraco.Extensions
@@ -140,6 +141,23 @@ namespace Umbraco.Extensions
             builder.Services.AddUnique<IHostingEnvironment, AspNetCoreHostingEnvironment>();
             builder.Services.AddHostedService(factory => factory.GetRequiredService<IRuntime>());
 
+            AddNPoco(builder);
+            AddEfCore(builder);
+
+            builder.AddCoreInitialServices();
+
+            // aspnet app lifetime mgmt
+            builder.Services.AddUnique<IUmbracoApplicationLifetime, AspNetCoreUmbracoApplicationLifetime>();
+            builder.Services.AddUnique<IApplicationShutdownRegistry, AspNetCoreApplicationShutdownRegistry>();
+
+            return builder;
+        }
+        private static void AddEfCore(IUmbracoBuilder builder)
+        {
+            builder.Services.AddEfCoreServices();
+        }
+        private static void AddNPoco(IUmbracoBuilder builder)
+        {
             // Add supported databases
             builder.AddUmbracoSqlServerSupport();
             builder.AddUmbracoSqlCeSupport();
@@ -153,14 +171,6 @@ namespace Umbraco.Extensions
                 factory.GetServices<IEmbeddedDatabaseCreator>(),
                 factory.GetServices<IProviderSpecificMapperFactory>()
             ));
-
-            builder.AddCoreInitialServices();
-
-            // aspnet app lifetime mgmt
-            builder.Services.AddUnique<IUmbracoApplicationLifetime, AspNetCoreUmbracoApplicationLifetime>();
-            builder.Services.AddUnique<IApplicationShutdownRegistry, AspNetCoreApplicationShutdownRegistry>();
-
-            return builder;
         }
 
         /// <summary>

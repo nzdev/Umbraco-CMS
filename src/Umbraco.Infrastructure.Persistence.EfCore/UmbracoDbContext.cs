@@ -121,6 +121,11 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore
 
         public DbSet<UserStartNodeDto> UserStartNode { get; set; }
 
+
+        public UmbracoDbContext(DbContextOptions<UmbracoDbContext> options) : base(options)
+        {
+
+        }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.HasSequence<int>("ContentTypeDto_seq", schema: "dbo").StartsAt(700).IncrementsBy(1);
