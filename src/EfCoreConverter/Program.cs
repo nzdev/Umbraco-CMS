@@ -51,7 +51,7 @@ namespace EfCoreConverter
                SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IEntityTypeConfiguration<{model.DtoClassName}>")));
 
             // Create a stament with the body of a method.
-            List<StatementSyntax> statements = GenerateEfConfigurationStatements(model);
+            (List<StatementSyntax> statements, List<StatementSyntax> modelCreatingStatements) = GenerateEfConfigurationStatements(model);
 
             // Create a method
             var methodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), "Configure")
@@ -60,7 +60,15 @@ namespace EfCoreConverter
                 .AddParameterListParameters(SyntaxFactory.ParseParameterList($"EntityTypeBuilder<{model.DtoClassName}> builder").Parameters.First());
 
 
+            // Create a method
+            var onModelCreatingMethodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), "OnModelCreating")
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                .WithBody(SyntaxFactory.Block(modelCreatingStatements))
+                .AddParameterListParameters(SyntaxFactory.ParseParameterList($"ModelBuilder builder").Parameters.First());
+
+
             classDeclaration = classDeclaration.AddMembers(methodDeclaration);
+            classDeclaration = classDeclaration.AddMembers(onModelCreatingMethodDeclaration);
 
             @namespace = @namespace.AddMembers(classDeclaration);
 
@@ -74,10 +82,11 @@ namespace EfCoreConverter
             return code;
         }
 
-        private static List<StatementSyntax> GenerateEfConfigurationStatements(ModelConfig model)
+        private static (List<StatementSyntax>, List<StatementSyntax>) GenerateEfConfigurationStatements(ModelConfig model)
         {
             List<StatementSyntax> statements = new List<StatementSyntax>();
-            if(model.TableName != null)
+            List<StatementSyntax> onModelCreatingStatements = new List<StatementSyntax>();
+            if (model.TableName != null)
             {
                 var cleanedTableName = !model.TableName.Contains("\"") ? $"{model.DtoClassName}.{model.TableName}" : model.TableName;
                 if (model.TableName.Contains("Cms.Core.Constants.DatabaseSchema.Tables"))
@@ -116,7 +125,7 @@ namespace EfCoreConverter
                         {
                             start = $"{model.DtoClassName}.{prop.PrimaryKeyIdentitySeed}";
                         }
-                        statements.Add(SyntaxFactory.ParseStatement($"builder.HasSequence<int>(\"{model.DtoClassName}_seq\", schema: \"dbo\").StartsAt({start}).IncrementsBy(1);"));
+                        onModelCreatingStatements.Add(SyntaxFactory.ParseStatement($"builder.HasSequence<int>(\"{model.DtoClassName}_seq\", schema: \"dbo\").StartsAt({start}).IncrementsBy(1);"));
                         statements.Add(SyntaxFactory.ParseStatement($"builder.Property(x => x.{prop.PropertyName}).HasDefaultValueSql(\"NEXT VALUE FOR dbo.{model.DtoClassName}_seq\");"));
                     }
                 }
@@ -255,7 +264,7 @@ namespace EfCoreConverter
                     }
                 }
             }
-            return statements;
+            return (statements, onModelCreatingStatements);
         }
     }
     class EfCoreModelConfigurationWalker : CSharpSyntaxWalker
@@ -323,6 +332,11 @@ namespace EfCoreConverter
                             mp.ForiegnKeyTypeName = fkType?.Expression?.ToString();
                             var fkName = GetArgument(attr, 1, "Name");
                             mp.ForiegnKeyDbName = fkName?.Expression?.ToString();
+                            //Workaround
+                            if(mp.ForiegnKeyDbName != null && mp.ForiegnKeyDbName.EndsWith("_umbracoUser_id\""))
+                            {
+                                mp.ForiegnKeyDbName = "\"FK_\" + " + "Cms.Core.Constants.DatabaseSchema.Tables.UserLogin" + " + \"_umbracoUser_id\"";
+                            }
                         }
                         else if (attr.Name.ToString() == "PrimaryKeyColumn")
                         {

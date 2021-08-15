@@ -22,5 +22,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasIndex(x => x.Key);
             builder.HasMany(typeof(LanguageTextDto), "UniqueId");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

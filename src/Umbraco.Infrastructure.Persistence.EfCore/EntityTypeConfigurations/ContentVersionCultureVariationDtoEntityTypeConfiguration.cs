@@ -24,5 +24,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(UserDto)).WithOne();
             builder.Property(x => x.UpdateUserId).IsRequired(false);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

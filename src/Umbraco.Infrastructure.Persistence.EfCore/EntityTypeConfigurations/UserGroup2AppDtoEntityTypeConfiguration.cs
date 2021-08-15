@@ -11,13 +11,17 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.ToTable(Cms.Core.Constants.DatabaseSchema.Tables.UserGroup2App);
             builder.HasKey(x => new
             {
-            x.UserGroupId, x.App
+            x.UserGroupId, x.AppAlias
             }).HasName("PK_userGroup2App");
             builder.Property(x => x.UserGroupId).ValueGeneratedNever();
             builder.Property(x => x.UserGroupId).HasColumnName("userGroupId");
             builder.HasOne(typeof(UserGroupDto)).WithOne();
             builder.Property(x => x.AppAlias).HasColumnName("app");
             builder.Property(x => x.AppAlias).HasMaxLength(50);
+        }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
         }
     }
 }

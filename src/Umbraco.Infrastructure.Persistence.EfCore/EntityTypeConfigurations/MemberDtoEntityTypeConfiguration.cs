@@ -34,5 +34,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(ContentDto), nameof(MemberDto.ContentDto));
             builder.HasOne(typeof(ContentVersionDto), nameof(MemberDto.ContentVersionDto));
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

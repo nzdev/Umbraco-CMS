@@ -15,5 +15,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Newest).HasColumnName("newest");
             builder.Property(x => x.VersionDate).HasColumnName("updateDate");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

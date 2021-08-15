@@ -19,5 +19,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Published).HasColumnName("published");
             builder.HasOne(typeof(ContentVersionDto), nameof(DocumentVersionDto.ContentVersionDto));
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

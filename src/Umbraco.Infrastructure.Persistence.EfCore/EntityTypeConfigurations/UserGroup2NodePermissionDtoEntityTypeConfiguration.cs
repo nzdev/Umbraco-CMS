@@ -21,5 +21,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasIndex(x => x.NodeId);
             builder.Property(x => x.Permission).HasColumnName("permission");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

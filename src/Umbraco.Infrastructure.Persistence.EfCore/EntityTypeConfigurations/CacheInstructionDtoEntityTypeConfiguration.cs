@@ -24,5 +24,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.InstructionCount).IsRequired(true);
             builder.Property(x => x.InstructionCount).HasDefaultValue(1);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

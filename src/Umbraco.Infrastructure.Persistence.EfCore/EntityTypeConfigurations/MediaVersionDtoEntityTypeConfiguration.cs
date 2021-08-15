@@ -18,5 +18,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Path).IsRequired(false);
             builder.HasOne(typeof(ContentVersionDto), nameof(MediaVersionDto.ContentVersionDto));
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

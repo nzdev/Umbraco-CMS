@@ -24,5 +24,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Name).HasColumnName("name");
             builder.Property(x => x.Name).IsRequired(false);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

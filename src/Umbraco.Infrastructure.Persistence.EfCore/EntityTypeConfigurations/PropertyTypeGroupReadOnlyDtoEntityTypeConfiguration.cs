@@ -15,5 +15,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.ContentTypeNodeId).HasColumnName("contenttypeNodeId");
             builder.Property(x => x.UniqueId).HasColumnName("PropertyGroupUniqueID");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

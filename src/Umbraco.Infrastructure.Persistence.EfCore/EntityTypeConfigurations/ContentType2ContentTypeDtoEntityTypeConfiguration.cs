@@ -11,13 +11,17 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.ToTable(Cms.Core.Constants.DatabaseSchema.Tables.ElementTypeTree);
             builder.HasKey(x => new
             {
-            x.ParentContentTypeId, x.ChildContentTypeId
+            x.ParentId, x.ChildId
             }).HasName("PK_cmsContentType2ContentType");
             builder.Property(x => x.ParentId).ValueGeneratedNever();
             builder.Property(x => x.ParentId).HasColumnName("parentContentTypeId");
             builder.HasOne(typeof(NodeDto), "FK_cmsContentType2ContentType_umbracoNode_parent").WithOne();
             builder.Property(x => x.ChildId).HasColumnName("childContentTypeId");
             builder.HasOne(typeof(NodeDto), "FK_cmsContentType2ContentType_umbracoNode_child").WithOne();
+        }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
         }
     }
 }

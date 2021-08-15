@@ -9,5 +9,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
         public void Configure(EntityTypeBuilder<PropertyTypeCommonDto> builder)
         {
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

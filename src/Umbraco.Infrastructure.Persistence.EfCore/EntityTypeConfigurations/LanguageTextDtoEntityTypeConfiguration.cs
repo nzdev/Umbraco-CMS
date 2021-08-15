@@ -18,5 +18,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Value).HasColumnName("value");
             builder.Property(x => x.Value).HasMaxLength(1000);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

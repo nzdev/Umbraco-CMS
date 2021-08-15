@@ -24,5 +24,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.CreateDate).HasDefaultValueSql("getdate()");
             builder.HasOne(typeof(ExternalLoginDto), nameof(ExternalLoginTokenDto.ExternalLoginDto));
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

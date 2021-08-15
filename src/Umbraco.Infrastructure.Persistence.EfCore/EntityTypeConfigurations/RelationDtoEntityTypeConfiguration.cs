@@ -25,5 +25,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.ParentObjectType).HasColumnName("parentObjectType");
             builder.Property(x => x.ChildObjectType).HasColumnName("childObjectType");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

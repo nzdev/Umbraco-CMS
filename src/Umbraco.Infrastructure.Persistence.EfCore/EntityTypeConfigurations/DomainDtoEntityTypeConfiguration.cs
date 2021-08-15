@@ -18,5 +18,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.RootStructureId).IsRequired(false);
             builder.Property(x => x.DomainName).HasColumnName("domainName");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

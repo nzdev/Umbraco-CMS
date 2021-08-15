@@ -27,5 +27,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UserData).IsRequired(false);
             builder.Property(x => x.UserData).HasColumnType("NTEXT");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

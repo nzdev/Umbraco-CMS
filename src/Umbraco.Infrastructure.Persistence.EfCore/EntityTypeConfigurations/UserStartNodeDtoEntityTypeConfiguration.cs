@@ -21,5 +21,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.StartNodeType).IsRequired(true);
             builder.HasIndex(x => x.StartNodeType).IsUnique(true);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

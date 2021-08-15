@@ -19,5 +19,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Alias).HasMaxLength(100);
             builder.HasOne(typeof(NodeDto), nameof(TemplateDto.NodeDto));
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

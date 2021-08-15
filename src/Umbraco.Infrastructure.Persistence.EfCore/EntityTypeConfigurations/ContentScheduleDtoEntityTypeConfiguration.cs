@@ -20,5 +20,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Date).HasColumnName("date");
             builder.Property(x => x.Action).HasColumnName("action");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

@@ -23,5 +23,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.SortOrder).HasDefaultValue(0);
             builder.HasOne(typeof(ContentTypeDto), nameof(ContentTypeAllowedContentTypeDto.ContentTypeDto));
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

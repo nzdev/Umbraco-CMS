@@ -38,5 +38,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(PropertyTypeDto), nameof(PropertyDataDto.PropertyTypeDto));
             builder.Ignore(x => x.Value);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

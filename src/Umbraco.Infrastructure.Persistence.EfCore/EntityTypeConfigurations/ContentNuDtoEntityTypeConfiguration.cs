@@ -24,5 +24,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.RawData).HasColumnName("dataRaw");
             builder.Property(x => x.RawData).IsRequired(false);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

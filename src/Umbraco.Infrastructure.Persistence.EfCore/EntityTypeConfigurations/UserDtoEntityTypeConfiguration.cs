@@ -58,5 +58,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasMany(typeof(UserGroupDto), "UserId");
             builder.HasMany(typeof(UserStartNodeDto), "UserId");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

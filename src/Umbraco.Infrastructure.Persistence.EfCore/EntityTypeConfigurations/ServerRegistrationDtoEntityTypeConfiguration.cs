@@ -23,5 +23,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasIndex(x => x.IsActive);
             builder.Property(x => x.IsMaster).HasColumnName("isMaster");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

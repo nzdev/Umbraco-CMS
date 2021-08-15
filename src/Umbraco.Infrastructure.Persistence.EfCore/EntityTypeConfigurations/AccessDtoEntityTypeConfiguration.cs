@@ -25,5 +25,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UpdateDate).HasDefaultValueSql("getdate()");
             builder.HasMany(typeof(AccessRuleDto), "AccessId");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

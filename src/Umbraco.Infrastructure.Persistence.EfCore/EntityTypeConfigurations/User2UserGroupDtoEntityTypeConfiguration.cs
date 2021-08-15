@@ -19,5 +19,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UserGroupId).HasColumnName("userGroupId");
             builder.HasOne(typeof(UserGroupDto)).WithOne();
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

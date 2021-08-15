@@ -10,7 +10,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
         {
             builder.ToTable(Cms.Core.Constants.DatabaseSchema.Tables.PropertyType);
             builder.HasKey(x => x.Id);
-            builder.HasSequence<int>("PropertyTypeDto_seq", schema: "dbo").StartsAt(100).IncrementsBy(1);
             builder.Property(x => x.Id).HasDefaultValueSql("NEXT VALUE FOR dbo.PropertyTypeDto_seq");
             builder.Property(x => x.Id).HasColumnName("id");
             builder.Property(x => x.DataTypeId).HasColumnName("dataTypeId");
@@ -48,6 +47,11 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UniqueId).IsRequired(true);
             builder.Property(x => x.UniqueId).HasDefaultValueSql("NEWID()");
             builder.HasIndex(x => x.UniqueId).IsUnique(true);
+        }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+            builder.HasSequence<int>("PropertyTypeDto_seq", schema: "dbo").StartsAt(100).IncrementsBy(1);
         }
     }
 }

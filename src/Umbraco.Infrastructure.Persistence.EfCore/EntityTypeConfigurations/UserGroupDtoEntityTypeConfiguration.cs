@@ -10,7 +10,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
         {
             builder.ToTable(Cms.Core.Constants.DatabaseSchema.Tables.UserGroup);
             builder.HasKey(x => x.Id);
-            builder.HasSequence<int>("UserGroupDto_seq", schema: "dbo").StartsAt(6).IncrementsBy(1);
             builder.Property(x => x.Id).HasDefaultValueSql("NEXT VALUE FOR dbo.UserGroupDto_seq");
             builder.Property(x => x.Id).HasColumnName("id");
             builder.Property(x => x.Alias).HasColumnName("userGroupAlias");
@@ -37,6 +36,11 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(NodeDto), "FK_startMediaId_umbracoNode_id").WithOne();
             builder.Property(x => x.StartMediaId).IsRequired(false);
             builder.HasMany(typeof(UserGroup2AppDto), "UserGroupId");
+        }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+            builder.HasSequence<int>("UserGroupDto_seq", schema: "dbo").StartsAt(6).IncrementsBy(1);
         }
     }
 }

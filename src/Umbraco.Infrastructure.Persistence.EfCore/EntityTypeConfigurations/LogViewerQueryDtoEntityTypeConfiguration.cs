@@ -15,5 +15,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasIndex(x => x.Name).IsUnique(true);
             builder.Property(x => x.Query).HasColumnName("query");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

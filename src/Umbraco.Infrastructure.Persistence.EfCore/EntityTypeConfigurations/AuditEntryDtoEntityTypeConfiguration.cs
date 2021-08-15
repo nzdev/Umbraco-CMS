@@ -25,5 +25,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.EventDetails).HasColumnName("eventDetails");
             builder.Property(x => x.EventDetails).IsRequired(false);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

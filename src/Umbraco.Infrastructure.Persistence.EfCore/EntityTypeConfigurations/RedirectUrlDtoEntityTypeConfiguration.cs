@@ -26,5 +26,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UrlHash).HasMaxLength(40);
             builder.HasIndex(x => x.UrlHash).IsUnique(true);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

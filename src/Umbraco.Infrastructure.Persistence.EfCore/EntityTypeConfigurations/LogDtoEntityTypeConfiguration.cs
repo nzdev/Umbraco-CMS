@@ -30,5 +30,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Parameters).IsRequired(false);
             builder.Property(x => x.Parameters).HasMaxLength(500);
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

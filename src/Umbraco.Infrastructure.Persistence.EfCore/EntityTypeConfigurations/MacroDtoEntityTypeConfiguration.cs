@@ -33,5 +33,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.MacroType).IsRequired(true);
             builder.HasMany(typeof(MacroPropertyDto), "Macro");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

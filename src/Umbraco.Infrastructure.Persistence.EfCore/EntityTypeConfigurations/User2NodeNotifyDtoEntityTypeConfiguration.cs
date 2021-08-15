@@ -22,5 +22,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Action).HasMaxLength(1);
             builder.Property(x => x.Action).HasColumnType("nchar");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

@@ -22,5 +22,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UpdateDate).HasColumnName("updateDate");
             builder.Property(x => x.UpdateDate).HasDefaultValueSql("getdate()");
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

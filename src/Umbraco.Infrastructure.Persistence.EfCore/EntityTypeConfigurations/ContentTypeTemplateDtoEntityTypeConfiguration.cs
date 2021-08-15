@@ -22,5 +22,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.IsDefault).HasDefaultValue(0);
             builder.HasOne(typeof(ContentTypeDto), nameof(ContentTypeTemplateDto.ContentTypeDto));
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

@@ -21,5 +21,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.PropertyTypeId).HasColumnName("propertyTypeId");
             builder.HasOne(typeof(PropertyTypeDto), "FK_cmsTagRelationship_cmsPropertyType").WithOne();
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }

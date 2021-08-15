@@ -21,5 +21,9 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Configuration).HasColumnType("NTEXT");
             builder.HasOne(typeof(NodeDto), nameof(DataTypeDto.NodeDto));
         }
+
+        public void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }
