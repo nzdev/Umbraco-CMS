@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class PropertyTypeGroupDtoEntityTypeConfiguration : IEntityTypeConfiguration<PropertyTypeGroupDto>, IOnModelCreating
+    internal class PropertyTypeGroupDtoEntityTypeConfiguration : IEntityTypeConfiguration<PropertyTypeGroupDto>
     {
         public void Configure(EntityTypeBuilder<PropertyTypeGroupDto> builder)
         {
@@ -21,11 +21,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UniqueId).IsRequired(true);
             builder.Property(x => x.UniqueId).HasDefaultValueSql("NEWID()");
             builder.HasIndex(x => x.UniqueId).IsUnique(true);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
-            builder.HasSequence<int>("PropertyTypeGroupDto_seq", schema: "dbo").StartsAt(56).IncrementsBy(1);
         }
     }
 }

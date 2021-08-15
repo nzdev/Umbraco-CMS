@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class MacroDtoEntityTypeConfiguration : IEntityTypeConfiguration<MacroDto>, IOnModelCreating
+    internal class MacroDtoEntityTypeConfiguration : IEntityTypeConfiguration<MacroDto>
     {
         public void Configure(EntityTypeBuilder<MacroDto> builder)
         {
@@ -32,10 +32,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.MacroType).HasColumnName("macroType");
             builder.Property(x => x.MacroType).IsRequired(true);
             builder.HasMany(typeof(MacroPropertyDto), "Macro");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

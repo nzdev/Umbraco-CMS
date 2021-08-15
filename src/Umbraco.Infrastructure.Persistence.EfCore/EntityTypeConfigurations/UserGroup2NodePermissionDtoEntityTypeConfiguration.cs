@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class UserGroup2NodePermissionDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserGroup2NodePermissionDto>, IOnModelCreating
+    internal class UserGroup2NodePermissionDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserGroup2NodePermissionDto>
     {
         public void Configure(EntityTypeBuilder<UserGroup2NodePermissionDto> builder)
         {
@@ -20,10 +20,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(NodeDto)).WithOne();
             builder.HasIndex(x => x.NodeId);
             builder.Property(x => x.Permission).HasColumnName("permission");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

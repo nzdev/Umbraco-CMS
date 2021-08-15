@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class RelationDtoEntityTypeConfiguration : IEntityTypeConfiguration<RelationDto>, IOnModelCreating
+    internal class RelationDtoEntityTypeConfiguration : IEntityTypeConfiguration<RelationDto>
     {
         public void Configure(EntityTypeBuilder<RelationDto> builder)
         {
@@ -24,10 +24,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Comment).HasMaxLength(1000);
             builder.Property(x => x.ParentObjectType).HasColumnName("parentObjectType");
             builder.Property(x => x.ChildObjectType).HasColumnName("childObjectType");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

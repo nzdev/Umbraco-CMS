@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class TagDtoEntityTypeConfiguration : IEntityTypeConfiguration<TagDto>, IOnModelCreating
+    internal class TagDtoEntityTypeConfiguration : IEntityTypeConfiguration<TagDto>
     {
         public void Configure(EntityTypeBuilder<TagDto> builder)
         {
@@ -20,10 +20,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Text).HasColumnName("tag");
             builder.Property(x => x.Text).HasMaxLength(200);
             builder.HasIndex(x => x.Text).IsUnique(true);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

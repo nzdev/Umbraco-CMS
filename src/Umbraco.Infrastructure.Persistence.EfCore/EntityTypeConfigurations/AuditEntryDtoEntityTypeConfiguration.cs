@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class AuditEntryDtoEntityTypeConfiguration : IEntityTypeConfiguration<AuditEntryDto>, IOnModelCreating
+    internal class AuditEntryDtoEntityTypeConfiguration : IEntityTypeConfiguration<AuditEntryDto>
     {
         public void Configure(EntityTypeBuilder<AuditEntryDto> builder)
         {
@@ -24,10 +24,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.EventType).HasColumnName("eventType");
             builder.Property(x => x.EventDetails).HasColumnName("eventDetails");
             builder.Property(x => x.EventDetails).IsRequired(false);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

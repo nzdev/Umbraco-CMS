@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class TagRelationshipDtoEntityTypeConfiguration : IEntityTypeConfiguration<TagRelationshipDto>, IOnModelCreating
+    internal class TagRelationshipDtoEntityTypeConfiguration : IEntityTypeConfiguration<TagRelationshipDto>
     {
         public void Configure(EntityTypeBuilder<TagRelationshipDto> builder)
         {
@@ -20,10 +20,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(TagDto)).WithOne();
             builder.Property(x => x.PropertyTypeId).HasColumnName("propertyTypeId");
             builder.HasOne(typeof(PropertyTypeDto), "FK_cmsTagRelationship_cmsPropertyType").WithOne();
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

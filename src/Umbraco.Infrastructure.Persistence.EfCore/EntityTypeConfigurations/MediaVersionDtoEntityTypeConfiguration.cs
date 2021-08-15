@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class MediaVersionDtoEntityTypeConfiguration : IEntityTypeConfiguration<MediaVersionDto>, IOnModelCreating
+    internal class MediaVersionDtoEntityTypeConfiguration : IEntityTypeConfiguration<MediaVersionDto>
     {
         public void Configure(EntityTypeBuilder<MediaVersionDto> builder)
         {
@@ -17,10 +17,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Path).HasColumnName("path");
             builder.Property(x => x.Path).IsRequired(false);
             builder.HasOne(typeof(ContentVersionDto), nameof(MediaVersionDto.ContentVersionDto));
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

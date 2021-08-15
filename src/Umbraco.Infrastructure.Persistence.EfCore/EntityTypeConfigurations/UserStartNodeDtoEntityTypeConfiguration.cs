@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class UserStartNodeDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserStartNodeDto>, IOnModelCreating
+    internal class UserStartNodeDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserStartNodeDto>
     {
         public void Configure(EntityTypeBuilder<UserStartNodeDto> builder)
         {
@@ -20,10 +20,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.StartNodeType).HasColumnName("startNodeType");
             builder.Property(x => x.StartNodeType).IsRequired(true);
             builder.HasIndex(x => x.StartNodeType).IsUnique(true);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

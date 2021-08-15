@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class UserDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserDto>, IOnModelCreating
+    internal class UserDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserDto>
     {
         public void Configure(EntityTypeBuilder<UserDto> builder)
         {
@@ -57,10 +57,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.TourData).HasColumnType("NTEXT");
             builder.HasMany(typeof(UserGroupDto), "UserId");
             builder.HasMany(typeof(UserStartNodeDto), "UserId");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

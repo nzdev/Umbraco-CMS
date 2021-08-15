@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class LanguageTextDtoEntityTypeConfiguration : IEntityTypeConfiguration<LanguageTextDto>, IOnModelCreating
+    internal class LanguageTextDtoEntityTypeConfiguration : IEntityTypeConfiguration<LanguageTextDto>
     {
         public void Configure(EntityTypeBuilder<LanguageTextDto> builder)
         {
@@ -17,10 +17,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(DictionaryDto)).WithOne();
             builder.Property(x => x.Value).HasColumnName("value");
             builder.Property(x => x.Value).HasMaxLength(1000);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

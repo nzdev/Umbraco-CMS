@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class MemberPropertyTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<MemberPropertyTypeDto>, IOnModelCreating
+    internal class MemberPropertyTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<MemberPropertyTypeDto>
     {
         public void Configure(EntityTypeBuilder<MemberPropertyTypeDto> builder)
         {
@@ -20,10 +20,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.ViewOnProfile).HasDefaultValue(0);
             builder.Property(x => x.IsSensitive).HasColumnName("isSensitive");
             builder.Property(x => x.IsSensitive).HasDefaultValue(0);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentTypeTemplateDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentTypeTemplateDto>, IOnModelCreating
+    internal class ContentTypeTemplateDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentTypeTemplateDto>
     {
         public void Configure(EntityTypeBuilder<ContentTypeTemplateDto> builder)
         {
@@ -21,10 +21,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.IsDefault).HasColumnName("IsDefault");
             builder.Property(x => x.IsDefault).HasDefaultValue(0);
             builder.HasOne(typeof(ContentTypeDto), nameof(ContentTypeTemplateDto.ContentTypeDto));
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

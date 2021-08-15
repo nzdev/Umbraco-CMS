@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentVersionDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentVersionDto>, IOnModelCreating
+    internal class ContentVersionDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentVersionDto>
     {
         public void Configure(EntityTypeBuilder<ContentVersionDto> builder)
         {
@@ -24,10 +24,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Text).HasColumnName("text");
             builder.Property(x => x.Text).IsRequired(false);
             builder.HasOne(typeof(ContentDto), nameof(ContentVersionDto.ContentDto));
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

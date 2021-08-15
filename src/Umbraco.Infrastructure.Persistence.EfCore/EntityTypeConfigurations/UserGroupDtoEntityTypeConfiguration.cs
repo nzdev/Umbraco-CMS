@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class UserGroupDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserGroupDto>, IOnModelCreating
+    internal class UserGroupDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserGroupDto>
     {
         public void Configure(EntityTypeBuilder<UserGroupDto> builder)
         {
@@ -36,11 +36,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(NodeDto), "FK_startMediaId_umbracoNode_id").WithOne();
             builder.Property(x => x.StartMediaId).IsRequired(false);
             builder.HasMany(typeof(UserGroup2AppDto), "UserGroupId");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
-            builder.HasSequence<int>("UserGroupDto_seq", schema: "dbo").StartsAt(6).IncrementsBy(1);
         }
     }
 }

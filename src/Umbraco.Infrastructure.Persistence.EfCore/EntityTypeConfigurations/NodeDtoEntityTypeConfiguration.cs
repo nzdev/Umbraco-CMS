@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class NodeDtoEntityTypeConfiguration : IEntityTypeConfiguration<NodeDto>, IOnModelCreating
+    internal class NodeDtoEntityTypeConfiguration : IEntityTypeConfiguration<NodeDto>
     {
         public void Configure(EntityTypeBuilder<NodeDto> builder)
         {
@@ -38,11 +38,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasIndex(x => x.NodeObjectType);
             builder.Property(x => x.CreateDate).HasColumnName("createDate");
             builder.Property(x => x.CreateDate).HasDefaultValueSql("getdate()");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
-            builder.HasSequence<int>("NodeDto_seq", schema: "dbo").StartsAt(NodeDto.NodeIdSeed).IncrementsBy(1);
         }
     }
 }

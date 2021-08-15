@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class DocumentPublishedReadOnlyDtoEntityTypeConfiguration : IEntityTypeConfiguration<DocumentPublishedReadOnlyDto>, IOnModelCreating
+    internal class DocumentPublishedReadOnlyDtoEntityTypeConfiguration : IEntityTypeConfiguration<DocumentPublishedReadOnlyDto>
     {
         public void Configure(EntityTypeBuilder<DocumentPublishedReadOnlyDto> builder)
         {
@@ -14,10 +14,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.VersionId).HasColumnName("versionId");
             builder.Property(x => x.Newest).HasColumnName("newest");
             builder.Property(x => x.VersionDate).HasColumnName("updateDate");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class RelationTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<RelationTypeDto>, IOnModelCreating
+    internal class RelationTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<RelationTypeDto>
     {
         public void Configure(EntityTypeBuilder<RelationTypeDto> builder)
         {
@@ -26,11 +26,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Alias).IsRequired(true);
             builder.Property(x => x.Alias).HasMaxLength(100);
             builder.HasIndex(x => x.Alias).IsUnique(true);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
-            builder.HasSequence<int>("RelationTypeDto_seq", schema: "dbo").StartsAt(RelationTypeDto.NodeIdSeed).IncrementsBy(1);
         }
     }
 }

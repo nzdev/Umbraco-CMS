@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ExternalLoginTokenDtoEntityTypeConfiguration : IEntityTypeConfiguration<ExternalLoginTokenDto>, IOnModelCreating
+    internal class ExternalLoginTokenDtoEntityTypeConfiguration : IEntityTypeConfiguration<ExternalLoginTokenDto>
     {
         public void Configure(EntityTypeBuilder<ExternalLoginTokenDto> builder)
         {
@@ -23,10 +23,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.CreateDate).HasColumnName("createDate");
             builder.Property(x => x.CreateDate).HasDefaultValueSql("getdate()");
             builder.HasOne(typeof(ExternalLoginDto), nameof(ExternalLoginTokenDto.ExternalLoginDto));
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

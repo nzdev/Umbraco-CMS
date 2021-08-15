@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ServerRegistrationDtoEntityTypeConfiguration : IEntityTypeConfiguration<ServerRegistrationDto>, IOnModelCreating
+    internal class ServerRegistrationDtoEntityTypeConfiguration : IEntityTypeConfiguration<ServerRegistrationDto>
     {
         public void Configure(EntityTypeBuilder<ServerRegistrationDto> builder)
         {
@@ -22,10 +22,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.IsActive).HasColumnName("isActive");
             builder.HasIndex(x => x.IsActive);
             builder.Property(x => x.IsMaster).HasColumnName("isMaster");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

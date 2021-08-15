@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class MemberDtoEntityTypeConfiguration : IEntityTypeConfiguration<MemberDto>, IOnModelCreating
+    internal class MemberDtoEntityTypeConfiguration : IEntityTypeConfiguration<MemberDto>
     {
         public void Configure(EntityTypeBuilder<MemberDto> builder)
         {
@@ -33,10 +33,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.EmailConfirmedDate).IsRequired(false);
             builder.HasOne(typeof(ContentDto), nameof(MemberDto.ContentDto));
             builder.HasOne(typeof(ContentVersionDto), nameof(MemberDto.ContentVersionDto));
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

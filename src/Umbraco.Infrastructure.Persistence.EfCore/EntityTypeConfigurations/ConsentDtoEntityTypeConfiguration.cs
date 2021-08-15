@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ConsentDtoEntityTypeConfiguration : IEntityTypeConfiguration<ConsentDto>, IOnModelCreating
+    internal class ConsentDtoEntityTypeConfiguration : IEntityTypeConfiguration<ConsentDto>
     {
         public void Configure(EntityTypeBuilder<ConsentDto> builder)
         {
@@ -23,10 +23,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.State).HasColumnName("state");
             builder.Property(x => x.Comment).HasColumnName("comment");
             builder.Property(x => x.Comment).IsRequired(false);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

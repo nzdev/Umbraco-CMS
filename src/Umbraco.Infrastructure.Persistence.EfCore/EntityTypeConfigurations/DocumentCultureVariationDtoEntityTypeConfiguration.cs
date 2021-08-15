@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class DocumentCultureVariationDtoEntityTypeConfiguration : IEntityTypeConfiguration<DocumentCultureVariationDto>, IOnModelCreating
+    internal class DocumentCultureVariationDtoEntityTypeConfiguration : IEntityTypeConfiguration<DocumentCultureVariationDto>
     {
         public void Configure(EntityTypeBuilder<DocumentCultureVariationDto> builder)
         {
@@ -23,10 +23,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Published).HasColumnName("published");
             builder.Property(x => x.Name).HasColumnName("name");
             builder.Property(x => x.Name).IsRequired(false);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

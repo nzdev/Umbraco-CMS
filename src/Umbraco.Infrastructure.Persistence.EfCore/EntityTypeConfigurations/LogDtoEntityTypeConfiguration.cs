@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class LogDtoEntityTypeConfiguration : IEntityTypeConfiguration<LogDto>, IOnModelCreating
+    internal class LogDtoEntityTypeConfiguration : IEntityTypeConfiguration<LogDto>
     {
         public void Configure(EntityTypeBuilder<LogDto> builder)
         {
@@ -29,10 +29,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Parameters).HasColumnName("parameters");
             builder.Property(x => x.Parameters).IsRequired(false);
             builder.Property(x => x.Parameters).HasMaxLength(500);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

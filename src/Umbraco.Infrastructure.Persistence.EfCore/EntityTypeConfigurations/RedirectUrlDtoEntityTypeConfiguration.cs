@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class RedirectUrlDtoEntityTypeConfiguration : IEntityTypeConfiguration<RedirectUrlDto>, IOnModelCreating
+    internal class RedirectUrlDtoEntityTypeConfiguration : IEntityTypeConfiguration<RedirectUrlDto>
     {
         public void Configure(EntityTypeBuilder<RedirectUrlDto> builder)
         {
@@ -25,10 +25,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UrlHash).IsRequired(true);
             builder.Property(x => x.UrlHash).HasMaxLength(40);
             builder.HasIndex(x => x.UrlHash).IsUnique(true);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

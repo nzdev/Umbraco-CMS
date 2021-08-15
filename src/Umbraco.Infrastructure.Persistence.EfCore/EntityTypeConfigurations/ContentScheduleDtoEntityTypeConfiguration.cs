@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentScheduleDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentScheduleDto>, IOnModelCreating
+    internal class ContentScheduleDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentScheduleDto>
     {
         public void Configure(EntityTypeBuilder<ContentScheduleDto> builder)
         {
@@ -19,10 +19,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.LanguageId).IsRequired(false);
             builder.Property(x => x.Date).HasColumnName("date");
             builder.Property(x => x.Action).HasColumnName("action");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class CacheInstructionDtoEntityTypeConfiguration : IEntityTypeConfiguration<CacheInstructionDto>, IOnModelCreating
+    internal class CacheInstructionDtoEntityTypeConfiguration : IEntityTypeConfiguration<CacheInstructionDto>
     {
         public void Configure(EntityTypeBuilder<CacheInstructionDto> builder)
         {
@@ -23,10 +23,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.InstructionCount).HasColumnName("instructionCount");
             builder.Property(x => x.InstructionCount).IsRequired(true);
             builder.Property(x => x.InstructionCount).HasDefaultValue(1);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

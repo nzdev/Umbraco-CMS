@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class PropertyDataDtoEntityTypeConfiguration : IEntityTypeConfiguration<PropertyDataDto>, IOnModelCreating
+    internal class PropertyDataDtoEntityTypeConfiguration : IEntityTypeConfiguration<PropertyDataDto>
     {
         public void Configure(EntityTypeBuilder<PropertyDataDto> builder)
         {
@@ -37,10 +37,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.TextValue).HasColumnType("NTEXT");
             builder.HasOne(typeof(PropertyTypeDto), nameof(PropertyDataDto.PropertyTypeDto));
             builder.Ignore(x => x.Value);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

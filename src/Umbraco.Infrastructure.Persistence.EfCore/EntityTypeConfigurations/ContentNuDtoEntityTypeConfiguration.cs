@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentNuDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentNuDto>, IOnModelCreating
+    internal class ContentNuDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentNuDto>
     {
         public void Configure(EntityTypeBuilder<ContentNuDto> builder)
         {
@@ -23,10 +23,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Rv).HasColumnName("rv");
             builder.Property(x => x.RawData).HasColumnName("dataRaw");
             builder.Property(x => x.RawData).IsRequired(false);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

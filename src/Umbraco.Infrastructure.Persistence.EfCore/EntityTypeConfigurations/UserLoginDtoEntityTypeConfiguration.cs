@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class UserLoginDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserLoginDto>, IOnModelCreating
+    internal class UserLoginDtoEntityTypeConfiguration : IEntityTypeConfiguration<UserLoginDto>
     {
         public void Configure(EntityTypeBuilder<UserLoginDto> builder)
         {
@@ -23,10 +23,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.LoggedOutUtc).IsRequired(false);
             builder.Property(x => x.IpAddress).HasColumnName("ipAddress");
             builder.Property(x => x.IpAddress).IsRequired(false);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

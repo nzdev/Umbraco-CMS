@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class DomainDtoEntityTypeConfiguration : IEntityTypeConfiguration<DomainDto>, IOnModelCreating
+    internal class DomainDtoEntityTypeConfiguration : IEntityTypeConfiguration<DomainDto>
     {
         public void Configure(EntityTypeBuilder<DomainDto> builder)
         {
@@ -17,10 +17,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(NodeDto)).WithOne();
             builder.Property(x => x.RootStructureId).IsRequired(false);
             builder.Property(x => x.DomainName).HasColumnName("domainName");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

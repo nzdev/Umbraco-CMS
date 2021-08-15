@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentTypeDto>, IOnModelCreating
+    internal class ContentTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentTypeDto>
     {
         public void Configure(EntityTypeBuilder<ContentTypeDto> builder)
         {
@@ -34,11 +34,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Variations).HasColumnName("variations");
             builder.Property(x => x.Variations).HasDefaultValue(1);
             builder.HasOne(typeof(NodeDto), nameof(ContentTypeDto.NodeDto));
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
-            builder.HasSequence<int>("ContentTypeDto_seq", schema: "dbo").StartsAt(700).IncrementsBy(1);
         }
     }
 }

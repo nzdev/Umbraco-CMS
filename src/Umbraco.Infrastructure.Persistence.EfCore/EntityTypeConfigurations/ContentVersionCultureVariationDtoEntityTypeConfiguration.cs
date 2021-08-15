@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ContentVersionCultureVariationDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentVersionCultureVariationDto>, IOnModelCreating
+    internal class ContentVersionCultureVariationDtoEntityTypeConfiguration : IEntityTypeConfiguration<ContentVersionCultureVariationDto>
     {
         public void Configure(EntityTypeBuilder<ContentVersionCultureVariationDto> builder)
         {
@@ -23,10 +23,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UpdateUserId).HasColumnName("availableUserId");
             builder.HasOne(typeof(UserDto)).WithOne();
             builder.Property(x => x.UpdateUserId).IsRequired(false);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

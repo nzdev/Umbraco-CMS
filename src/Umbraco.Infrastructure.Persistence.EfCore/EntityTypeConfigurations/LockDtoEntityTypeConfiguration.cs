@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class LockDtoEntityTypeConfiguration : IEntityTypeConfiguration<LockDto>, IOnModelCreating
+    internal class LockDtoEntityTypeConfiguration : IEntityTypeConfiguration<LockDto>
     {
         public void Configure(EntityTypeBuilder<LockDto> builder)
         {
@@ -17,10 +17,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Name).HasColumnName("name");
             builder.Property(x => x.Name).IsRequired(true);
             builder.Property(x => x.Name).HasMaxLength(64);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

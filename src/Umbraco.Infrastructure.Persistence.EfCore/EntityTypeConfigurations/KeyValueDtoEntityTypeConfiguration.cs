@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class KeyValueDtoEntityTypeConfiguration : IEntityTypeConfiguration<KeyValueDto>, IOnModelCreating
+    internal class KeyValueDtoEntityTypeConfiguration : IEntityTypeConfiguration<KeyValueDto>
     {
         public void Configure(EntityTypeBuilder<KeyValueDto> builder)
         {
@@ -17,10 +17,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Value).IsRequired(false);
             builder.Property(x => x.UpdateDate).HasColumnName("updated");
             builder.Property(x => x.UpdateDate).HasDefaultValueSql("getdate()");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

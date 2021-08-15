@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class DataTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<DataTypeDto>, IOnModelCreating
+    internal class DataTypeDtoEntityTypeConfiguration : IEntityTypeConfiguration<DataTypeDto>
     {
         public void Configure(EntityTypeBuilder<DataTypeDto> builder)
         {
@@ -20,10 +20,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.Configuration).IsRequired(false);
             builder.Property(x => x.Configuration).HasColumnType("NTEXT");
             builder.HasOne(typeof(NodeDto), nameof(DataTypeDto.NodeDto));
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

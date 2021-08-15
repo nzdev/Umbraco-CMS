@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class ExternalLoginDtoEntityTypeConfiguration : IEntityTypeConfiguration<ExternalLoginDto>, IOnModelCreating
+    internal class ExternalLoginDtoEntityTypeConfiguration : IEntityTypeConfiguration<ExternalLoginDto>
     {
         public void Configure(EntityTypeBuilder<ExternalLoginDto> builder)
         {
@@ -26,10 +26,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.UserData).HasColumnName("userData");
             builder.Property(x => x.UserData).IsRequired(false);
             builder.Property(x => x.UserData).HasColumnType("NTEXT");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

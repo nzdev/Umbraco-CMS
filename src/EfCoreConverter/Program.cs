@@ -11,6 +11,7 @@ namespace EfCoreConverter
     class Program
     {
         private const string EntityConfigFolder = @"C:\Users\chadc\source\repos\V9\Umbraco-CMS\src\Umbraco.Infrastructure.Persistence.EfCore\EntityTypeConfigurations";
+        private const string EfCoreFolder = @"C:\Users\chadc\source\repos\V9\Umbraco-CMS\src\Umbraco.Infrastructure.Persistence.EfCore";
 
         static void Main(string[] args)
         {
@@ -23,7 +24,13 @@ namespace EfCoreConverter
                 ProcessDtoFile(dtoFile);
             }
 
+
+            //Generate DB Context
+            var dbContextStr = GenerateDbContext();
+            File.WriteAllText(Path.Combine(EfCoreFolder, $"UmbracoDbContext.cs"), dbContextStr);
         }
+        static List<StatementSyntax> DbContextOnModelCreatingStatements = new List<StatementSyntax>();
+        static List<MemberDeclarationSyntax> DbContextDBSets = new List<MemberDeclarationSyntax>();
         static void ProcessDtoFile(FileInfo file)
         {
 
@@ -33,17 +40,70 @@ namespace EfCoreConverter
             var root = (CompilationUnitSyntax)tree.GetRoot();
             var modelCollector = new EfCoreModelConfigurationWalker();
             modelCollector.Visit(root);
-            //Generate Config
-            var configStr = GenerateEfDtoConfiguration(modelCollector.CurrentModel);
-            File.WriteAllText(Path.Combine(EntityConfigFolder, $"{modelCollector.CurrentModel.DtoClassName}EntityTypeConfiguration.cs"), configStr);
-            //Generate clean POCO
 
+            //Generate Config
+            (var configStr, var onmodelCreatingDto) = GenerateEfDtoConfiguration(modelCollector.CurrentModel);
+
+
+            DbContextDBSets.Add(SyntaxFactory.ParseMemberDeclaration($"public DbSet<{modelCollector.CurrentModel.DtoClassName}> {modelCollector.CurrentModel.DtoClassName.Substring(0, modelCollector.CurrentModel.DtoClassName.Length -3)} {{ get; set; }}"));
+            if (onmodelCreatingDto != null && onmodelCreatingDto.Any())
+            {
+                DbContextOnModelCreatingStatements.AddRange(onmodelCreatingDto);
+            }
+            File.WriteAllText(Path.Combine(EntityConfigFolder, $"{modelCollector.CurrentModel.DtoClassName}EntityTypeConfiguration.cs"), configStr);
+
+            UpdatePoco(file, tree);
+
+        }
+
+        private static void UpdatePoco(FileInfo file, SyntaxTree tree)
+        {
+            //Generate clean POCO
             var root2 = (CompilationUnitSyntax)tree.GetRoot();
             var modelCollector2 = new EfcoreDtoNoAnnotationsWalker();
             var updated = modelCollector2.Visit(root2);
             File.WriteAllText(file.FullName, updated.ToFullString());
         }
-        static string GenerateEfDtoConfiguration(ModelConfig model)
+
+        static string GenerateDbContext()
+        {
+            var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("Umbraco.Cms.Infrastructure.Persistence.EfCore")).NormalizeWhitespace();
+            @namespace = @namespace.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("Microsoft.EntityFrameworkCore")));
+            @namespace = @namespace.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("Umbraco.Cms.Infrastructure.Persistence.Dtos")));
+
+            var classDeclaration = SyntaxFactory.ClassDeclaration($"UmbracoDbContext");
+            classDeclaration = classDeclaration.AddModifiers(SyntaxFactory.Token(SyntaxKind.InternalKeyword));
+            classDeclaration = classDeclaration.AddBaseListTypes(
+               SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"DbContext")));
+
+            // Create a stament with the body of a method.
+
+            // Create a method
+            // Create a method
+            var onModelCreatingMethodDeclaration = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), "OnModelCreating")
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword), SyntaxFactory.Token(SyntaxKind.OverrideKeyword))
+                .WithBody(SyntaxFactory.Block(DbContextOnModelCreatingStatements))
+                .AddParameterListParameters(SyntaxFactory.ParseParameterList($"ModelBuilder builder").Parameters.First());
+
+            foreach (var item in DbContextDBSets)
+            {
+                classDeclaration = classDeclaration.AddMembers(item);
+            }
+
+            classDeclaration = classDeclaration.AddMembers(onModelCreatingMethodDeclaration);
+
+            @namespace = @namespace.AddMembers(classDeclaration);
+
+            // Normalize and get code as string.
+            var code = @namespace
+                .NormalizeWhitespace()
+                .ToFullString();
+
+            // Output new code to the console.
+            Console.WriteLine(code);
+            return code;
+        }
+        static (string, List<StatementSyntax>) GenerateEfDtoConfiguration(ModelConfig model)
         {
             var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName("Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations")).NormalizeWhitespace();
             @namespace = @namespace.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("Microsoft.EntityFrameworkCore")));
@@ -53,8 +113,9 @@ namespace EfCoreConverter
             var classDeclaration = SyntaxFactory.ClassDeclaration($"{model.DtoClassName}EntityTypeConfiguration");
             classDeclaration = classDeclaration.AddModifiers(SyntaxFactory.Token(SyntaxKind.InternalKeyword));
             classDeclaration = classDeclaration.AddBaseListTypes(
-               SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IEntityTypeConfiguration<{model.DtoClassName}>")),
-               SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IOnModelCreating")));
+               SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IEntityTypeConfiguration<{model.DtoClassName}>"))
+              // ,SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"IOnModelCreating"))
+               );
 
             // Create a stament with the body of a method.
             (List<StatementSyntax> statements, List<StatementSyntax> modelCreatingStatements) = GenerateEfConfigurationStatements(model);
@@ -74,7 +135,7 @@ namespace EfCoreConverter
 
 
             classDeclaration = classDeclaration.AddMembers(methodDeclaration);
-            classDeclaration = classDeclaration.AddMembers(onModelCreatingMethodDeclaration);
+            //classDeclaration = classDeclaration.AddMembers(onModelCreatingMethodDeclaration);
 
             @namespace = @namespace.AddMembers(classDeclaration);
 
@@ -85,7 +146,7 @@ namespace EfCoreConverter
 
             // Output new code to the console.
             Console.WriteLine(code);
-            return code;
+            return (code, modelCreatingStatements);
         }
 
         private static (List<StatementSyntax>, List<StatementSyntax>) GenerateEfConfigurationStatements(ModelConfig model)

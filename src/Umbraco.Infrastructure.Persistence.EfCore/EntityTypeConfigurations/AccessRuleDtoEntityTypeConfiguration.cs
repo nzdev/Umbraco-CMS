@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class AccessRuleDtoEntityTypeConfiguration : IEntityTypeConfiguration<AccessRuleDto>, IOnModelCreating
+    internal class AccessRuleDtoEntityTypeConfiguration : IEntityTypeConfiguration<AccessRuleDto>
     {
         public void Configure(EntityTypeBuilder<AccessRuleDto> builder)
         {
@@ -21,10 +21,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.CreateDate).HasDefaultValueSql("getdate()");
             builder.Property(x => x.UpdateDate).HasColumnName("updateDate");
             builder.Property(x => x.UpdateDate).HasDefaultValueSql("getdate()");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

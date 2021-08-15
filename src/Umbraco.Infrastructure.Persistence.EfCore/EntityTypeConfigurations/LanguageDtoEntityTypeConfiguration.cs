@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class LanguageDtoEntityTypeConfiguration : IEntityTypeConfiguration<LanguageDto>, IOnModelCreating
+    internal class LanguageDtoEntityTypeConfiguration : IEntityTypeConfiguration<LanguageDto>
     {
         public void Configure(EntityTypeBuilder<LanguageDto> builder)
         {
@@ -27,11 +27,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(LanguageDto)).WithOne();
             builder.Property(x => x.FallbackLanguageId).IsRequired(false);
             builder.HasIndex(x => x.FallbackLanguageId);
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
-            builder.HasSequence<int>("LanguageDto_seq", schema: "dbo").StartsAt(2).IncrementsBy(1);
         }
     }
 }

@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class DocumentDtoEntityTypeConfiguration : IEntityTypeConfiguration<DocumentDto>, IOnModelCreating
+    internal class DocumentDtoEntityTypeConfiguration : IEntityTypeConfiguration<DocumentDto>
     {
         public void Configure(EntityTypeBuilder<DocumentDto> builder)
         {
@@ -19,10 +19,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(ContentDto), nameof(DocumentDto.ContentDto));
             builder.HasOne(typeof(DocumentVersionDto), nameof(DocumentDto.DocumentVersionDto));
             builder.HasOne(typeof(DocumentVersionDto), nameof(DocumentDto.PublishedVersionDto));
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }

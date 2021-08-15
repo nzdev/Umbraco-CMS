@@ -4,7 +4,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Umbraco.Cms.Infrastructure.Persistence.Dtos;
 
-    internal class PropertyTypeReadOnlyDtoEntityTypeConfiguration : IEntityTypeConfiguration<PropertyTypeReadOnlyDto>, IOnModelCreating
+    internal class PropertyTypeReadOnlyDtoEntityTypeConfiguration : IEntityTypeConfiguration<PropertyTypeReadOnlyDto>
     {
         public void Configure(EntityTypeBuilder<PropertyTypeReadOnlyDto> builder)
         {
@@ -28,10 +28,6 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.PropertyEditorAlias).HasColumnName("propertyEditorAlias");
             builder.Property(x => x.DbType).HasColumnName("dbType");
             builder.Property(x => x.UniqueId).HasColumnName("UniqueID");
-        }
-
-        public void OnModelCreating(ModelBuilder builder)
-        {
         }
     }
 }
