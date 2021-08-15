@@ -10,6 +10,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
         {
             builder.ToTable(Cms.Core.Constants.DatabaseSchema.Tables.UserGroup);
             builder.HasKey(x => x.Id);
+            builder.HasSequence<int>("UserGroupDto_seq", schema: "dbo").StartsAt(6).IncrementsBy(1);
             builder.Property(x => x.Id).HasDefaultValueSql("NEXT VALUE FOR dbo.UserGroupDto_seq");
             builder.Property(x => x.Id).HasColumnName("id");
             builder.Property(x => x.Alias).HasColumnName("userGroupAlias");

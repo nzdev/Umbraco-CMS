@@ -10,6 +10,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
         {
             builder.ToTable(LanguageDto.TableName);
             builder.HasKey(x => x.Id);
+            builder.HasSequence<int>("LanguageDto_seq", schema: "dbo").StartsAt(2).IncrementsBy(1);
             builder.Property(x => x.Id).HasDefaultValueSql("NEXT VALUE FOR dbo.LanguageDto_seq");
             builder.Property(x => x.Id).HasColumnName("id");
             builder.Property(x => x.IsoCode).HasColumnName("languageISOCode");

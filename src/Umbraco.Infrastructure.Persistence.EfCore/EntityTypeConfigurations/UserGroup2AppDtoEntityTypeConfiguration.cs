@@ -11,7 +11,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.ToTable(Cms.Core.Constants.DatabaseSchema.Tables.UserGroup2App);
             builder.HasKey(x => new
             {
-            x.UserGroupId, x.AppAlias
+            x.UserGroupId, x.App
             }).HasName("PK_userGroup2App");
             builder.Property(x => x.UserGroupId).ValueGeneratedNever();
             builder.Property(x => x.UserGroupId).HasColumnName("userGroupId");

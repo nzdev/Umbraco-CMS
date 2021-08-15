@@ -15,7 +15,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasIndex(x => x.UserId);
             builder.Property(x => x.LoginProvider).HasColumnName("loginProvider");
             builder.Property(x => x.LoginProvider).IsRequired(true);
-            builder.Property(x => x.LoginProvider).HasMaxLength(4000);
+            builder.Property(x => x.LoginProvider).HasMaxLength(400);
             builder.HasIndex(x => x.LoginProvider).IsUnique(true);
             builder.Property(x => x.ProviderKey).HasColumnName("providerKey");
             builder.Property(x => x.ProviderKey).IsRequired(true);

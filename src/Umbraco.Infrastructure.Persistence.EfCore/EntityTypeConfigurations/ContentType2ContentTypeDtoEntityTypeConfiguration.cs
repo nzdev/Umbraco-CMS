@@ -11,7 +11,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.ToTable(Cms.Core.Constants.DatabaseSchema.Tables.ElementTypeTree);
             builder.HasKey(x => new
             {
-            x.ParentId, x.ChildId
+            x.ParentContentTypeId, x.ChildContentTypeId
             }).HasName("PK_cmsContentType2ContentType");
             builder.Property(x => x.ParentId).ValueGeneratedNever();
             builder.Property(x => x.ParentId).HasColumnName("parentContentTypeId");

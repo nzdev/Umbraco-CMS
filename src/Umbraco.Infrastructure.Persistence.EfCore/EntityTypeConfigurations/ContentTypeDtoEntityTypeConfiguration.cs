@@ -10,6 +10,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
         {
             builder.ToTable(ContentTypeDto.TableName);
             builder.HasKey(x => x.PrimaryKey);
+            builder.HasSequence<int>("ContentTypeDto_seq", schema: "dbo").StartsAt(700).IncrementsBy(1);
             builder.Property(x => x.PrimaryKey).HasDefaultValueSql("NEXT VALUE FOR dbo.ContentTypeDto_seq");
             builder.Property(x => x.PrimaryKey).HasColumnName("pk");
             builder.Property(x => x.NodeId).HasColumnName("nodeId");

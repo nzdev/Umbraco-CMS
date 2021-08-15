@@ -13,7 +13,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.Property(x => x.SessionId).ValueGeneratedNever();
             builder.Property(x => x.SessionId).HasColumnName("sessionId");
             builder.Property(x => x.UserId).HasColumnName("userId");
-            builder.HasOne(typeof(UserDto), "FK_" + UserLoginDto.TableName + "_umbracoUser_id").WithOne();
+            builder.HasOne(typeof(UserDto), "FK_" + TableName + "_umbracoUser_id").WithOne();
             builder.Property(x => x.LoggedInUtc).HasColumnName("loggedInUtc");
             builder.Property(x => x.LoggedInUtc).IsRequired(true);
             builder.Property(x => x.LastValidatedUtc).HasColumnName("lastValidatedUtc");

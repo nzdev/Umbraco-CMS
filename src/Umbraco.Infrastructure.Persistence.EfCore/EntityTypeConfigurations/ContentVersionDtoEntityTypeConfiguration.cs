@@ -20,6 +20,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(UserDto)).WithOne();
             builder.Property(x => x.UserId).IsRequired(false);
             builder.Property(x => x.Current).HasColumnName("current");
+            builder.HasIndex(x => x.Current);
             builder.Property(x => x.Text).HasColumnName("text");
             builder.Property(x => x.Text).IsRequired(false);
             builder.HasOne(typeof(ContentDto), nameof(ContentVersionDto.ContentDto));

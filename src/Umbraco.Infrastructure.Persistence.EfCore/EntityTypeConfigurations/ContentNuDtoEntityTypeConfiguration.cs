@@ -18,8 +18,11 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(ContentDto)).WithOne();
             builder.Property(x => x.Published).HasColumnName("published");
             builder.Property(x => x.Data).HasColumnName("data");
+            builder.Property(x => x.Data).IsRequired(false);
             builder.Property(x => x.Data).HasColumnType("NTEXT");
             builder.Property(x => x.Rv).HasColumnName("rv");
+            builder.Property(x => x.RawData).HasColumnName("dataRaw");
+            builder.Property(x => x.RawData).IsRequired(false);
         }
     }
 }

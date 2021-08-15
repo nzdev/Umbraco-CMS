@@ -10,6 +10,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
         {
             builder.ToTable(NodeDto.TableName);
             builder.HasKey(x => x.NodeId);
+            builder.HasSequence<int>("NodeDto_seq", schema: "dbo").StartsAt(NodeDto.NodeIdSeed).IncrementsBy(1);
             builder.Property(x => x.NodeId).HasDefaultValueSql("NEXT VALUE FOR dbo.NodeDto_seq");
             builder.Property(x => x.NodeId).HasColumnName("id");
             builder.Property(x => x.UniqueId).HasColumnName("uniqueId");
@@ -20,6 +21,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.EfCore.EntityConfigurations
             builder.HasOne(typeof(NodeDto)).WithOne();
             builder.HasIndex(x => x.ParentId);
             builder.Property(x => x.Level).HasColumnName("level");
+            builder.HasIndex(x => x.Level);
             builder.Property(x => x.Path).HasColumnName("path");
             builder.Property(x => x.Path).HasMaxLength(150);
             builder.HasIndex(x => x.Path);
