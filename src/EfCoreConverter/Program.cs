@@ -304,7 +304,15 @@ namespace EfCoreConverter
 
             //Append the leading trivia to the method
             node = node.WithLeadingTrivia(leadTriv);
-            return node;
+            return base.VisitClassDeclaration(node);
+        }
+        public override SyntaxNode VisitUsingStatement(UsingStatementSyntax node)
+        {
+            return base.VisitUsingStatement(node);
+        }
+        public override SyntaxNode? Visit(SyntaxNode? node)
+        {
+            return base.Visit(node);
         }
         public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
@@ -334,7 +342,7 @@ namespace EfCoreConverter
 
             //Append the leading trivia to the method
             node = node.WithLeadingTrivia(leadTriv);
-            return node;
+            return base.VisitPropertyDeclaration(node);
         }
     }
     class EfCoreModelConfigurationWalker : CSharpSyntaxWalker
