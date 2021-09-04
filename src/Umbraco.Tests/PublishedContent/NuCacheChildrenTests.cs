@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using CSharpTest.Net.Serialization;
 using Moq;
 using NUnit.Framework;
 using Umbraco.Core;
@@ -137,6 +138,15 @@ namespace Umbraco.Tests.PublishedContent
             // create a data source for NuCache
             _source = new TestDataSource(kits());
             _contentNestedDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
+            var dictionaryPropertySerializer = new DictionaryOfPropertyDataSerializer();
+            var dictionaryCultureSerializer = new DictionaryOfCultureVariationSerializer();
+            var contentDataSerializer = new ContentDataSerializer(dictionaryPropertySerializer);
+            var contentNodeKitSerializer = new ContentNodeKitSerializer(contentDataSerializer);
+            var intSerializer = new PrimitiveSerializer();
+            var keySerializer = new BPlusTreeTransactableDictionarySerializerAdapter<int>(intSerializer);
+            var valueSerializer = new BPlusTreeTransactableDictionarySerializerAdapter<ContentNodeKit>(contentNodeKitSerializer);
+            var transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory<int, ContentNodeKit>(globalSettings, valueSerializer, keySerializer);
+            INucacheRepositoryFactory nucacheRepositoryFactory = new TransactableDictionaryNucacheRepositoryFactory(transactableDictionaryFactory);
 
             // at last, create the complete NuCache snapshot service!
             var options = new PublishedSnapshotServiceOptions { IgnoreLocalDb = true };
@@ -150,17 +160,14 @@ namespace Umbraco.Tests.PublishedContent
                 _variationAccesor,
                 Mock.Of<IProfilingLogger>(),
                 scopeProvider.Object,
-                Mock.Of<IDocumentRepository>(),
-                Mock.Of<IMediaRepository>(),
-                Mock.Of<IMemberRepository>(),
                 new TestDefaultCultureAccessor(),
                 _source,
                 globalSettings,
                 Mock.Of<IEntityXmlSerializer>(),
                 Mock.Of<IPublishedModelFactory>(),
-                new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }),
                 new TestSyncBootStateAccessor(SyncBootState.WarmBoot),
-                _contentNestedDataSerializerFactory);
+                nucacheRepositoryFactory.GetMediaRepository(),
+                nucacheRepositoryFactory.GetContentRepository());
 
             // invariant is the current default
             _variationAccesor.VariationContext = new VariationContext();

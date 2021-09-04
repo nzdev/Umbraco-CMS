@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Routing;
+using CSharpTest.Net.Serialization;
 using Moq;
 using NUnit.Framework;
 using Umbraco.Core;
@@ -82,6 +83,19 @@ namespace Umbraco.Tests.Scoping
             var mediaRepository = Mock.Of<IMediaRepository>();
             var memberRepository = Mock.Of<IMemberRepository>();
 
+            var globalSettings = Factory.GetInstance<IGlobalSettings>();
+            var dictionaryPropertySerializer = new DictionaryOfPropertyDataSerializer();
+            var dictionaryCultureSerializer = new DictionaryOfCultureVariationSerializer();
+            var contentDataSerializer = new ContentDataSerializer(dictionaryPropertySerializer);
+            var contentNodeKitSerializer = new ContentNodeKitSerializer(contentDataSerializer);
+            var intSerializer = new PrimitiveSerializer();
+            var keySerializer = new BPlusTreeTransactableDictionarySerializerAdapter<int>(intSerializer);
+            var valueSerializer = new BPlusTreeTransactableDictionarySerializerAdapter<ContentNodeKit>(contentNodeKitSerializer);
+            var transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory<int, ContentNodeKit>(globalSettings, valueSerializer, keySerializer);
+            INucacheRepositoryFactory nucacheRepositoryFactory = new TransactableDictionaryNucacheRepositoryFactory(transactableDictionaryFactory);
+
+            var segmentProvider = new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() });
+
             var nestedContentDataSerializerFactory = new JsonContentNestedDataSerializerFactory();
             return new PublishedSnapshotService(
                 options,
@@ -94,15 +108,14 @@ namespace Umbraco.Tests.Scoping
                 Mock.Of<IVariationContextAccessor>(),
                 ProfilingLogger,
                 ScopeProvider,
-                documentRepository, mediaRepository, memberRepository,
                 DefaultCultureAccessor,
-                new DatabaseDataSource(nestedContentDataSerializerFactory),
+                new DatabaseDataSource(nestedContentDataSerializerFactory, documentRepository, mediaRepository, memberRepository,
+                ScopeProvider, segmentProvider),
                 Factory.GetInstance<IGlobalSettings>(),
                 Factory.GetInstance<IEntityXmlSerializer>(),
                 Mock.Of<IPublishedModelFactory>(),
-                new UrlSegmentProviderCollection(new[] { new DefaultUrlSegmentProvider() }),
-                new TestSyncBootStateAccessor(SyncBootState.WarmBoot),
-                nestedContentDataSerializerFactory);
+                new TestSyncBootStateAccessor(SyncBootState.WarmBoot), nucacheRepositoryFactory.GetMediaRepository(),
+                nucacheRepositoryFactory.GetContentRepository());
         }
 
         protected UmbracoContext GetUmbracoContextNu(string url, int templateId = 1234, RouteData routeData = null, bool setSingleton = false, IUmbracoSettingsSection umbracoSettings = null, IEnumerable<IUrlProvider> urlProviders = null)
