@@ -19,7 +19,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         {
 
         }
-        public ICollection<ContentNodeKit> GetAllSorted()
+        public ICollection<ContentNodeKit> GetAllByLevelParentIdSortOrder()
         {
             var kits = _transactableDictionary.Select(x => x.Value)
                    .OrderBy(x => x.Node.Level)

@@ -15,9 +15,9 @@ namespace Umbraco.Web.PublishedCache.NuCache
     public interface INucacheRepositoryBase<TKey, TValue> : ITransactableDictionary<TKey, TValue>
     {
         /// <summary>
-        /// Get All by default sort order
+        /// Get All by default sort order (IMPORTANT sort by level + parentId + sortOrder)
         /// </summary>
         /// <returns></returns>
-        ICollection<TValue> GetAllSorted();
+        ICollection<TValue> GetAllByLevelParentIdSortOrder();
     }
 }

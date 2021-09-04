@@ -489,7 +489,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
         private bool LoadEntitiesFromLocalDbLocked(bool onStartup, INucacheRepositoryBase<int, ContentNodeKit> repository, ContentStore store, string entityType)
         {
-            var kits = repository.GetAllSorted();
+            var kits = repository.GetAllByLevelParentIdSortOrder();
 
             if (kits.Count == 0)
             {

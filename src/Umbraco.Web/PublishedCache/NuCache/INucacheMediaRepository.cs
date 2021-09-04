@@ -15,6 +15,6 @@ namespace Umbraco.Web.PublishedCache.NuCache
         /// Get All by level, parentid, sortorder
         /// </summary>
         /// <returns></returns>
-        ICollection<ContentNodeKit> GetAllSorted();
+        ICollection<ContentNodeKit> GetAllByLevelParentIdSortOrder();
     }
 }
