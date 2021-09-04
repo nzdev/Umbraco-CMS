@@ -13,6 +13,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         private readonly BPlusTree<TKey, TValue> _bplusTree;
         private bool _disposedValue;
         private readonly string _filePath;
+        private readonly string _fileDirectory;
         private bool _isPopulated;
         private readonly bool _isCountEnabled;
 
@@ -20,6 +21,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         {
             _bplusTree = bplusTree;
             _filePath = filePath;
+            _fileDirectory = Path.GetDirectoryName(filePath);
             _isPopulated = localDbCacheFileExists;
             _isCountEnabled = isCountEnabled;
         }
@@ -182,7 +184,7 @@ namespace Umbraco.Web.PublishedCache.NuCache
         public bool EnsureEnvironment(out IEnumerable<string> errors)
         {
             // must have app_data and be able to write files into it
-            var ok = FilePermissionHelper.TryCreateDirectory(_filePath);
+            var ok = FilePermissionHelper.TryCreateDirectory(_fileDirectory);
             errors = ok ? Enumerable.Empty<string>() : new[] { "NuCache local files." };
             return ok;
         }
