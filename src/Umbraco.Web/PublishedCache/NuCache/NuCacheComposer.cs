@@ -4,6 +4,8 @@ using Umbraco.Core.Composing;
 using Umbraco.Core.Sync;
 using Umbraco.Core.PropertyEditors;
 using Umbraco.Web.PublishedCache.NuCache.DataSource;
+using CSharpTest.Net.Serialization;
+using System.Collections.Generic;
 
 namespace Umbraco.Web.PublishedCache.NuCache
 {
@@ -39,6 +41,16 @@ namespace Umbraco.Web.PublishedCache.NuCache
 
             composition.RegisterUnique(factory => new ContentDataSerializer(new DictionaryOfPropertyDataSerializer()));
 
+            RegisterBPlusTreeSerializers(composition);
+            composition.RegisterUnique<ITransactableDictionaryFactory<int, ContentNodeKit>, BPlusTreeTransactableDictionaryFactory<int, ContentNodeKit>>();
+
+            composition.RegisterUnique<INucacheRepositoryFactory, TransactableDictionaryNucacheRepositoryFactory>();
+
+            composition.Register<INucacheContentRepository>(factory => factory.GetInstance<INucacheRepositoryFactory>().GetContentRepository()
+            , Lifetime.Singleton);
+            composition.Register<INucacheMediaRepository>(factory => factory.GetInstance<INucacheRepositoryFactory>().GetMediaRepository()
+            , Lifetime.Singleton);
+
             //Overriden on Run state in DatabaseServerRegistrarAndMessengerComposer
             composition.Register<ISyncBootStateAccessor, NonRuntimeLevelBootStateAccessor>(Lifetime.Singleton);
 
@@ -54,6 +66,17 @@ namespace Umbraco.Web.PublishedCache.NuCache
             // TODO: no NuCache health check yet
             //composition.HealthChecks().Add<NuCacheIntegrityHealthCheck>();
         }
+        private static void RegisterBPlusTreeSerializers(Composition composition)
+        {
+            composition.RegisterUnique<ISerializer<IDictionary<string, PropertyData[]>>, DictionaryOfPropertyDataSerializer>();
+            composition.RegisterUnique<ISerializer<IReadOnlyDictionary<string, CultureVariation>>, DictionaryOfCultureVariationSerializer>();
+            composition.RegisterUnique<ISerializer<ContentData>, ContentDataSerializer>();
+            composition.RegisterUnique<ISerializer<ContentNodeKit>, ContentNodeKitSerializer>();
+            composition.RegisterUnique<ISerializer<int>, PrimitiveSerializer>();
 
+            composition.RegisterUnique<ITransactableDictionarySerializer<int>, BPlusTreeTransactableDictionarySerializerAdapter<int>>(); //Key Serializer
+            composition.RegisterUnique<ITransactableDictionarySerializer<ContentNodeKit>, BPlusTreeTransactableDictionarySerializerAdapter<ContentNodeKit>>(); // Value Serializer
+        }
     }
+    
 }
