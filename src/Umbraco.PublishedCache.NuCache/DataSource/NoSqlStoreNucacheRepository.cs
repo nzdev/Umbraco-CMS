@@ -7,11 +7,11 @@ using Umbraco.Cms.Infrastructure.PublishedCache.Persistence;
 
 namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 {
-    public class TransactableDictionaryNucacheRepository : INucacheNoSqlRepositoryBase<int, ContentNodeKit>, INucacheNoSqlMediaRepository, INucacheNoSqlContentRepository
+    public class NoSqlStoreNucacheRepository : INucacheNoSqlRepositoryBase<int, ContentNodeKit>, INucacheNoSqlMediaRepository, INucacheNoSqlContentRepository
     {
-        private readonly ITransactableDictionary<int, ContentNodeKit> _transactableDictionary;
+        private readonly INoSqlStore<int, ContentNodeKit> _transactableDictionary;
 
-        public TransactableDictionaryNucacheRepository(ITransactableDictionary<int, ContentNodeKit> transactableDictionary)
+        public NoSqlStoreNucacheRepository(INoSqlStore<int, ContentNodeKit> transactableDictionary)
         {
             _transactableDictionary = transactableDictionary;
         }
@@ -34,7 +34,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
         }
 
 
-        #region  ITransactableDictionary<int, ContentNodeKit>
+        #region  INoSqlStore<int, ContentNodeKit>
         public ContentNodeKit this[int key] { get => _transactableDictionary[key]; set => _transactableDictionary[key] = value; }
 
         public ICollection<int> Keys => _transactableDictionary.Keys;

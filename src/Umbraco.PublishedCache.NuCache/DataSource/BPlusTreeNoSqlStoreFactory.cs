@@ -14,19 +14,19 @@ using Umbraco.Extensions;
 
 namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 {
-    public class BPlusTreeTransactableDictionaryFactory<TKey, TValue> : ITransactableDictionaryFactory<TKey, TValue>
+    public class BPlusTreeNoSqlStoreFactory<TKey, TValue> : INoSqlStoreFactory<TKey, TValue>
     {
         private readonly IOptionsMonitor<NuCacheSettings> _settings;
-        private readonly ITransactableDictionarySerializer<TValue> _serializer;
-        private readonly ITransactableDictionarySerializer<TKey> _keySerializer;
+        private readonly INoSqlStoreSerializer<TValue> _serializer;
+        private readonly INoSqlStoreSerializer<TKey> _keySerializer;
         private readonly IIOHelper _ioHelper;
         private string _folderName;
         private readonly IHostingEnvironment _hostingEnvironment;
 
-        public BPlusTreeTransactableDictionaryFactory(
+        public BPlusTreeNoSqlStoreFactory(
             IOptionsMonitor<NuCacheSettings> settings,
-            ITransactableDictionarySerializer<TValue> valueSerializer,
-            ITransactableDictionarySerializer<TKey> keySerializer,
+            INoSqlStoreSerializer<TValue> valueSerializer,
+            INoSqlStoreSerializer<TKey> keySerializer,
             IIOHelper ioHelper,
             IHostingEnvironment hostingEnvironment)
         {
@@ -38,21 +38,21 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             _folderName = "NuCache";
         }
 
-        public ITransactableDictionary<TKey, TValue> Get(string name, IComparer<TKey> keyComparer = null, bool isReadOnly = false, bool enableCount = false)
+        public INoSqlStore<TKey, TValue> Get(string name, IComparer<TKey> keyComparer = null, bool isReadOnly = false, bool enableCount = false)
         {
             var localContentDbPath = GetDbPath(name);
             var localContentCacheFilesExist = File.Exists(localContentDbPath);
-            var keySerializer = new TransactableDictionaryBPlusTreeSerializerAdapter<TKey>(_keySerializer);
-            var valueSerializer = new TransactableDictionaryBPlusTreeSerializerAdapter<TValue>(_serializer);
+            var keySerializer = new NoSqlStoreBPlusTreeSerializerAdapter<TKey>(_keySerializer);
+            var valueSerializer = new NoSqlStoreBPlusTreeSerializerAdapter<TValue>(_serializer);
             var bplusTree = GetTree(localContentDbPath, localContentCacheFilesExist, keySerializer, valueSerializer, keyComparer, isReadOnly, enableCount);
-            return new BPlusTreeTransactableDictionary<TKey, TValue>(bplusTree, localContentDbPath, localContentCacheFilesExist, enableCount, _ioHelper);
+            return new BPlusTreeNoSqlStore<TKey, TValue>(bplusTree, localContentDbPath, localContentCacheFilesExist, enableCount, _ioHelper);
         }
 
         public void Drop(string name)
         {
             var localContentDbPath = GetDbPath(name);
             var localContentCacheFilesExist = File.Exists(localContentDbPath);
-            var dictDoc = new BPlusTreeTransactableDictionary<TKey, TValue>(null, localContentDbPath, localContentCacheFilesExist, false, _ioHelper);
+            var dictDoc = new BPlusTreeNoSqlStore<TKey, TValue>(null, localContentDbPath, localContentCacheFilesExist, false, _ioHelper);
             dictDoc.Drop();
         }
 
@@ -76,10 +76,10 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
         }
 
         /// <summary>
-        /// Ensures that the ITransactableDictionaryFactory has the proper environment to run.
+        /// Ensures that the INoSqlStoreFactory has the proper environment to run.
         /// </summary>
         /// <param name="errors">The errors, if any.</param>
-        /// <returns>A value indicating whether the ITransactableDictionaryFactory has the proper environment to run.</returns>
+        /// <returns>A value indicating whether the INoSqlStoreFactory has the proper environment to run.</returns>
         public virtual bool EnsureEnvironment(out IEnumerable<string> errors)
         {
             // must have app_data and be able to write files into it

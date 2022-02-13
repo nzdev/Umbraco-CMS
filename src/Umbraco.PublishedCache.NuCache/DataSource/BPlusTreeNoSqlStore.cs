@@ -11,7 +11,7 @@ using Umbraco.Cms.Core.IO;
 
 namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 {
-    public class BPlusTreeTransactableDictionary<TKey, TValue> : ITransactableDictionary<TKey, TValue>
+    public class BPlusTreeNoSqlStore<TKey, TValue> : INoSqlStore<TKey, TValue>
     {
         private readonly BPlusTree<TKey, TValue> _bplusTree;
         private bool _disposedValue;
@@ -20,7 +20,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
         private readonly bool _isCountEnabled;
         private readonly IIOHelper _iIOHelper;
 
-        public BPlusTreeTransactableDictionary(BPlusTree<TKey, TValue> bplusTree, string filePath, bool localDbCacheFileExists, bool isCountEnabled, IIOHelper iIOHelper)
+        public BPlusTreeNoSqlStore(BPlusTree<TKey, TValue> bplusTree, string filePath, bool localDbCacheFileExists, bool isCountEnabled, IIOHelper iIOHelper)
         {
             _bplusTree = bplusTree;
             _filePath = filePath;
@@ -29,7 +29,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             _iIOHelper = iIOHelper;
         }
 
-        #region ITransactableDictionary
+        #region INoSqlStore
         public int AddRange(IEnumerable<KeyValuePair<TKey, TValue>> unorderedItems, bool allowUpdates = false)
         {
             return _bplusTree.AddRange(unorderedItems, allowUpdates);
@@ -163,7 +163,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 
         #endregion
 
-        #region ITransactableDictionary<TKey,TValue>
+        #region INoSqlStore<TKey,TValue>
 
         public bool TryRemove(TKey key, out TValue value)
         {
@@ -180,10 +180,10 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
         public bool IsPopulated() => _isPopulated;
 
         /// <summary>
-        /// Ensures that the ITransactableDictionaryFactory has the proper environment to run.
+        /// Ensures that the INoSqlStoreFactory has the proper environment to run.
         /// </summary>
         /// <param name="errors">The errors, if any.</param>
-        /// <returns>A value indicating whether the ITransactableDictionaryFactory has the proper environment to run.</returns>
+        /// <returns>A value indicating whether the INoSqlStoreFactory has the proper environment to run.</returns>
         public bool EnsureEnvironment(out IEnumerable<string> errors)
         {
             // must have app_data and be able to write files into it

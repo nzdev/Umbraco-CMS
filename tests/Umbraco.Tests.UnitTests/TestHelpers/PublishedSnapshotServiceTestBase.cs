@@ -258,10 +258,10 @@ namespace Umbraco.Cms.Tests.UnitTests.TestHelpers
             var contentDataSerializer = new ContentDataSerializer(dictionaryPropertySerializer);
             var contentNodeKitSerializer = new ContentNodeKitSerializer(contentDataSerializer);
             var intSerializer = new PrimitiveSerializer();
-            var keySerializer = new BPlusTreeTransactableDictionarySerializerAdapter<int>(intSerializer);
-            var valueSerializer = new BPlusTreeTransactableDictionarySerializerAdapter<ContentNodeKit>(contentNodeKitSerializer);
-            var transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory<int, ContentNodeKit>(nuCacheOptions.Object, valueSerializer, keySerializer, ioHelper.Object, Mock.Of<IHostingEnvironment>());
-            var nucacheRepositoryFactory = new TransactableDictionaryNucacheRepositoryFactory(transactableDictionaryFactory);
+            var keySerializer = new BPlusTreeNoSqlStoreSerializerAdapter<int>(intSerializer);
+            var valueSerializer = new BPlusTreeNoSqlStoreSerializerAdapter<ContentNodeKit>(contentNodeKitSerializer);
+            var transactableDictionaryFactory = new BPlusTreeNoSqlStoreFactory<int, ContentNodeKit>(nuCacheOptions.Object, valueSerializer, keySerializer, ioHelper.Object, Mock.Of<IHostingEnvironment>());
+            var nucacheRepositoryFactory = new NoSqlStoreNucacheRepositoryFactory(transactableDictionaryFactory);
 
             // at last, create the complete NuCache snapshot service!
             var options = new PublishedSnapshotServiceOptions { IgnoreLocalDb = true };

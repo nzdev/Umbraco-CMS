@@ -9,7 +9,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
     /// Provides serialization for a type
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface ITransactableDictionarySerializer<T>
+    public interface INoSqlStoreSerializer<T>
     {
         /// <summary>
         /// Reads the object from a stream

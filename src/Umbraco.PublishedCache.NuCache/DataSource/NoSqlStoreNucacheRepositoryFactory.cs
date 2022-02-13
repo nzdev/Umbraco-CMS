@@ -6,11 +6,11 @@ using Umbraco.Cms.Infrastructure.PublishedCache.Persistence;
 
 namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 {
-    public class TransactableDictionaryNucacheRepositoryFactory : INucacheRepositoryFactory
+    public class NoSqlStoreNucacheRepositoryFactory : INucacheRepositoryFactory
     {
-        private readonly ITransactableDictionaryFactory<int, ContentNodeKit> _transactableDictionaryFactory;
+        private readonly INoSqlStoreFactory<int, ContentNodeKit> _transactableDictionaryFactory;
 
-        public TransactableDictionaryNucacheRepositoryFactory(ITransactableDictionaryFactory<int, ContentNodeKit> transactableDictionaryFactory)
+        public NoSqlStoreNucacheRepositoryFactory(INoSqlStoreFactory<int, ContentNodeKit> transactableDictionaryFactory)
         {
             _transactableDictionaryFactory = transactableDictionaryFactory;
         }
@@ -18,13 +18,13 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
         public INucacheNoSqlContentRepository GetContentRepository()
         {
             var transactableDictionary = _transactableDictionaryFactory.Get(Constants.NuCache.ContentDatabaseName);
-            return new TransactableDictionaryNucacheRepository(transactableDictionary);
+            return new NoSqlStoreNucacheRepository(transactableDictionary);
         }
 
         public INucacheNoSqlMediaRepository GetMediaRepository()
         {
             var transactableDictionary = _transactableDictionaryFactory.Get(Constants.NuCache.MediaDatabaseName);
-            return new TransactableDictionaryNucacheRepository(transactableDictionary);
+            return new NoSqlStoreNucacheRepository(transactableDictionary);
         }
     }
 }

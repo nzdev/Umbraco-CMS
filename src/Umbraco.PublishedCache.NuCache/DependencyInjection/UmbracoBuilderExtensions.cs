@@ -86,9 +86,9 @@ namespace Umbraco.Extensions
 
             builder.Services.AddSingleton(s => new ContentDataSerializer(new DictionaryOfPropertyDataSerializer()));
 
-            builder.Services.AddUnique<ITransactableDictionaryFactory<int, ContentNodeKit>, BPlusTreeTransactableDictionaryFactory<int, ContentNodeKit>>();
+            builder.Services.AddUnique<INoSqlStoreFactory<int, ContentNodeKit>, BPlusTreeNoSqlStoreFactory<int, ContentNodeKit>>();
 
-            builder.Services.AddUnique<INucacheRepositoryFactory, TransactableDictionaryNucacheRepositoryFactory>();
+            builder.Services.AddUnique<INucacheRepositoryFactory, NoSqlStoreNucacheRepositoryFactory>();
 
             builder.Services.AddUnique<INucacheNoSqlContentRepository>(factory => factory.GetRequiredService<INucacheRepositoryFactory>().GetContentRepository());
             builder.Services.AddUnique<INucacheNoSqlMediaRepository>(factory => factory.GetRequiredService<INucacheRepositoryFactory>().GetMediaRepository());
@@ -108,8 +108,8 @@ namespace Umbraco.Extensions
             builder.Services.AddUnique<ISerializer<ContentData>, ContentDataSerializer>();
             builder.Services.AddUnique<ISerializer<ContentNodeKit>, ContentNodeKitSerializer>();
             builder.Services.AddUnique<ISerializer<int>, PrimitiveSerializer>();
-            builder.Services.AddUnique<ITransactableDictionarySerializer<int>, BPlusTreeTransactableDictionarySerializerAdapter<int>>(); // Key Serializer
-            builder.Services.AddUnique<ITransactableDictionarySerializer<ContentNodeKit>, BPlusTreeTransactableDictionarySerializerAdapter<ContentNodeKit>>(); // Value Serializer
+            builder.Services.AddUnique<INoSqlStoreSerializer<int>, BPlusTreeNoSqlStoreSerializerAdapter<int>>(); // Key Serializer
+            builder.Services.AddUnique<INoSqlStoreSerializer<ContentNodeKit>, BPlusTreeNoSqlStoreSerializerAdapter<ContentNodeKit>>(); // Value Serializer
 
         }
 

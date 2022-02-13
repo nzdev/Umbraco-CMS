@@ -49,7 +49,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
         private readonly ConcurrentDictionary<Guid, int> _contentKeyToIdMap;
 
         private readonly IPublishedModelFactory _publishedModelFactory;
-        private ITransactableDictionary<int, ContentNodeKit> _localDb;
+        private INoSqlStore<int, ContentNodeKit> _localDb;
         private readonly ConcurrentQueue<GenObj> _genObjs;
         private GenObj _genObj;
         private readonly object _wlocko = new object();
@@ -71,7 +71,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
             ILogger logger,
             ILoggerFactory loggerFactory,
             IPublishedModelFactory publishedModelFactory,
-            ITransactableDictionary<int, ContentNodeKit> localDb = null)
+            INoSqlStore<int, ContentNodeKit> localDb = null)
         {
             _publishedSnapshotAccessor = publishedSnapshotAccessor;
             _variationContextAccessor = variationContextAccessor;

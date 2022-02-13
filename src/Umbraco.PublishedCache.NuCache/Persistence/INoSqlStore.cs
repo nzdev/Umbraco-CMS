@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Umbraco.Cms.Infrastructure.PublishedCache.Persistence
 {
-    public interface ITransactableDictionary<TKey, TValue> :
+    public interface INoSqlStore<TKey, TValue> :
          IDictionary<TKey, TValue>,
          ICollection<KeyValuePair<TKey, TValue>>,
          IEnumerable<KeyValuePair<TKey, TValue>>,
@@ -98,10 +98,10 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.Persistence
         void Init();
 
         /// <summary>
-        /// Ensures that the ITransactableDictionaryFactory has the proper environment to run.
+        /// Ensures that the INoSqlStoreFactory has the proper environment to run.
         /// </summary>
         /// <param name="errors">The errors, if any.</param>
-        /// <returns>A value indicating whether the ITransactableDictionaryFactory has the proper environment to run.</returns>
+        /// <returns>A value indicating whether the INoSqlStoreFactory has the proper environment to run.</returns>
         bool EnsureEnvironment(out IEnumerable<string> errors);
     }
 }

@@ -7,14 +7,14 @@ using System.IO;
 namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 {
     /// <summary>
-    /// Adapts ITransactableDictionarySerializer<T> to ISerializer<T>
+    /// Adapts INoSqlStoreSerializer<T> to ISerializer<T>
     /// </summary>
     /// <typeparam name="T">Type to serialize/deserialize</typeparam>
-    public class TransactableDictionaryBPlusTreeSerializerAdapter<T> : ISerializer<T>
+    public class NoSqlStoreBPlusTreeSerializerAdapter<T> : ISerializer<T>
     {
-        private readonly ITransactableDictionarySerializer<T> _serializer;
+        private readonly INoSqlStoreSerializer<T> _serializer;
 
-        public TransactableDictionaryBPlusTreeSerializerAdapter(ITransactableDictionarySerializer<T> serializer)
+        public NoSqlStoreBPlusTreeSerializerAdapter(INoSqlStoreSerializer<T> serializer)
         {
             _serializer = serializer;
         }
