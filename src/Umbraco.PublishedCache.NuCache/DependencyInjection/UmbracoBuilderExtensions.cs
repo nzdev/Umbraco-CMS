@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using CSharpTest.Net.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -84,12 +86,32 @@ namespace Umbraco.Extensions
 
             builder.Services.AddSingleton(s => new ContentDataSerializer(new DictionaryOfPropertyDataSerializer()));
 
+            builder.Services.AddUnique<ITransactableDictionaryFactory<int, ContentNodeKit>, BPlusTreeTransactableDictionaryFactory<int, ContentNodeKit>>();
+
+            builder.Services.AddUnique<INucacheRepositoryFactory, TransactableDictionaryNucacheRepositoryFactory>();
+
+            builder.Services.AddUnique<INucacheNoSqlContentRepository>(factory => factory.GetRequiredService<INucacheRepositoryFactory>().GetContentRepository());
+            builder.Services.AddUnique<INucacheNoSqlMediaRepository>(factory => factory.GetRequiredService<INucacheRepositoryFactory>().GetMediaRepository());
+
+            RegisterBPlusTreeSerializers(builder);
+
             // add the NuCache health check (hidden from type finder)
             // TODO: no NuCache health check yet
             // composition.HealthChecks().Add<NuCacheIntegrityHealthCheck>();
             return builder;
         }
 
+        private static void RegisterBPlusTreeSerializers(IUmbracoBuilder builder)
+        {
+            builder.Services.AddUnique<ISerializer<IDictionary<string, PropertyData[]>>, DictionaryOfPropertyDataSerializer>();
+            builder.Services.AddUnique<ISerializer<IReadOnlyDictionary<string, CultureVariation>>, DictionaryOfCultureVariationSerializer>();
+            builder.Services.AddUnique<ISerializer<ContentData>, ContentDataSerializer>();
+            builder.Services.AddUnique<ISerializer<ContentNodeKit>, ContentNodeKitSerializer>();
+            builder.Services.AddUnique<ISerializer<int>, PrimitiveSerializer>();
+            builder.Services.AddUnique<ITransactableDictionarySerializer<int>, BPlusTreeTransactableDictionarySerializerAdapter<int>>(); // Key Serializer
+            builder.Services.AddUnique<ITransactableDictionarySerializer<ContentNodeKit>, BPlusTreeTransactableDictionarySerializerAdapter<ContentNodeKit>>(); // Value Serializer
+
+        }
 
         private static IUmbracoBuilder AddNuCacheNotifications(this IUmbracoBuilder builder)
         {

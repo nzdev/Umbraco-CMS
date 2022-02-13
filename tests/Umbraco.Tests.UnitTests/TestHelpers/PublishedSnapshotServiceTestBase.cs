@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using CSharpTest.Net.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -12,6 +13,7 @@ using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Hosting;
+using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Logging;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
@@ -245,7 +247,21 @@ namespace Umbraco.Cms.Tests.UnitTests.TestHelpers
 
             ITypeFinder typeFinder = TestHelper.GetTypeFinder();
 
+            var ioHelper = new Mock<IIOHelper>();
+
             var nuCacheSettings = new NuCacheSettings();
+            var nuCacheOptions = new Mock<IOptionsMonitor<NuCacheSettings>>();
+            nuCacheOptions.Setup(x => x.CurrentValue).Returns(nuCacheSettings);
+
+            var dictionaryPropertySerializer = new DictionaryOfPropertyDataSerializer();
+            var dictionaryCultureSerializer = new DictionaryOfCultureVariationSerializer();
+            var contentDataSerializer = new ContentDataSerializer(dictionaryPropertySerializer);
+            var contentNodeKitSerializer = new ContentNodeKitSerializer(contentDataSerializer);
+            var intSerializer = new PrimitiveSerializer();
+            var keySerializer = new BPlusTreeTransactableDictionarySerializerAdapter<int>(intSerializer);
+            var valueSerializer = new BPlusTreeTransactableDictionarySerializerAdapter<ContentNodeKit>(contentNodeKitSerializer);
+            var transactableDictionaryFactory = new BPlusTreeTransactableDictionaryFactory<int, ContentNodeKit>(nuCacheOptions.Object, valueSerializer, keySerializer, ioHelper.Object, Mock.Of<IHostingEnvironment>());
+            var nucacheRepositoryFactory = new TransactableDictionaryNucacheRepositoryFactory(transactableDictionaryFactory);
 
             // at last, create the complete NuCache snapshot service!
             var options = new PublishedSnapshotServiceOptions { IgnoreLocalDb = true };
@@ -267,7 +283,10 @@ namespace Umbraco.Cms.Tests.UnitTests.TestHelpers
                 TestHelper.GetHostingEnvironment(),
                 Options.Create(nuCacheSettings),
                 //ContentNestedDataSerializerFactory,
-                new ContentDataSerializer(new DictionaryOfPropertyDataSerializer()));
+                new ContentDataSerializer(new DictionaryOfPropertyDataSerializer()),
+                nucacheRepositoryFactory.GetMediaRepository(),
+                nucacheRepositoryFactory.GetContentRepository()
+                );
 
             // invariant is the current default
             VariationContextAccessor.VariationContext = new VariationContext();
