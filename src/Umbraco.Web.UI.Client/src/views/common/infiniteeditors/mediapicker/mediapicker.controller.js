@@ -84,7 +84,7 @@ angular.module("umbraco")
 
             vm.searchOptions = {
                 pageNumber: 1,
-                pageSize: 100,
+                pageSize: 20,
                 totalItems: 0,
                 totalPages: 0,
                 filter: '',
@@ -443,13 +443,17 @@ angular.module("umbraco")
             var debounceSearchMedia = _.debounce(function () {
                 $scope.$apply(function () {
                     if (vm.searchOptions.filter) {
+                        vm.searchOptions.pageNumber = 1;
+                        vm.searchOptions.totalItems = 0;
+                        vm.searchOptions.totalPages = 0
+                        vm.searchOptions.pageSize = 20;
                         searchMedia();
                     } else {
 
                         // reset pagination
                         vm.searchOptions = {
                             pageNumber: 1,
-                            pageSize: 100,
+                            pageSize: 20,
                             totalItems: 0,
                             totalPages: 0,
                             filter: '',
@@ -475,7 +479,13 @@ angular.module("umbraco")
             function changePagination(pageNumber) {
                 vm.loading = true;
                 vm.searchOptions.pageNumber = pageNumber;
-                searchMedia();
+                if (vm.searchOptions.filter) {
+                  // Using search filter
+                  searchMedia();
+                } else {
+                  // Browsing folder
+                  getChildren($scope.currentFolder.id)
+                }
             };
 
             function searchMedia() {
@@ -550,32 +560,33 @@ angular.module("umbraco")
 
             function getChildren(id) {
                 vm.loading = true;
-                return entityResource.getChildren(id, "Media", vm.searchOptions).then(function (data) {
+              return entityResource.getPagedChildren(id, "Media", vm.searchOptions).then(function (data) {
 
                     var allowedTypes = dialogOptions.filter ? dialogOptions.filter.split(",") : null;
 
-                    for (var i = 0; i < data.length; i++) {
-                        setDefaultData(data[i]);
-                        data[i].filtered = allowedTypes && allowedTypes.indexOf(data[i].metaData.ContentTypeAlias) < 0;
+                    if (data.items) {
+                      data.items.forEach(mediaItem => {
+                        setMediaMetaData(mediaItem);
+                        mediaItem.filtered = allowedTypes && allowedTypes.indexOf(mediaItem.metaData.ContentTypeAlias) < 0;
+                      });
                     }
 
                     vm.searchOptions.filter = "";
-                    $scope.images = data ? data : [];
+                    $scope.images = data.items ? data.items : [];
+
+                    // update pagination
+                    if (data.pageNumber > 0)
+                      vm.searchOptions.pageNumber = data.pageNumber;
+                    if (data.pageSize > 0)
+                      vm.searchOptions.pageSize = data.pageSize;
+
+                    vm.searchOptions.totalItems = data.totalItems;
+                    vm.searchOptions.totalPages = data.totalPages;
 
                     // set already selected medias to selected
                     preSelectMedia();
                     vm.loading = false;
                 });
-            }
-
-            function setDefaultData(item) {
-                if (item.metaData.MediaPath !== null) {
-                    item.thumbnail = mediaHelper.resolveFileFromEntity(item, true);
-                    item.image = mediaHelper.resolveFileFromEntity(item, false);
-                }
-                if (item.metaData.UpdateDate !== null) {
-                    item.updateDate = item.metaData.UpdateDate;
-                }
             }
 
             function preSelectMedia() {
