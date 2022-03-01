@@ -109,7 +109,10 @@ namespace Umbraco.Cms.Infrastructure.Runtime
 
             _sqlServerSyntax = sqlServerSyntaxProvider;
 
-            _logger.LogDebug("Acquiring lock...");
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Acquiring lock...");
+            }
 
             var tempId = Guid.NewGuid().ToString();
 
@@ -154,7 +157,10 @@ namespace Umbraco.Cms.Infrastructure.Runtime
                     // if we've inserted, then there was no MainDom so we can instantly acquire
 
                     InsertLockRecord(_lockId, db); // so update with our appdomain id
-                    _logger.LogDebug("Acquired with ID {LockId}", _lockId);
+                    if (_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        _logger.LogDebug("Acquired with ID {LockId}", _lockId);
+                    }
                     return true;
                 }
 
@@ -364,7 +370,10 @@ namespace Umbraco.Cms.Infrastructure.Runtime
 
                     // so now we update the row with our appdomain id
                     InsertLockRecord(_lockId, db);
-                    _logger.LogDebug("Acquired with ID {LockId}", _lockId);
+                    if (_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        _logger.LogDebug("Acquired with ID {LockId}", _lockId);
+                    }
                     return true;
                 }
                 else if (mainDomRows.Count == 1 && !mainDomRows[0].Value.StartsWith(tempId))
@@ -423,7 +432,10 @@ namespace Umbraco.Cms.Infrastructure.Runtime
 
                 // so now we update the row with our appdomain id
                 InsertLockRecord(_lockId, db);
-                _logger.LogDebug("Acquired with ID {LockId}", _lockId);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Acquired with ID {LockId}", _lockId);
+                }
                 return true;
             }
             catch (Exception ex)
