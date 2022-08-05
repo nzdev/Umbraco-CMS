@@ -47,7 +47,9 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                 finally
                 {
                     if(chars is not null)
-                    ArrayPool<char>.Shared.Return(chars, true);
+                    {
+                        ArrayPool<char>.Shared.Return(chars, true);
+                    }
                 }
             }
         }

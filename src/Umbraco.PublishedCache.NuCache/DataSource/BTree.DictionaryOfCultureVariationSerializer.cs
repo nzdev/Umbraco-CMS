@@ -25,6 +25,10 @@ internal class DictionaryOfCultureVariationSerializer : SerializerBase,
         for (var i = 0; i < pcount; i++)
         {
             var languageId = ArrayPoolingLimitedSerializer.StringSerializer.ReadString(stream, true);
+            if(languageId is null)
+            {
+                continue;
+            }
             var cultureVariation = new CultureVariation
             {
                 Name = ReadStringObject(stream),
