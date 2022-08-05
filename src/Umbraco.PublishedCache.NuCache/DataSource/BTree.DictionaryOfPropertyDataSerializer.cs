@@ -16,11 +16,11 @@ internal class DictionaryOfPropertyDataSerializer : SerializerBase, ISerializer<
         var pcount = PrimitiveSerializer.Int32.ReadFrom(stream);
         var dict = new Dictionary<string, PropertyData[]>(pcount, StringComparer.InvariantCultureIgnoreCase);
 
-        // read each property
-        for (var i = 0; i < pcount; i++)
-        {
-            // read property alias
-            var key = string.Intern(PrimitiveSerializer.String.ReadFrom(stream));
+            // read each property
+            for (var i = 0; i < pcount; i++)
+            {
+                // read property alias
+                var key = ArrayPoolingLimitedSerializer.StringSerializer.ReadString(stream, true);
 
             // read values count
             var vcount = PrimitiveSerializer.Int32.ReadFrom(stream);
