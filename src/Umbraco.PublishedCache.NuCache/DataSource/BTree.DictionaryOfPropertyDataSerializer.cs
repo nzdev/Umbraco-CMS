@@ -21,6 +21,10 @@ internal class DictionaryOfPropertyDataSerializer : SerializerBase, ISerializer<
             {
                 // read property alias
                 var key = ArrayPoolingLimitedSerializer.StringSerializer.ReadString(stream, true);
+                if(key == null)
+                {
+                continue;
+                }
 
             // read values count
             var vcount = PrimitiveSerializer.Int32.ReadFrom(stream);

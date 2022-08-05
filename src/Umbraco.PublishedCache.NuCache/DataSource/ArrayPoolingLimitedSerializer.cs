@@ -12,7 +12,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
     internal class ArrayPoolingLimitedSerializer
     {
         private StringPool _s_internPool = new StringPool();
-        public string ReadString(Stream stream, bool intern = false)
+        public string? ReadString(Stream stream, bool intern = false)
         {
             unchecked
             {
@@ -28,7 +28,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                 }
 
                 Check.Assert<InvalidDataException>(sz >= 0 && sz <= int.MaxValue);
-                char[] chars = null;
+                char[]? chars = null;
                 try
                 {
                     chars = ArrayPool<char>.Shared.Rent(sz);
@@ -46,6 +46,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                 }
                 finally
                 {
+                    if(chars is not null)
                     ArrayPool<char>.Shared.Return(chars, true);
                 }
             }
@@ -99,7 +100,7 @@ static partial class Check
     {
         if (!condition)
         {
-            ConstructorInfo ci = typeof(TException).GetConstructor(new Type[] { typeof(string) });
+            ConstructorInfo? ci = typeof(TException).GetConstructor(new Type[] { typeof(string) });
             if (ci != null)
             {
                 TException e = (TException)ci.Invoke(new object[] { message });
@@ -136,7 +137,7 @@ static partial class Check
     {
         if (!condition)
         {
-            ConstructorInfo ci = typeof(TException).GetConstructor(new Type[] { typeof(string), typeof(Exception) });
+            ConstructorInfo? ci = typeof(TException).GetConstructor(new Type[] { typeof(string), typeof(Exception) });
             if (ci != null)
             {
                 TException e = (TException)ci.Invoke(new object[] { message, innerException });
@@ -246,16 +247,16 @@ static partial class Check
     /// Returns (T)value if the object provided can be assinged to a variable of type T
     /// throws ArgumentException
     /// </summary>
-    public static T IsAssignable<T>(object value)
+    public static T? IsAssignable<T>(object value) where T : class
     {
-        return (T)IsAssignable(typeof(T), value);
+        return IsAssignable(typeof(T), value) as T;
     }
 
     /// <summary>
     /// Returns value if the object provided can be assinged to a variable of type toType
     /// throws ArgumentException
     /// </summary>
-    public static object IsAssignable(Type toType, object fromValue)
+    public static object? IsAssignable(Type toType, object fromValue)
     {
         Check.NotNull(toType);
         if (fromValue == null)
