@@ -22,14 +22,6 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
         {
             MessagePackSerializerOptions? defaultOptions = StandardResolver.Options;
             IFormatterResolver? resolver = CompositeResolver.Create(
-
-                 // TODO: We want to be able to intern the strings for aliases when deserializing like we do for Newtonsoft but I'm unsure exactly how
-                 // to do that but it would seem to be with a custom message pack resolver but I haven't quite figured out based on the docs how
-                 // to do that since that is part of the int key -> string mapping operation, might have to see the source code to figure that one out.
-                 // There are docs here on how to build one of these: https://github.com/neuecc/MessagePack-CSharp/blob/master/README.md#low-level-api-imessagepackformattert
-                 // and there are a couple examples if you search on google for them but this will need to be a separate project.
-                 // NOTE: resolver custom types first
-                 // new ContentNestedDataResolver(),
                  new IMessagePackFormatter[] { new StringInterningFormatter() },
                  new IFormatterResolver[] { defaultOptions.Resolver });
             // finally use standard resolver
