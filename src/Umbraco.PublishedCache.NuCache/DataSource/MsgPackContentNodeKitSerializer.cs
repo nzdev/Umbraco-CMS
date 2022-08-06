@@ -27,7 +27,6 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 
             _options = defaultOptions
                 .WithResolver(resolver)
-                .WithCompression(MessagePackCompression.Lz4BlockArray)
                 .WithSecurity(MessagePackSecurity.UntrustedData);
         }
 
