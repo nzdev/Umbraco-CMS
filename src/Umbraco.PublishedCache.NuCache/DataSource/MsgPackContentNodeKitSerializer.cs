@@ -17,7 +17,8 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
     {
         private readonly MessagePackSerializerOptions _options;
         private static readonly RecyclableMemoryStreamManager manager = new RecyclableMemoryStreamManager();
-
+        private static readonly Dictionary<string, PropertyData[]> _emptyProps = new Dictionary<string, PropertyData[]>(0);
+        private static readonly Dictionary<string, CultureVariation> _emptyVariations = new Dictionary<string, CultureVariation>(0);
         public MsgPackContentNodeKitSerializer()
         {
             MessagePackSerializerOptions? defaultOptions = StandardResolver.Options;
@@ -55,7 +56,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             {
                 var draft = model.DraftData.Value;
 
-                Dictionary<string, PropertyData[]> propDatas = new Dictionary<string, PropertyData[]>(draft.Properties.PropertyDatas.Count);
+                Dictionary<string, PropertyData[]> propDatas = draft.Properties.PropertyDatas.Count == 0 ? _emptyProps : new Dictionary<string, PropertyData[]>(draft.Properties.PropertyDatas.Count);
                 foreach (var propData in draft.Properties.PropertyDatas)
                 {
                     var propVals = propData.Value.Length == 0 ? Array.Empty<PropertyData>() : new PropertyData[propData.Value.Length];
@@ -70,7 +71,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                     }
                     propDatas.Add(propData.Key, propVals);
                 }
-                Dictionary<string, CultureVariation> variations = new Dictionary<string, CultureVariation>(0); //TODO
+                Dictionary<string, CultureVariation> variations = _emptyVariations; //TODO
                 draftData = new ContentData(draft.Name, draft.UrlSegment, draft.VersionId, draft.VersionDate, draft.WriterId, draft.TemplateId, draft.Published, propDatas, variations); //TODO
             }
 
@@ -78,7 +79,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             {
                 var pubData = model.PublishedData.Value;
 
-                Dictionary<string, PropertyData[]> propDatas = new Dictionary<string, PropertyData[]>(pubData.Properties.PropertyDatas.Count);
+                Dictionary<string, PropertyData[]> propDatas = pubData.Properties.PropertyDatas.Count == 0 ? _emptyProps : new Dictionary<string, PropertyData[]>(pubData.Properties.PropertyDatas.Count);
                 foreach (var propData in pubData.Properties.PropertyDatas)
                 {
                     var propVals = propData.Value.Length == 0 ? Array.Empty<PropertyData>() : new PropertyData[propData.Value.Length];
@@ -93,7 +94,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                     }
                     propDatas.Add(propData.Key, propVals);
                 }
-                Dictionary<string, CultureVariation> variations = new Dictionary<string, CultureVariation>(0); //TODO
+                Dictionary<string, CultureVariation> variations = _emptyVariations; //TODO
                 publishedData = new ContentData(pubData.Name, pubData.UrlSegment, pubData.VersionId, pubData.VersionDate, pubData.WriterId, pubData.TemplateId, pubData.Published, propDatas, variations); //TODO
             }
 
