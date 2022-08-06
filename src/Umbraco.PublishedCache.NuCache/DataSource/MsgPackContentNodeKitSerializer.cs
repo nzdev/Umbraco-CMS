@@ -71,7 +71,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                     }
                     propDatas.Add(propData.Key, propVals);
                 }
-                Dictionary<string, CultureVariation> variations = new Dictionary<string, CultureVariation>(0);
+                Dictionary<string, CultureVariation> variations = new Dictionary<string, CultureVariation>(0); //TODO
                 draftData = new ContentData(draft.Name, draft.UrlSegment, draft.VersionId, draft.VersionDate, draft.WriterId, draft.TemplateId, draft.Published, propDatas, variations); //TODO
             }
 
@@ -94,7 +94,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                     }
                     propDatas.Add(propData.Key, propVals);
                 }
-                Dictionary<string, CultureVariation> variations = new Dictionary<string, CultureVariation>(0);
+                Dictionary<string, CultureVariation> variations = new Dictionary<string, CultureVariation>(0); //TODO
                 publishedData = new ContentData(pubData.Name, pubData.UrlSegment, pubData.VersionId, pubData.VersionDate, pubData.WriterId, pubData.TemplateId, pubData.Published, propDatas, variations); //TODO
             }
 
