@@ -10,7 +10,7 @@ public class BTree
     public static BPlusTree<int, ContentNodeKit> GetTree(string filepath, bool exists, NuCacheSettings settings, ContentDataSerializer? contentDataSerializer = null)
     {
         var keySerializer = new PrimitiveSerializer();
-        var valueSerializer = new ContentNodeKitSerializer(contentDataSerializer);
+        var valueSerializer = new MsgPackContentNodeKitSerializer();
         var options = new BPlusTree<int, ContentNodeKit>.OptionsV2(keySerializer, valueSerializer)
         {
             CreateFile = exists ? CreatePolicy.IfNeeded : CreatePolicy.Always,
