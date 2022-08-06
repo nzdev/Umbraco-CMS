@@ -1,5 +1,6 @@
 using MessagePack;
 using MessagePack.Formatters;
+using Microsoft.Toolkit.HighPerformance.Buffers;
 
 namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource;
 
@@ -14,11 +15,12 @@ public sealed class MessagePackAutoInterningStringKeyCaseInsensitiveDictionaryFo
     DictionaryFormatterBase<string, TValue, Dictionary<string, TValue>, Dictionary<string, TValue>.Enumerator,
         Dictionary<string, TValue>>
 {
+
+    private StringPool _s_internPool = new StringPool();
     protected override void Add(Dictionary<string, TValue> collection, int index, string key, TValue value,
         MessagePackSerializerOptions options)
     {
-        string.Intern(key);
-        collection.Add(key, value);
+        collection.Add(_s_internPool.GetOrAdd(key), value);
     }
 
     protected override Dictionary<string, TValue> Complete(Dictionary<string, TValue> intermediateCollection) =>

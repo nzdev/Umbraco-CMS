@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MessagePack;
+using Umbraco.Cms.Infrastructure.PublishedCache.MsgPack;
 
 namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 {
@@ -32,6 +33,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             PropertyDatas = propertyDatas;
         }
         [Key(0)]
+        [MessagePackFormatter(typeof(MessagePackAutoInterningStringKeyCaseInsensitiveDictionaryFormatter<PropertyDataMsgPackModel[]>))]
         public Dictionary<string, PropertyDataMsgPackModel[]> PropertyDatas { get; }
     }
     [MessagePackObject]
@@ -45,8 +47,12 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
         }
 
         [Key(0)]
+        [MessagePackFormatter(
+        typeof(StringInterningFormatter))]
         public string? Culture { get; }
         [Key(1)]
+        [MessagePackFormatter(
+        typeof(StringInterningFormatter))]
         public string? Segment { get; }
         [Key(2)]
         public object? Value { get; }
@@ -81,6 +87,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
         }
 
         [Key(0)]
+        [MessagePackFormatter(typeof(MessagePackAutoInterningStringKeyCaseInsensitiveDictionaryFormatter<ContentDataCultureVariationMsgPackModel>))]
         public Dictionary<string, ContentDataCultureVariationMsgPackModel> Variations { get; }
     }
 

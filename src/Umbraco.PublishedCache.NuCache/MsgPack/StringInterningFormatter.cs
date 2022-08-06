@@ -3,6 +3,7 @@ using System.Text;
 using MessagePack;
 using MessagePack.Formatters;
 using Microsoft.NET.StringTools;
+using Microsoft.Toolkit.HighPerformance.Buffers;
 
 namespace Umbraco.Cms.Infrastructure.PublishedCache.MsgPack
 {
@@ -11,6 +12,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.MsgPack
     /// </summary>
     public sealed class StringInterningFormatter : IMessagePackFormatter<string?>
     {
+        private StringPool _s_internPool = new StringPool();
         /// <inheritdoc/>
         public string? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
@@ -28,11 +30,10 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.MsgPack
                     {
                         return string.Empty;
                     }
-
                     Span<char> chars = stackalloc char[bytes.Length];
                     int charLength;
                     charLength = StringEncoding.UTF8.GetChars(bytes, chars);
-                    return Strings.WeakIntern(chars.Slice(0, charLength));
+                    return _s_internPool.GetOrAdd(chars.Slice(0, charLength));
                 }
                 else
                 {
@@ -41,7 +42,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.MsgPack
                 }
             }
 
-            return Strings.WeakIntern(reader.ReadString());
+            return _s_internPool.GetOrAdd(reader.ReadString());
         }
 
         /// <inheritdoc/>

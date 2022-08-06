@@ -24,7 +24,6 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             IFormatterResolver? resolver = CompositeResolver.Create(
                  new IMessagePackFormatter[] { new StringInterningFormatter() },
                  new IFormatterResolver[] { defaultOptions.Resolver });
-            // finally use standard resolver
 
             _options = defaultOptions
                 .WithResolver(resolver)
