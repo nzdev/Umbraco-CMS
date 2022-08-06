@@ -20,7 +20,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
 
         public MsgPackContentNodeKitSerializer()
         {
-            MessagePackSerializerOptions? defaultOptions = ContractlessStandardResolver.Options;
+            MessagePackSerializerOptions? defaultOptions = StandardResolver.Options;
             IFormatterResolver? resolver = CompositeResolver.Create(
 
                  // TODO: We want to be able to intern the strings for aliases when deserializing like we do for Newtonsoft but I'm unsure exactly how
@@ -32,7 +32,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                  // new ContentNestedDataResolver(),
                  new IMessagePackFormatter[] { new StringInterningFormatter() },
                  new IFormatterResolver[] { defaultOptions.Resolver });
-                // finally use standard resolver
+            // finally use standard resolver
 
             _options = defaultOptions
                 .WithResolver(resolver)
@@ -65,10 +65,10 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             {
                 var draft = model.DraftData.Value;
 
-                Dictionary<string, PropertyData[]> propDatas = new();
+                Dictionary<string, PropertyData[]> propDatas = new Dictionary<string, PropertyData[]>(draft.Properties.PropertyDatas.Count);
                 foreach (var propData in draft.Properties.PropertyDatas)
                 {
-                    var propVals = new PropertyData[propData.Value.Length];
+                    var propVals = propData.Value.Length == 0 ? Array.Empty<PropertyData>() : new PropertyData[propData.Value.Length];
                     for (int i = 0; i < propData.Value.Length; i++)
                     {
                         propVals[i] = new PropertyData
@@ -80,7 +80,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                     }
                     propDatas.Add(propData.Key, propVals);
                 }
-                Dictionary<string, CultureVariation> variations = new();
+                Dictionary<string, CultureVariation> variations = new Dictionary<string, CultureVariation>(0);
                 draftData = new ContentData(draft.Name, draft.UrlSegment, draft.VersionId, draft.VersionDate, draft.WriterId, draft.TemplateId, draft.Published, propDatas, variations); //TODO
             }
 
@@ -88,10 +88,10 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
             {
                 var pubData = model.PublishedData.Value;
 
-                Dictionary<string, PropertyData[]> propDatas = new();
+                Dictionary<string, PropertyData[]> propDatas = new Dictionary<string, PropertyData[]>(pubData.Properties.PropertyDatas.Count);
                 foreach (var propData in pubData.Properties.PropertyDatas)
                 {
-                    var propVals = new PropertyData[propData.Value.Length];
+                    var propVals = propData.Value.Length == 0 ? Array.Empty<PropertyData>() : new PropertyData[propData.Value.Length];
                     for (int i = 0; i < propData.Value.Length; i++)
                     {
                         propVals[i] = new PropertyData
@@ -103,8 +103,8 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                     }
                     propDatas.Add(propData.Key, propVals);
                 }
-                Dictionary<string, CultureVariation> variations = new();
-                publishedData = new ContentData(pubData.Name, pubData.UrlSegment,pubData.VersionId,pubData.VersionDate,pubData.WriterId,pubData.TemplateId,pubData.Published, propDatas, variations); //TODO
+                Dictionary<string, CultureVariation> variations = new Dictionary<string, CultureVariation>(0);
+                publishedData = new ContentData(pubData.Name, pubData.UrlSegment, pubData.VersionId, pubData.VersionDate, pubData.WriterId, pubData.TemplateId, pubData.Published, propDatas, variations); //TODO
             }
 
             var kit = new ContentNodeKit(
@@ -124,7 +124,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                 Dictionary<string, PropertyDataMsgPackModel[]> propertyDatas = new Dictionary<string, PropertyDataMsgPackModel[]>(value.DraftData.Properties.Count);
                 foreach (var item in value.DraftData.Properties)
                 {
-                    var pdata = new PropertyDataMsgPackModel[item.Value.Length];
+                    var pdata = item.Value.Length == 0 ? Array.Empty<PropertyDataMsgPackModel>() : new PropertyDataMsgPackModel[item.Value.Length];
                     for (int i = 0; i < item.Value.Length; i++)
                     {
                         pdata[i] = new PropertyDataMsgPackModel(item.Value[i].Culture, item.Value[i].Segment, item.Value[i].Value);
@@ -132,7 +132,23 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                     propertyDatas.Add(item.Key, pdata);
                 }
                 ContentDataPropertiesMsgPackModel props = new ContentDataPropertiesMsgPackModel(propertyDatas);
-                ContentDataCultureInfosMsgPackModel cultures = new ContentDataCultureInfosMsgPackModel();
+                ContentDataCultureInfosMsgPackModel cultures;
+                if (value.DraftData.CultureInfos is not null)
+                {
+                    Dictionary<string, ContentDataCultureVariationMsgPackModel> cultureDatas = new Dictionary<string, ContentDataCultureVariationMsgPackModel>(value.DraftData.Properties.Count);
+                    foreach (var item in value.DraftData.CultureInfos)
+                    {
+                        if (item.Value.Name is not null && item.Value.UrlSegment is not null)
+                        {
+                            cultureDatas.Add(item.Key, new ContentDataCultureVariationMsgPackModel(item.Value.Name, item.Value.UrlSegment, item.Value.Date, item.Value.IsDraft));
+                        }
+                    }
+                    cultures = new ContentDataCultureInfosMsgPackModel();
+                }
+                else
+                {
+                    cultures = new ContentDataCultureInfosMsgPackModel();
+                }
                 draftData = new ContentDataMsgPackModel(value.DraftData.Published, value.DraftData.Name, value.DraftData.UrlSegment ?? "", value.DraftData.VersionId, value.DraftData.VersionDate, value.DraftData.WriterId, value.DraftData.TemplateId ?? 0, props, cultures);
             }
 
@@ -142,7 +158,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                 Dictionary<string, PropertyDataMsgPackModel[]> propertyDatas = new Dictionary<string, PropertyDataMsgPackModel[]>(value.PublishedData.Properties.Count);
                 foreach (var item in value.PublishedData.Properties)
                 {
-                    var pdata = new PropertyDataMsgPackModel[item.Value.Length];
+                    var pdata = item.Value.Length == 0 ? Array.Empty<PropertyDataMsgPackModel>() : new PropertyDataMsgPackModel[item.Value.Length];
                     for (int i = 0; i < item.Value.Length; i++)
                     {
                         pdata[i] = new PropertyDataMsgPackModel(item.Value[i].Culture, item.Value[i].Segment, item.Value[i].Value);
@@ -150,7 +166,23 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache.DataSource
                     propertyDatas.Add(item.Key, pdata);
                 }
                 ContentDataPropertiesMsgPackModel props = new ContentDataPropertiesMsgPackModel(propertyDatas);
-                ContentDataCultureInfosMsgPackModel cultures = new ContentDataCultureInfosMsgPackModel();
+                ContentDataCultureInfosMsgPackModel cultures;
+                if (value.PublishedData.CultureInfos is not null)
+                {
+                    Dictionary<string, ContentDataCultureVariationMsgPackModel> cultureDatas = new Dictionary<string, ContentDataCultureVariationMsgPackModel>(value.PublishedData.Properties.Count);
+                    foreach (var item in value.PublishedData.CultureInfos)
+                    {
+                        if (item.Value.Name is not null && item.Value.UrlSegment is not null)
+                        {
+                            cultureDatas.Add(item.Key, new ContentDataCultureVariationMsgPackModel(item.Value.Name, item.Value.UrlSegment, item.Value.Date, item.Value.IsDraft));
+                        }
+                    }
+                    cultures = new ContentDataCultureInfosMsgPackModel();
+                }
+                else
+                {
+                    cultures = new ContentDataCultureInfosMsgPackModel();
+                }
                 publishData = new ContentDataMsgPackModel(value.PublishedData.Published, value.PublishedData.Name, value.PublishedData.UrlSegment ?? "", value.PublishedData.VersionId, value.PublishedData.VersionDate, value.PublishedData.WriterId, value.PublishedData.TemplateId ?? 0, props, cultures);
             }
             if (value.Node is not null)
