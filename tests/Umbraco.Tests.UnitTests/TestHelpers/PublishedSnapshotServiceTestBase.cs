@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using CSharpTest.Net.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -12,6 +13,7 @@ using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Hosting;
+using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Logging;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
@@ -244,9 +246,19 @@ namespace Umbraco.Cms.Tests.UnitTests.TestHelpers
                 DataTypeService);
 
             ITypeFinder typeFinder = TestHelper.GetTypeFinder();
-
+            IHostingEnvironment environment = TestHelper.GetHostingEnvironment();
+            IIOHelper iOHelper = TestHelper.IOHelper;
             var nuCacheSettings = new NuCacheSettings();
-
+            var nuCacheOptionsMonitor = Mock.Of<IOptionsMonitor<NuCacheSettings>>(x => x.CurrentValue == nuCacheSettings);
+            var dictionaryPropertySerializer = new DictionaryOfPropertyDataSerializer();
+            var dictionaryCultureSerializer = new DictionaryOfCultureVariationSerializer();
+            var contentDataSerializer = new ContentDataSerializer(dictionaryPropertySerializer);
+            var contentNodeKitSerializer = new ContentNodeKitSerializer(contentDataSerializer);
+            var intSerializer = new PrimitiveSerializer();
+            var keySerializer = new BPlusTreeKeyValueStoreSerializerAdapter<int>(intSerializer);
+            var valueSerializer = new BPlusTreeKeyValueStoreSerializerAdapter<ContentNodeKit>(contentNodeKitSerializer);
+            var transactableDictionaryFactory = new BPlusTreeKeyValueStoreFactory<int, ContentNodeKit>(nuCacheOptionsMonitor, valueSerializer, keySerializer, TestHelper.IOHelper,environment);
+            INucacheRepositoryFactory nucacheRepositoryFactory = new KeyValueStoreNucacheRepositoryFactory(transactableDictionaryFactory);
             // at last, create the complete NuCache snapshot service!
             var options = new PublishedSnapshotServiceOptions { IgnoreLocalDb = true };
             SnapshotService = new PublishedSnapshotService(
@@ -267,7 +279,8 @@ namespace Umbraco.Cms.Tests.UnitTests.TestHelpers
                 TestHelper.GetHostingEnvironment(),
                 Options.Create(nuCacheSettings),
                 //ContentNestedDataSerializerFactory,
-                new ContentDataSerializer(new DictionaryOfPropertyDataSerializer()));
+                new ContentDataSerializer(new DictionaryOfPropertyDataSerializer()),
+                nucacheRepositoryFactory);
 
             // invariant is the current default
             VariationContextAccessor.VariationContext = new VariationContext();

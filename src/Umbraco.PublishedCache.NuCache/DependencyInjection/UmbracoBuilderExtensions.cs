@@ -1,4 +1,6 @@
 using System;
+using CSharpTest.Net.Serialization;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -83,6 +85,14 @@ namespace Umbraco.Extensions
             });
 
             builder.Services.AddSingleton(s => new ContentDataSerializer(new DictionaryOfPropertyDataSerializer()));
+            RegisterBPlusTreeSerializers(builder);
+
+            builder.Services.AddSingleton<IKeyValueStoreFactory<int, ContentNodeKit>, BPlusTreeKeyValueStoreFactory<int, ContentNodeKit>>();
+
+            builder.Services.AddSingleton<INucacheRepositoryFactory, KeyValueStoreNucacheRepositoryFactory>();
+
+            builder.Services.AddSingleton<INucacheContentRepository>(factory => factory.GetService<INucacheRepositoryFactory>().GetContentRepository());
+            builder.Services.AddSingleton<INucacheMediaRepository>(factory => factory.GetService<INucacheRepositoryFactory>().GetMediaRepository());
 
             // add the NuCache health check (hidden from type finder)
             // TODO: no NuCache health check yet
@@ -109,7 +119,17 @@ namespace Umbraco.Extensions
 
             return builder;
         }
+        private static void RegisterBPlusTreeSerializers(this IUmbracoBuilder builder)
+        {
+            builder.Services.AddSingleton<ISerializer<IDictionary<string, PropertyData[]>>, DictionaryOfPropertyDataSerializer>();
+            builder.Services.AddSingleton<ISerializer<IReadOnlyDictionary<string, CultureVariation>>, DictionaryOfCultureVariationSerializer>();
+            builder.Services.AddSingleton<ISerializer<ContentData>, ContentDataSerializer>();
+            builder.Services.AddSingleton<ISerializer<ContentNodeKit>, ContentNodeKitSerializer>();
+            builder.Services.AddSingleton<ISerializer<int>, PrimitiveSerializer>();
 
+            builder.Services.AddSingleton<IKeyValueStoreSerializer<int>, BPlusTreeKeyValueStoreSerializerAdapter<int>>(); //Key Serializer
+            builder.Services.AddSingleton<IKeyValueStoreSerializer<ContentNodeKit>, BPlusTreeKeyValueStoreSerializerAdapter<ContentNodeKit>>(); // Value Serializer
+        }
 
     }
 }

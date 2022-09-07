@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CSharpTest.Net.Collections;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Cms.Core.Cache;
@@ -47,6 +46,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
         private readonly IDefaultCultureAccessor _defaultCultureAccessor;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ContentDataSerializer _contentDataSerializer;
+        private readonly INucacheRepositoryFactory _nucacheRepositoryFactory;
         private readonly NuCacheSettings _config;
 
         private bool _isReady;
@@ -59,8 +59,8 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
         private readonly object _storesLock = new object();
         private readonly object _elementsLock = new object();
 
-        private BPlusTree<int, ContentNodeKit> _localContentDb;
-        private BPlusTree<int, ContentNodeKit> _localMediaDb;
+        private INucacheContentRepository _documentRepository;
+        private INucacheMediaRepository _mediaRepository;
         private bool _localContentDbExists;
         private bool _localMediaDbExists;
 
@@ -92,7 +92,8 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
             IPublishedModelFactory publishedModelFactory,
             IHostingEnvironment hostingEnvironment,
             IOptions<NuCacheSettings> config,
-            ContentDataSerializer contentDataSerializer)
+            ContentDataSerializer contentDataSerializer,
+            INucacheRepositoryFactory nucacheRepositoryFactory)
         {
             _options = options;
             _syncBootStateAccessor = syncBootStateAccessor;
@@ -110,6 +111,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
             _globalSettings = globalSettings.Value;
             _hostingEnvironment = hostingEnvironment;
             _contentDataSerializer = contentDataSerializer;
+            _nucacheRepositoryFactory = nucacheRepositoryFactory;
             _config = config.Value;
             _publishedModelFactory = publishedModelFactory;
         }
@@ -166,18 +168,16 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
         /// </remarks>
         private void MainDomRegister()
         {
-            var path = GetLocalFilesPath();
-            var localContentDbPath = Path.Combine(path, "NuCache.Content.db");
-            var localMediaDbPath = Path.Combine(path, "NuCache.Media.db");
+            // if both local databases exist then Get will open them, else new databases will be created
+            _localContentDbExists = _nucacheRepositoryFactory.ContentRespositoryStorageExists();
+            _localMediaDbExists = _nucacheRepositoryFactory.MediaRespositoryStorageExists();
 
-            _localContentDbExists = File.Exists(localContentDbPath);
-            _localMediaDbExists = File.Exists(localMediaDbPath);
+            _documentRepository = _nucacheRepositoryFactory.GetContentRepository();
+            _mediaRepository = _nucacheRepositoryFactory.GetMediaRepository();
 
-            // if both local databases exist then GetTree will open them, else new databases will be created
-            _localContentDb = BTree.GetTree(localContentDbPath, _localContentDbExists, _config, _contentDataSerializer);
-            _localMediaDb = BTree.GetTree(localMediaDbPath, _localMediaDbExists, _config, _contentDataSerializer);
-
-            _logger.LogInformation("Registered with MainDom, localContentDbExists? {LocalContentDbExists}, localMediaDbExists? {LocalMediaDbExists}", _localContentDbExists, _localMediaDbExists);
+            _documentRepository.Init();
+            _mediaRepository.Init();
+            _logger.LogInformation("Registered with MainDom, localContentDbExists? {LocalContentDbExists}, localMediaDbExists? {LocalMediaDbExists}", _documentRepository.IsPopulated(), _mediaRepository.IsPopulated());
         }
 
         /// <summary>
@@ -194,26 +194,34 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
             {
                 _logger.LogDebug("Releasing content store...");
                 _contentStore?.ReleaseLocalDb(); // null check because we could shut down before being assigned
-                _localContentDb = null;
+                _documentRepository = null;
 
                 _logger.LogDebug("Releasing media store...");
                 _mediaStore?.ReleaseLocalDb(); // null check because we could shut down before being assigned
-                _localMediaDb = null;
+                _mediaRepository = null;
 
                 _logger.LogInformation("Released from MainDom");
             }
         }
 
-        private string GetLocalFilesPath()
+        private void DeleteLocalFilesForContent()
         {
-            var path = Path.Combine(_hostingEnvironment.LocalTempPath, "NuCache");
-
-            if (!Directory.Exists(path))
+            if (_isReady && _documentRepository != null)
             {
-                Directory.CreateDirectory(path);
+                throw new InvalidOperationException("Cannot delete local files while the cache uses them.");
             }
 
-            return path;
+            _documentRepository.Drop();
+        }
+
+        private void DeleteLocalFilesForMedia()
+        {
+            if (_isReady && _mediaRepository != null)
+            {
+                throw new InvalidOperationException("Cannot delete local files while the cache uses them.");
+            }
+
+            _mediaRepository.Drop();
         }
 
         /// <summary>
@@ -240,9 +248,9 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
                         // figure out whether it can read the databases or it should populate them from sql
 
                         _logger.LogInformation("Creating the content store, localContentDbExists? {LocalContentDbExists}", _localContentDbExists);
-                        _contentStore = new ContentStore(_publishedSnapshotAccessor, _variationContextAccessor, _loggerFactory.CreateLogger("ContentStore"), _loggerFactory, _publishedModelFactory, _localContentDb);
+                        _contentStore = new ContentStore(_publishedSnapshotAccessor, _variationContextAccessor, _loggerFactory.CreateLogger("ContentStore"), _loggerFactory, _publishedModelFactory, _documentRepository);
                         _logger.LogInformation("Creating the media store, localMediaDbExists? {LocalMediaDbExists}", _localMediaDbExists);
-                        _mediaStore = new ContentStore(_publishedSnapshotAccessor, _variationContextAccessor, _loggerFactory.CreateLogger("ContentStore"), _loggerFactory, _publishedModelFactory, _localMediaDb);
+                        _mediaStore = new ContentStore(_publishedSnapshotAccessor, _variationContextAccessor, _loggerFactory.CreateLogger("ContentStore"), _loggerFactory, _publishedModelFactory, _mediaRepository);
                     }
                     else
                     {
@@ -334,7 +342,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
                 // beware! at that point the cache is inconsistent,
                 // assuming we are going to SetAll content items!
 
-                _localContentDb?.Clear();
+                _documentRepository?.Clear();
 
                 // IMPORTANT GetAllContentSources sorts kits by level + parentId + sortOrder
                 var kits = _publishedContentService.GetAllContentSources();
@@ -353,7 +361,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
                 // beware! at that point the cache is inconsistent,
                 // assuming we are going to SetAll content items!
 
-                return LoadEntitiesFromLocalDbLocked(onStartup, _localContentDb, _contentStore, "content");
+                return LoadEntitiesFromLocalDbLocked(onStartup, _documentRepository, _contentStore, "content");
             }
         }
 
@@ -381,7 +389,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
             {
                 // beware! at that point the cache is inconsistent,
                 // assuming we are going to SetAll content items!
-                _localMediaDb?.Clear();
+                _mediaRepository?.Clear();
 
                 _logger.LogDebug("Loading media from database...");
                 // IMPORTANT GetAllMediaSources sorts kits by level + parentId + sortOrder
@@ -401,17 +409,13 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
                 // beware! at that point the cache is inconsistent,
                 // assuming we are going to SetAll content items!
 
-                return LoadEntitiesFromLocalDbLocked(onStartup, _localMediaDb, _mediaStore, "media");
+                return LoadEntitiesFromLocalDbLocked(onStartup, _mediaRepository, _mediaStore, "media");
             }
         }
 
-        private bool LoadEntitiesFromLocalDbLocked(bool onStartup, BPlusTree<int, ContentNodeKit> localDb, ContentStore store, string entityType)
+        private bool LoadEntitiesFromLocalDbLocked(bool onStartup, INucacheRepositoryBase<int, ContentNodeKit> repository, ContentStore store, string entityType)
         {
-            var kits = localDb.Select(x => x.Value)
-                    .OrderBy(x => x.Node.Level)
-                    .ThenBy(x => x.Node.ParentContentId)
-                    .ThenBy(x => x.Node.SortOrder) // IMPORTANT sort by level + parentId + sortOrder
-                    .ToList();
+            var kits = repository.GetAllSortedByLevelParentIdSortOrderDesc();
 
             if (kits.Count == 0)
             {
@@ -1102,6 +1106,9 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
 
         /// <inheritdoc/>
         public void Dispose()
-        { }
+        {
+            _documentRepository?.Dispose();
+            _mediaRepository?.Dispose();
+        }
     }
 }

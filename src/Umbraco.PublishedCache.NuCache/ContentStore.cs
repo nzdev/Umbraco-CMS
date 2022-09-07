@@ -49,7 +49,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
         private readonly ConcurrentDictionary<Guid, int> _contentKeyToIdMap;
 
         private readonly IPublishedModelFactory _publishedModelFactory;
-        private BPlusTree<int, ContentNodeKit> _localDb;
+        private IKeyValueStore<int, ContentNodeKit> _localDb;
         private readonly ConcurrentQueue<GenObj> _genObjs;
         private GenObj _genObj;
         private readonly object _wlocko = new object();
@@ -71,7 +71,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
             ILogger logger,
             ILoggerFactory loggerFactory,
             IPublishedModelFactory publishedModelFactory,
-            BPlusTree<int, ContentNodeKit> localDb = null)
+            IKeyValueStore<int, ContentNodeKit> localDb = null)
         {
             _publishedSnapshotAccessor = publishedSnapshotAccessor;
             _variationContextAccessor = variationContextAccessor;
@@ -195,15 +195,18 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
                 }
                 else if (_localDb != null && _wchanges != null)
                 {
-                    foreach (var change in _wchanges)
+                    using (var transaction = _localDb.BeginTransaction())
                     {
-                        if (change.Value.IsNull)
-                            _localDb.TryRemove(change.Key, out ContentNodeKit unused);
-                        else
-                            _localDb[change.Key] = change.Value;
+                        foreach (var change in _wchanges)
+                        {
+                            if (change.Value.IsNull)
+                                _localDb.TryRemove(change.Key, out ContentNodeKit unused);
+                            else
+                                _localDb[change.Key] = change.Value;
+                        }
+                        _wchanges = null;
+                        transaction.Commit();
                     }
-                    _wchanges = null;
-                    _localDb.Commit();
                 }
             }
             finally
