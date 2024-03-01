@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Pooling;
 using Umbraco.Extensions;
 
 namespace Umbraco.Cms.Core.IO;
@@ -10,12 +11,24 @@ public class ViewHelper : IViewHelper
 {
     private readonly IDefaultViewContentProvider _defaultViewContentProvider;
     private readonly IFileSystem _viewFileSystem;
+    private readonly IMemoryStreamPool _memoryStreamPool;
 
-        public ViewHelper(FileSystems fileSystems, IDefaultViewContentProvider defaultViewContentProvider)
-        {
+    public ViewHelper(FileSystems fileSystems, IDefaultViewContentProvider defaultViewContentProvider, RecyclableMemoryStreamPool memoryStreamPool)
+    {
+        _viewFileSystem = fileSystems.MvcViewsFileSystem ?? throw new ArgumentNullException(nameof(fileSystems));
+        _defaultViewContentProvider = defaultViewContentProvider ?? throw new ArgumentNullException(nameof(defaultViewContentProvider));
+        _memoryStreamPool = memoryStreamPool;
+    }
+
+    [Obsolete("Please use constructor that accepts a IMemoryStreamPool")]
+    public ViewHelper(FileSystems fileSystems, IDefaultViewContentProvider defaultViewContentProvider)
+    {
             _viewFileSystem = fileSystems.MvcViewsFileSystem ?? throw new ArgumentNullException(nameof(fileSystems));
             _defaultViewContentProvider = defaultViewContentProvider ?? throw new ArgumentNullException(nameof(defaultViewContentProvider));
-        }[Obsolete("Inject IDefaultViewContentProvider instead")]
+        _memoryStreamPool = StaticServiceProvider.Instance.GetRequiredService<IMemoryStreamPool>();
+    }
+
+    [Obsolete("Inject IDefaultViewContentProvider instead")]
     public static string GetDefaultFileContent(string? layoutPageAlias = null, string? modelClassName = null, string? modelNamespace = null, string? modelNamespaceAlias = null)
     {
         IDefaultViewContentProvider viewContentProvider =
@@ -77,12 +90,17 @@ public class ViewHelper : IViewHelper
             }
         }
 
-        var data = Encoding.UTF8.GetBytes(t.Content ?? string.Empty);
-        var withBom = Encoding.UTF8.GetPreamble().Concat(data).ToArray();
-
-        using (var ms = new MemoryStream(withBom))
+        using (PooledMemoryStream recyclableMemoryStream = _memoryStreamPool.GetStream())
         {
-            _viewFileSystem.AddFile(path, ms, true);
+            var preamble = Encoding.UTF8.GetPreamble();
+            if (preamble is not null && preamble.Length > 0)
+            {
+                recyclableMemoryStream.Write(preamble);
+            }
+            Encoding.UTF8.GetBytes(t.Content ?? string.Empty, recyclableMemoryStream);
+            recyclableMemoryStream.Position = 0;
+
+            _viewFileSystem.AddFile(path, recyclableMemoryStream, true);
         }
 
         return t.Content;
@@ -95,12 +113,17 @@ public class ViewHelper : IViewHelper
         var design = template.Content.IsNullOrWhiteSpace() ? EnsureInheritedLayout(template) : template.Content!;
         var path = ViewPath(template.Alias);
 
-        var data = Encoding.UTF8.GetBytes(design);
-        var withBom = Encoding.UTF8.GetPreamble().Concat(data).ToArray();
-
-        using (var ms = new MemoryStream(withBom))
+        using (PooledMemoryStream recyclableMemoryStream = _memoryStreamPool.GetStream())
         {
-            _viewFileSystem.AddFile(path, ms, true);
+            var preamble = Encoding.UTF8.GetPreamble();
+            if (preamble is not null && preamble.Length > 0)
+            {
+                recyclableMemoryStream.Write(preamble);
+            }
+            Encoding.UTF8.GetBytes(design, recyclableMemoryStream);
+            recyclableMemoryStream.Position = 0;
+
+            _viewFileSystem.AddFile(path, recyclableMemoryStream, true);
         }
 
         return design;

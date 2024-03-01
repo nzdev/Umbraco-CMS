@@ -1,7 +1,10 @@
+using System.IO;
 using System.Text;
+using Microsoft.IO;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Persistence.Repositories;
+using Umbraco.Cms.Core.Pooling;
 using Umbraco.Extensions;
 
 namespace Umbraco.Cms.Infrastructure.Persistence.Repositories.Implement;
@@ -135,8 +138,15 @@ internal class PartialViewRepository : FileRepository<string, IPartialView>, IPa
     /// </remarks>
     protected override Stream GetContentStream(string content)
     {
-        var data = Encoding.UTF8.GetBytes(content);
-        var withBom = Encoding.UTF8.GetPreamble().Concat(data).ToArray();
-        return new MemoryStream(withBom);
+        PooledMemoryStream recyclableMemoryStream = MemoryStreamPool.GetStream();
+        byte[] preamble = Encoding.UTF8.GetPreamble();
+        if (preamble is not null && preamble.Length > 0)
+        {
+            recyclableMemoryStream.Write(preamble);
+        }
+
+        Encoding.UTF8.GetBytes(content, recyclableMemoryStream);
+        recyclableMemoryStream.Position = 0;
+        return recyclableMemoryStream;
     }
 }

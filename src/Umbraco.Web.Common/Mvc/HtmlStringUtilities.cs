@@ -2,6 +2,9 @@ using System.Net;
 using System.Text;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Html;
+using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Core.Pooling;
 
 namespace Umbraco.Cms.Web.Common.Mvc;
 
@@ -10,6 +13,8 @@ namespace Umbraco.Cms.Web.Common.Mvc;
 /// </summary>
 public sealed class HtmlStringUtilities
 {
+    private static readonly IMemoryStreamPool _memoryStreamPool = StaticServiceProvider.Instance is null ? new RecyclableMemoryStreamPool() : StaticServiceProvider.Instance.GetRequiredService<IMemoryStreamPool>();
+
     /// <summary>
     ///     HTML encodes the text and replaces text line breaks with HTML line breaks.
     /// </summary>
@@ -104,13 +109,13 @@ public sealed class HtmlStringUtilities
     {
         const string hellip = "&hellip;";
 
-        using (var outputms = new MemoryStream())
+        using (var outputms = _memoryStreamPool.GetStream())
         {
             var lengthReached = false;
 
             using (var outputtw = new StreamWriter(outputms))
             {
-                using (var ms = new MemoryStream())
+                using (var ms = _memoryStreamPool.GetStream())
                 {
                     using (var tw = new StreamWriter(ms))
                     {

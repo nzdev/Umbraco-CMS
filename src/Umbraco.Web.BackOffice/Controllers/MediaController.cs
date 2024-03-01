@@ -13,6 +13,7 @@ using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.ContentApps;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Dictionary;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Hosting;
@@ -25,6 +26,7 @@ using Umbraco.Cms.Core.Models.Editors;
 using Umbraco.Cms.Core.Models.Entities;
 using Umbraco.Cms.Core.Models.Validation;
 using Umbraco.Cms.Core.Persistence.Querying;
+using Umbraco.Cms.Core.Pooling;
 using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Serialization;
@@ -53,6 +55,7 @@ public class MediaController : ContentControllerBase
     private static readonly Semaphore _postAddFileSemaphore = new(1, 1);
     private readonly AppCaches _appCaches;
     private readonly IFileStreamSecurityValidator? _fileStreamSecurityValidator; // make non nullable in v14
+    private readonly IMemoryStreamPool _memoryStreamPool;
     private readonly IAuthorizationService _authorizationService;
     private readonly IBackOfficeSecurityAccessor _backofficeSecurityAccessor;
     private readonly ContentSettings _contentSettings;
@@ -70,6 +73,59 @@ public class MediaController : ContentControllerBase
     private readonly IUmbracoMapper _umbracoMapper;
 
     [ActivatorUtilitiesConstructor]
+    public MediaController(
+        ICultureDictionary cultureDictionary,
+        ILoggerFactory loggerFactory,
+        IShortStringHelper shortStringHelper,
+        IEventMessagesFactory eventMessages,
+        ILocalizedTextService localizedTextService,
+        IOptionsSnapshot<ContentSettings> contentSettings,
+        IMediaTypeService mediaTypeService,
+        IMediaService mediaService,
+        IEntityService entityService,
+        IBackOfficeSecurityAccessor backofficeSecurityAccessor,
+        IUmbracoMapper umbracoMapper,
+        IDataTypeService dataTypeService,
+        ISqlContext sqlContext,
+        IContentTypeBaseServiceProvider contentTypeBaseServiceProvider,
+        IRelationService relationService,
+        PropertyEditorCollection propertyEditors,
+        MediaFileManager mediaFileManager,
+        MediaUrlGeneratorCollection mediaUrlGenerators,
+        IHostingEnvironment hostingEnvironment,
+        IImageUrlGenerator imageUrlGenerator,
+        IJsonSerializer serializer,
+        IAuthorizationService authorizationService,
+        AppCaches appCaches,
+        IFileStreamSecurityValidator streamSecurityValidator,
+        IMemoryStreamPool memoryStreamPool)
+        : base(cultureDictionary, loggerFactory, shortStringHelper, eventMessages, localizedTextService, serializer)
+    {
+        _shortStringHelper = shortStringHelper;
+        _contentSettings = contentSettings.Value;
+        _mediaTypeService = mediaTypeService;
+        _mediaService = mediaService;
+        _entityService = entityService;
+        _backofficeSecurityAccessor = backofficeSecurityAccessor;
+        _umbracoMapper = umbracoMapper;
+        _dataTypeService = dataTypeService;
+        _localizedTextService = localizedTextService;
+        _sqlContext = sqlContext;
+        _contentTypeBaseServiceProvider = contentTypeBaseServiceProvider;
+        _relationService = relationService;
+        _propertyEditors = propertyEditors;
+        _mediaFileManager = mediaFileManager;
+        _mediaUrlGenerators = mediaUrlGenerators;
+        _hostingEnvironment = hostingEnvironment;
+        _logger = loggerFactory.CreateLogger<MediaController>();
+        _imageUrlGenerator = imageUrlGenerator;
+        _authorizationService = authorizationService;
+        _appCaches = appCaches;
+        _fileStreamSecurityValidator = streamSecurityValidator;
+        _memoryStreamPool = memoryStreamPool;
+    }
+
+    [Obsolete("Use constructor overload that has fileStreamSecurityValidator, scheduled for removal in v14")]
     public MediaController(
         ICultureDictionary cultureDictionary,
         ILoggerFactory loggerFactory,
@@ -118,6 +174,7 @@ public class MediaController : ContentControllerBase
         _authorizationService = authorizationService;
         _appCaches = appCaches;
         _fileStreamSecurityValidator = streamSecurityValidator;
+        _memoryStreamPool = StaticServiceProvider.Instance.GetRequiredService<RecyclableMemoryStreamPool>();
     }
 
     [Obsolete("Use constructor overload that has fileStreamSecurityValidator, scheduled for removal in v14")]
@@ -167,6 +224,7 @@ public class MediaController : ContentControllerBase
         _imageUrlGenerator = imageUrlGenerator;
         _authorizationService = authorizationService;
         _appCaches = appCaches;
+        _memoryStreamPool = StaticServiceProvider.Instance.GetRequiredService<RecyclableMemoryStreamPool>();
     }
 
     /// <summary>
@@ -788,7 +846,7 @@ public class MediaController : ContentControllerBase
                     continue;
                 }
 
-                using var stream = new MemoryStream();
+                using PooledMemoryStream stream = _memoryStreamPool.GetStream();
                 await formFile.CopyToAsync(stream);
                 if (_fileStreamSecurityValidator != null && _fileStreamSecurityValidator.IsConsideredSafe(stream) == false)
                 {

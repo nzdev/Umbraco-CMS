@@ -1,13 +1,19 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.IO;
+using Umbraco.Cms.Core.Pooling;
 
 namespace Umbraco.Extensions;
 
 public static class FileSystemExtensions
 {
+
+    private static readonly IMemoryStreamPool _memoryStreamPool = StaticServiceProvider.Instance is null ? new RecyclableMemoryStreamPool() : StaticServiceProvider.Instance.GetRequiredService<IMemoryStreamPool>();
+
     public static string GetStreamHash(this Stream fileStream)
     {
         if (fileStream.CanSeek)
@@ -75,7 +81,7 @@ public static class FileSystemExtensions
     {
         var path = fs.GetRelativePath(folderPath);
         var tempFile = Path.Combine(path, Guid.NewGuid().ToString("N") + ".tmp");
-        using (var s = new MemoryStream())
+        using (var s = _memoryStreamPool.GetStream())
         {
             fs.AddFile(tempFile, s);
         }

@@ -1,8 +1,11 @@
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.Entities;
 using Umbraco.Cms.Core.Persistence;
+using Umbraco.Cms.Core.Pooling;
 using Umbraco.Extensions;
 
 namespace Umbraco.Cms.Infrastructure.Persistence.Repositories.Implement;
@@ -10,9 +13,22 @@ namespace Umbraco.Cms.Infrastructure.Persistence.Repositories.Implement;
 internal abstract class FileRepository<TId, TEntity> : IReadRepository<TId, TEntity>, IWriteRepository<TEntity>
     where TEntity : IFile
 {
-    protected FileRepository(IFileSystem? fileSystem) => FileSystem = fileSystem;
+    [Obsolete("Use Constructor that takes a MemoryStreamPool")]
+    protected FileRepository(IFileSystem? fileSystem)
+    {
+        FileSystem = fileSystem;
+        MemoryStreamPool = StaticServiceProvider.Instance.GetRequiredService<IMemoryStreamPool>();
+    }
+
+    protected FileRepository(IFileSystem? fileSystem, RecyclableMemoryStreamPool memoryStreamPool)
+    {
+        FileSystem = fileSystem;
+        MemoryStreamPool = memoryStreamPool;
+    }
 
     protected IFileSystem? FileSystem { get; }
+
+    public IMemoryStreamPool MemoryStreamPool { get; }
 
     public virtual void AddFolder(string folderPath) => PersistNewItem(new Folder(folderPath));
 
@@ -44,7 +60,13 @@ internal abstract class FileRepository<TId, TEntity> : IReadRepository<TId, TEnt
     /// </summary>
     /// <param name="content"></param>
     /// <returns></returns>
-    protected virtual Stream GetContentStream(string content) => new MemoryStream(Encoding.UTF8.GetBytes(content));
+    protected virtual Stream GetContentStream(string content)
+    {
+        PooledMemoryStream memoryStream = MemoryStreamPool.GetStream();
+        Encoding.UTF8.GetBytes(content, memoryStream);
+        memoryStream.Position = 0;
+        return memoryStream;
+    }
 
     /// <summary>
     ///     Returns all files in the file system

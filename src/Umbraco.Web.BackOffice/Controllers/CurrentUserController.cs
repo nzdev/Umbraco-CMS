@@ -18,6 +18,7 @@ using Umbraco.Cms.Core.Media;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Models.Membership;
+using Umbraco.Cms.Core.Pooling;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Strings;
@@ -49,9 +50,45 @@ public class CurrentUserController : UmbracoAuthorizedJsonController
     private readonly IUmbracoMapper _umbracoMapper;
     private readonly IUserDataService _userDataService;
     private readonly IFileStreamSecurityValidator? _fileStreamSecurityValidator; // make non nullable in v14
+    private readonly IMemoryStreamPool _memoryStreamPool;
     private readonly IUserService _userService;
 
     [ActivatorUtilitiesConstructor]
+    public CurrentUserController(
+        MediaFileManager mediaFileManager,
+        IOptionsSnapshot<ContentSettings> contentSettings,
+        IHostingEnvironment hostingEnvironment,
+        IImageUrlGenerator imageUrlGenerator,
+        IBackOfficeSecurityAccessor backofficeSecurityAccessor,
+        IUserService userService,
+        IUmbracoMapper umbracoMapper,
+        IBackOfficeUserManager backOfficeUserManager,
+        ILocalizedTextService localizedTextService,
+        AppCaches appCaches,
+        IShortStringHelper shortStringHelper,
+        IPasswordChanger<BackOfficeIdentityUser> passwordChanger,
+        IUserDataService userDataService,
+        IFileStreamSecurityValidator fileStreamSecurityValidator,
+        IMemoryStreamPool memoryStreamPool)
+    {
+        _mediaFileManager = mediaFileManager;
+        _contentSettings = contentSettings.Value;
+        _hostingEnvironment = hostingEnvironment;
+        _imageUrlGenerator = imageUrlGenerator;
+        _backofficeSecurityAccessor = backofficeSecurityAccessor;
+        _userService = userService;
+        _umbracoMapper = umbracoMapper;
+        _backOfficeUserManager = backOfficeUserManager;
+        _localizedTextService = localizedTextService;
+        _appCaches = appCaches;
+        _shortStringHelper = shortStringHelper;
+        _passwordChanger = passwordChanger;
+        _userDataService = userDataService;
+        _fileStreamSecurityValidator = fileStreamSecurityValidator;
+        _memoryStreamPool = memoryStreamPool;
+    }
+
+    [Obsolete("Use constructor overload that has fileStreamSecurityValidator, scheduled for removal in v14")]
     public CurrentUserController(
         MediaFileManager mediaFileManager,
         IOptionsSnapshot<ContentSettings> contentSettings,
@@ -82,6 +119,7 @@ public class CurrentUserController : UmbracoAuthorizedJsonController
         _passwordChanger = passwordChanger;
         _userDataService = userDataService;
         _fileStreamSecurityValidator = fileStreamSecurityValidator;
+        _memoryStreamPool = StaticServiceProvider.Instance.GetRequiredService<IMemoryStreamPool>();
     }
 
     [Obsolete("Use constructor overload that has fileStreamSecurityValidator, scheduled for removal in v14")]
@@ -113,6 +151,7 @@ public class CurrentUserController : UmbracoAuthorizedJsonController
         _shortStringHelper = shortStringHelper;
         _passwordChanger = passwordChanger;
         _userDataService = userDataService;
+        _memoryStreamPool = StaticServiceProvider.Instance.GetRequiredService<IMemoryStreamPool>();
     }
 
         /// <summary>
@@ -288,7 +327,8 @@ public class CurrentUserController : UmbracoAuthorizedJsonController
             _hostingEnvironment,
             _imageUrlGenerator,
             _fileStreamSecurityValidator,
-            _backofficeSecurityAccessor.BackOfficeSecurity?.GetUserId().Result ?? 0);
+            _backofficeSecurityAccessor.BackOfficeSecurity?.GetUserId().Result ?? 0,
+            _memoryStreamPool);
     }
 
     /// <summary>

@@ -34,6 +34,7 @@ using Umbraco.Cms.Core.Logging;
 using Umbraco.Cms.Core.Macros;
 using Umbraco.Cms.Core.Net;
 using Umbraco.Cms.Core.Notifications;
+using Umbraco.Cms.Core.Pooling;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Telemetry;
@@ -174,6 +175,9 @@ public static partial class UmbracoBuilderExtensions
         builder.Services.AddUnique<IUmbracoApplicationLifetime, AspNetCoreUmbracoApplicationLifetime>();
         builder.Services.AddUnique<IApplicationShutdownRegistry, AspNetCoreApplicationShutdownRegistry>();
         builder.Services.AddTransient<IIpAddressUtilities, IpAddressUtilities>();
+
+        // Memory Optimization
+        builder.Services.AddUnique<IMemoryStreamPool, RecyclableMemoryStreamPool>();
 
         return builder;
     }

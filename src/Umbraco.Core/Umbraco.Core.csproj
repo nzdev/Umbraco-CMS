@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
     <PackageReference Include="System.Runtime.Caching" />
   </ItemGroup>
 

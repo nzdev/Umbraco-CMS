@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -14,6 +14,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using Umbraco.Cms.Core.Pooling;
 using Umbraco.Extensions;
 
 namespace Umbraco.Cms.Web.Common.ModelsBuilder.InMemoryAuto;
@@ -30,6 +31,7 @@ internal class CollectibleRuntimeViewCompiler : IViewCompiler
     private readonly UmbracoRazorReferenceManager _referenceManager;
     private readonly CompilationOptionsProvider _compilationOptionsProvider;
     private readonly InMemoryAssemblyLoadContextManager _loadContextManager;
+    private readonly IMemoryStreamPool _memoryStreamPool;
 
     public CollectibleRuntimeViewCompiler(
         IFileProvider fileProvider,
@@ -38,7 +40,8 @@ internal class CollectibleRuntimeViewCompiler : IViewCompiler
         ILogger<CollectibleRuntimeViewCompiler> logger,
         UmbracoRazorReferenceManager referenceManager,
         CompilationOptionsProvider compilationOptionsProvider,
-        InMemoryAssemblyLoadContextManager loadContextManager)
+        InMemoryAssemblyLoadContextManager loadContextManager,
+        IMemoryStreamPool memoryStreamPool)
     {
         if (fileProvider == null)
         {
@@ -66,7 +69,7 @@ internal class CollectibleRuntimeViewCompiler : IViewCompiler
         _referenceManager = referenceManager;
         _compilationOptionsProvider = compilationOptionsProvider;
         _loadContextManager = loadContextManager;
-
+        _memoryStreamPool = memoryStreamPool;
         _normalizedPathCache = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
 
         // This is our L0 cache, and is a durable store. Views migrate into the cache as they are requested
@@ -369,8 +372,8 @@ internal class CollectibleRuntimeViewCompiler : IViewCompiler
         var emitPdbFile = _compilationOptionsProvider.EmitPdb && emitOptions.DebugInformationFormat != DebugInformationFormat.Embedded;
 
 
-        using (var assemblyStream = new MemoryStream())
-        using (MemoryStream? pdbStream = emitPdbFile ? new MemoryStream() : null)
+        using (PooledMemoryStream assemblyStream = _memoryStreamPool.GetStream())
+        using (PooledMemoryStream? pdbStream = emitPdbFile ? _memoryStreamPool.GetStream() : null)
         {
             var result = compilation.Emit(
                 assemblyStream,

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Razor.Compilation;
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.AspNetCore.Razor.Language;
@@ -6,6 +6,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Cms.Core.Exceptions;
+using Umbraco.Cms.Core.Pooling;
 
 namespace Umbraco.Cms.Web.Common.ModelsBuilder.InMemoryAuto;
 
@@ -15,7 +16,7 @@ internal class UmbracoViewCompilerProvider : IViewCompilerProvider
     private readonly UmbracoRazorReferenceManager _umbracoRazorReferenceManager;
     private readonly CompilationOptionsProvider _compilationOptionsProvider;
     private readonly InMemoryAssemblyLoadContextManager _loadContextManager;
-
+    private readonly IMemoryStreamPool _memoryStreamPool;
     private readonly ApplicationPartManager _applicationPartManager;
 
     private readonly ILogger<CollectibleRuntimeViewCompiler> _logger;
@@ -34,13 +35,15 @@ internal class UmbracoViewCompilerProvider : IViewCompilerProvider
         IOptions<MvcRazorRuntimeCompilationOptions> options,
         UmbracoRazorReferenceManager umbracoRazorReferenceManager,
         CompilationOptionsProvider compilationOptionsProvider,
-        InMemoryAssemblyLoadContextManager loadContextManager)
+        InMemoryAssemblyLoadContextManager loadContextManager,
+        IMemoryStreamPool memoryStreamPool)
     {
         _applicationPartManager = applicationPartManager;
         _razorProjectEngine = razorProjectEngine;
         _umbracoRazorReferenceManager = umbracoRazorReferenceManager;
         _compilationOptionsProvider = compilationOptionsProvider;
         _loadContextManager = loadContextManager;
+        _memoryStreamPool = memoryStreamPool;
         _options = options.Value;
 
         _logger = loggerFactory.CreateLogger<CollectibleRuntimeViewCompiler>();
@@ -68,7 +71,8 @@ internal class UmbracoViewCompilerProvider : IViewCompilerProvider
             _logger,
             _umbracoRazorReferenceManager,
             _compilationOptionsProvider,
-            _loadContextManager);
+            _loadContextManager,
+            _memoryStreamPool);
     }
 
     private static IFileProvider GetCompositeFileProvider(MvcRazorRuntimeCompilationOptions options)

@@ -14,6 +14,7 @@ using MimeKit;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Core.Configuration.Models;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Editors;
 using Umbraco.Cms.Core.Hosting;
 using Umbraco.Cms.Core.IO;
@@ -25,6 +26,7 @@ using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Models.Email;
 using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Persistence.Querying;
+using Umbraco.Cms.Core.Pooling;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Strings;
@@ -56,6 +58,7 @@ public class UsersController : BackOfficeNotificationsController
     private readonly IHostingEnvironment _hostingEnvironment;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IFileStreamSecurityValidator? _fileStreamSecurityValidator; // make non nullable in v14
+    private readonly IMemoryStreamPool _memoryStreamPool;
     private readonly IImageUrlGenerator _imageUrlGenerator;
     private readonly LinkGenerator _linkGenerator;
     private readonly ILocalizedTextService _localizedTextService;
@@ -73,6 +76,60 @@ public class UsersController : BackOfficeNotificationsController
     private readonly WebRoutingSettings _webRoutingSettings;
 
     [ActivatorUtilitiesConstructor]
+    public UsersController(
+        MediaFileManager mediaFileManager,
+        IOptionsSnapshot<ContentSettings> contentSettings,
+        IHostingEnvironment hostingEnvironment,
+        ISqlContext sqlContext,
+        IImageUrlGenerator imageUrlGenerator,
+        IOptionsSnapshot<SecuritySettings> securitySettings,
+        IEmailSender emailSender,
+        IBackOfficeSecurityAccessor backofficeSecurityAccessor,
+        AppCaches appCaches,
+        IShortStringHelper shortStringHelper,
+        IUserService userService,
+        ILocalizedTextService localizedTextService,
+        IUmbracoMapper umbracoMapper,
+        IOptionsSnapshot<GlobalSettings> globalSettings,
+        IBackOfficeUserManager backOfficeUserManager,
+        ILoggerFactory loggerFactory,
+        LinkGenerator linkGenerator,
+        IBackOfficeExternalLoginProviders externalLogins,
+        UserEditorAuthorizationHelper userEditorAuthorizationHelper,
+        IPasswordChanger<BackOfficeIdentityUser> passwordChanger,
+        IHttpContextAccessor httpContextAccessor,
+        IOptions<WebRoutingSettings> webRoutingSettings,
+        IFileStreamSecurityValidator fileStreamSecurityValidator,
+        IMemoryStreamPool memoryStreamPool)
+    {
+        _mediaFileManager = mediaFileManager;
+        _contentSettings = contentSettings.Value;
+        _hostingEnvironment = hostingEnvironment;
+        _sqlContext = sqlContext;
+        _imageUrlGenerator = imageUrlGenerator;
+        _securitySettings = securitySettings.Value;
+        _emailSender = emailSender;
+        _backofficeSecurityAccessor = backofficeSecurityAccessor;
+        _appCaches = appCaches;
+        _shortStringHelper = shortStringHelper;
+        _userService = userService;
+        _localizedTextService = localizedTextService;
+        _umbracoMapper = umbracoMapper;
+        _globalSettings = globalSettings.Value;
+        _userManager = backOfficeUserManager;
+        _loggerFactory = loggerFactory;
+        _linkGenerator = linkGenerator;
+        _externalLogins = externalLogins;
+        _userEditorAuthorizationHelper = userEditorAuthorizationHelper;
+        _passwordChanger = passwordChanger;
+        _logger = _loggerFactory.CreateLogger<UsersController>();
+        _httpContextAccessor = httpContextAccessor;
+        _fileStreamSecurityValidator = fileStreamSecurityValidator;
+        _memoryStreamPool = memoryStreamPool;
+        _webRoutingSettings = webRoutingSettings.Value;
+    }
+
+    [Obsolete("Use constructor overload that has MemoryStreamPool, scheduled for removal in v14")]
     public UsersController(
         MediaFileManager mediaFileManager,
         IOptionsSnapshot<ContentSettings> contentSettings,
@@ -122,6 +179,7 @@ public class UsersController : BackOfficeNotificationsController
         _httpContextAccessor = httpContextAccessor;
         _fileStreamSecurityValidator = fileStreamSecurityValidator;
         _webRoutingSettings = webRoutingSettings.Value;
+        _memoryStreamPool = StaticServiceProvider.Instance.GetRequiredService<IMemoryStreamPool>();
     }
 
     [Obsolete("Use constructor overload that has fileStreamSecurityValidator, scheduled for removal in v14")]
@@ -172,6 +230,7 @@ public class UsersController : BackOfficeNotificationsController
         _logger = _loggerFactory.CreateLogger<UsersController>();
         _httpContextAccessor = httpContextAccessor;
         _webRoutingSettings = webRoutingSettings.Value;
+        _memoryStreamPool = StaticServiceProvider.Instance.GetRequiredService<IMemoryStreamPool>();
     }
 
     /// <summary>
@@ -195,13 +254,13 @@ public class UsersController : BackOfficeNotificationsController
     public IActionResult PostSetAvatar(int id, IList<IFormFile> file)
         => PostSetAvatarInternal(file, _userService,
         _appCaches.RuntimeCache, _mediaFileManager, _shortStringHelper, _contentSettings, _hostingEnvironment,
-        _imageUrlGenerator,_fileStreamSecurityValidator, id);
+        _imageUrlGenerator,_fileStreamSecurityValidator, id, _memoryStreamPool);
 
     internal static IActionResult PostSetAvatarInternal(IList<IFormFile> files, IUserService userService,
         IAppCache cache, MediaFileManager mediaFileManager, IShortStringHelper shortStringHelper,
         ContentSettings contentSettings, IHostingEnvironment hostingEnvironment, IImageUrlGenerator imageUrlGenerator,
         IFileStreamSecurityValidator? fileStreamSecurityValidator,
-        int id)
+        int id, IMemoryStreamPool _memoryStreamPool)
     {
         if (files is null)
         {
@@ -243,7 +302,7 @@ public class UsersController : BackOfficeNotificationsController
             user.Avatar = "UserAvatars/" + (user.Id + safeFileName).GenerateHash<SHA1>() + "." + ext;
 
             //todo implement Filestreamsecurity
-            using (var ms = new MemoryStream())
+            using (var ms = _memoryStreamPool.GetStream())
             {
                 file.CopyTo(ms);
                 if(fileStreamSecurityValidator != null && fileStreamSecurityValidator.IsConsideredSafe(ms) == false)
